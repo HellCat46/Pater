@@ -1,0 +1,11 @@
+@model Web.Models.Link.LinkView;
+
+@{
+    ViewData["Title"] = "Home | Pater";
+}
+
+<form method="post" >
+    <input type="text" asp-for="url"/>
+    <button type="submit">Create</button>
+</form>
+<div>@Html.Display(Model.message)</div>
