@@ -16,46 +16,50 @@ public class HomeController : Controller
     public IActionResult Index()
     {
         
-        return View(new LinkView()
+        return View(new IndexView()
         {
             message = " "
         });
     }
 
     [HttpPost]
-    public IActionResult Index(LinkView paraLink)
+    public IActionResult Index(IndexView paraIndex)
     {
-        const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-        Random random = new Random();
-        String code = "";
-        for (int i = 0; i < 8; i++)
-        {
-            code += chars[random.Next(1, chars.Length)];
-        }
-
+        String code = GenerateRandom(8);
         try
         {
             _context.Link.Add(new LinkModel()
             {
                 code = code,
                 CreatedAt = DateOnly.FromDateTime(DateTime.Today),
-                url = paraLink.url
+                url = paraIndex.url
             });
             _context.SaveChanges();
-            return View(new LinkView()
+            return View(new IndexView()
             {
                 created = true,
                 message = code,
-                url = paraLink.url
+                url = paraIndex.url
             });
         }
         catch (Exception ex)
         {
             Console.WriteLine(ex + "F");
-            return View(paraLink);
+            return View(paraIndex);
 
         }
     }
+
+    public IActionResult Login()
+    {
+        return View();
+    }
+
+    public IActionResult Signup()
+    {
+        return View();
+    }
+    
     public IActionResult Privacy()
     {
         return View();
@@ -79,5 +83,18 @@ public class HomeController : Controller
     public IActionResult ToS()
     {
         return View();
+    }
+
+    public string GenerateRandom(int len)
+    {
+        const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+        Random random = new Random();
+        String code = "";
+        for (int i = 0; i < len; i++)
+        {
+            code += chars[random.Next(1, chars.Length)];
+        }
+
+        return code;
     }
 }

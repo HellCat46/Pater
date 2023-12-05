@@ -1,0 +1,46 @@
+@{
+    ViewData["Title"] = "Sign Up | Pater";
+}
+
+<div class="h-screen flex items-center justify-center bg-base-200">
+    <div class="card shrink-0 w-full max-w-sm shadow-2xl bg-base-100">
+        <form class="card-body">
+            <div class="card-title">Sign up</div>
+            <label class="label">
+                Already have an Account? <a asp-controller="Home" asp-action="Login">Login</a>
+            </label>
+            <div class="form-control">
+                <label class="label">
+                    <span class="label-text">Name</span>
+                </label>
+                <input type="text" placeholder="Name" class="input input-bordered" required/>
+            </div>
+            <div class="form-control">
+                <label class="label">
+                    <span class="label-text">Email</span>
+                </label>
+                <input type="email" placeholder="Email" class="input input-bordered" required/>
+            </div>
+            <div class="form-control">
+                <label class="label">
+                    <span class="label-text">Password</span>
+                </label>
+                <input type="password" placeholder="Password" class="input input-bordered" required/>
+            </div>
+            <div class="form-control mt-6">
+                <button class="btn btn-primary">Login</button>
+            </div>
+        </form>
+
+    </div>
+</div>
+
+<script>
+    function onSignIn(googleUser){
+        var profile = googleUser.getBasicProfile();
+          console.log('ID: ' + profile.getId()); // Do not send to your backend! Use an ID token instead.
+          console.log('Name: ' + profile.getName());
+          console.log('Image URL: ' + profile.getImageUrl());
+          console.log('Email: ' + profile.getEmail()); // This is null if the 'email' scope is not present.
+    }
+</script>
