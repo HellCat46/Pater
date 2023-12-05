@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Web.Models.Link;
 
-public class LinkView
+public class IndexView
 {
     
     [Required]
