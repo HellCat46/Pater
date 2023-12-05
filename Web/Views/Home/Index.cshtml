@@ -1,11 +1,33 @@
-@model Web.Models.Link.LinkView;
+@model Web.Models.Link.IndexView;
 
 @{
     ViewData["Title"] = "Home | Pater";
 }
-
-<form method="post" >
-    <input type="text" asp-for="url"/>
-    <button type="submit">Create</button>
-</form>
-<div>@Html.Display(Model.message)</div>
+<div class="hero min-h-screen bg-base-200">
+  <div class="hero-content flex-col lg:flex-row-reverse">
+    <div class="text-center lg:text-left">
+      <h1 class="text-5xl font-bold">Shorten the Path, Lengthen the Impact!</h1>
+      <p class="py-6">Pater is your go-to link shortening service designed to streamline your online experience. Whether you're sharing content, promoting a product, or simplifying communication, our tool ensures concise and memorable links. Say goodbye to lengthy URLs and hello to a sleek online presence. Shorten with Pater, and make every link count!</p>
+    </div>
+    <div class="card shrink-0 w-full max-w-sm shadow-2xl bg-base-100">
+      <form class="card-body" method="post">
+        <h2 class="card-title">Shorten a Link</h2>
+        <div class="form-control">
+          <label class="label">
+            <span class="label-text">Enter Link:</span>
+          </label>
+          <input type="text" class="input input-bordered" asp-for="url" required/>
+        </div>
+        <div class="form-control">
+          <label class="label">
+            <span class="label-text">Custom Link</span>
+          </label>
+            <input type="password" placeholder="Sign up to use this feature" class="input input-bordered" disabled/>
+        </div>
+        <div class="form-control mt-6">
+          <button  class="btn btn-primary">Create</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
