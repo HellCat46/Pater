@@ -3,10 +3,21 @@
 @{
     ViewData["Title"] = "Pricing | Pater";
 }
+<div class="min-h-screen mx-8 py-20">
+<div class="hero">
+    <div class="hero-content text-center">
+        <div >
+            <div class="flex flex-col justify-center item-center">
+                <h2 class="text-2xl font-bold sm:text-3xl">Our Flexible Pricing Plans: Tailored for Your Needs</h2>
+                <p class="py-6">At Pater, we believe in providing transparent and flexible pricing options that cater to the diverse needs of our users. Choose from our range of plans designed to accommodate everyone, from individuals to businesses seeking robust link management solutions.</p>
+            </div>
+        </div>
+    </div>
+</div>
 
-<div class="flex flex-col items-center lg:flex-row mx-8 py-20">
-    <div class="card w-96 lg:basis-1/3 m-5 bg-base-200 shadow-xl">
-        <div class="card-body lg:basis-1/3 items-center text-center">
+<div class="grid grid-cols-1 place-items-center lg:grid-cols-2">
+    <div class="card w-96  m-5 bg-base-200 shadow-xl">
+        <div class="card-body  items-center text-center">
             <h2 class="card-title">Free</h2>
             <div>
                 <ul>
@@ -20,12 +31,12 @@
                     </li>
                 </ul>
             </div>
-            <div class="card-actions justify-end">
+            <div class="card-actions justify-center mt-10">
                 <button class="btn btn-primary">Sign Up for Free</button>
             </div>
         </div>
     </div>
-    <div class="card w-96 lg:basis-1/3 m-5 bg-base-200 shadow-xl">
+    <div class="card w-96 m-5 bg-base-200 shadow-xl">
         <div class="card-body items-center text-center">
             <h2 class="card-title">Premium</h2>
             <div>
@@ -44,14 +55,40 @@
                     </li>
                 </ul>
             </div>
-            <div class="card-actions justify-end">
+            <div class="card-actions justify-center mt-10">
                 <button class="btn btn-primary">Pay $2 Per Month</button>
             </div>
         </div>
     </div>
-    <div class="card w-96 lg:basis-1/3 m-5 bg-base-200 shadow-xl ">
+    
+        <div class="card w-96 m-5 bg-base-200 shadow-xl">
+            <div class="card-body items-center text-center">
+                <h2 class="card-title">Business</h2>
+                <div>
+                    <ul>
+                        <li class="flex">
+                            <img src="~/assets/svg/check-white.svg" alt="check"/>
+                            <span class="ml-3"><span class="text-white">Unlimited</span> Links</span>
+                        </li>
+                        <li class="flex">
+                            <img src="~/assets/svg/check-white.svg" alt="check"/>
+                            <span class="ml-3"><span class="text-white">350</span> Custom Links</span>
+                        </li>
+                        <li class="flex">
+                            <img src="~/assets/svg/check-white.svg" alt="check"/>
+                            <span class="ml-3"><span class="text-white">Last 30 days</span> Analytics on Links</span>
+                        </li>
+                    </ul>
+                </div>
+                <div class="card-actions justify-center mt-10">
+                    <button class="btn btn-primary">Pay $20 Per Month</button>
+                </div>
+            </div>
+            </div>
+    
+    <div class="card w-96 m-5 bg-base-200 shadow-xl ">
         <div class="card-body items-center text-center">
-            <h2 class="card-title">Business</h2>
+            <h2 class="card-title">Custom</h2>
             <div>
                 <ul>
                     <li class="flex">
@@ -68,9 +105,10 @@
                     </li>
                 </ul>
             </div>
-            <div class="card-actions justify-end">
+            <div class="card-actions justify-center mt-10">
                 <button class="btn btn-primary">Custom</button>
             </div>
         </div>
     </div>
+</div>
 </div>
