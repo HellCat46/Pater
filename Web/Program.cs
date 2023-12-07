@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Web;
 using Web.ApplicationDbContext;
 using Web.Models.Link;
 
@@ -9,6 +10,15 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddControllers();
 builder.Services.AddDbContext<UserDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("prod")));
+
+builder.Services.AddDistributedMemoryCache();
+builder.Services.AddSession(options =>
+{
+    options.Cookie.Name = "SessionID";
+    options.IdleTimeout = TimeSpan.FromMinutes(20);
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+});
 
 var app = builder.Build();
 
@@ -27,7 +37,9 @@ app.UseRouting();
 
 app.UseAuthorization();
 
+app.UseSession();
 
+app.UseMiddleware<Middleware>();
 
 app.MapControllerRoute(
     name: "web",
