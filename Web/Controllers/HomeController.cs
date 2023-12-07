@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Web.ApplicationDbContext;
+using Web.Models.Account;
+using Web.Models.View;
 using Web.Models.Link;
 
 
@@ -13,13 +15,14 @@ public class HomeController : Controller
     {
         _context = context;
     }
+
     public IActionResult Index()
     {
-        
-        return View(new IndexView()
+        if (HttpContext.Session.GetString("SessionID") != null)
         {
-            message = " "
-        });
+            return Redirect("User/Dashboard");
+        }
+        return View();
     }
 
     [HttpPost]
@@ -31,27 +34,42 @@ public class HomeController : Controller
             _context.Link.Add(new LinkModel()
             {
                 code = code,
+                name = DateTime.Today.ToString(),
                 CreatedAt = DateOnly.FromDateTime(DateTime.Today),
                 url = paraIndex.url
             });
             _context.SaveChanges();
-            return View(new IndexView()
-            {
-                created = true,
-                message = code,
-                url = paraIndex.url
-            });
+
+            ViewBag.Message = "Created Link : " + code;
+            ViewBag.isError = false;
+            return View();
         }
         catch (Exception ex)
         {
-            Console.WriteLine(ex + "F");
-            return View(paraIndex);
+            Console.WriteLine(ex );
+            ViewBag.Message = "Failed to create link.";
+            ViewBag.isError = true;
+            return View();
 
         }
     }
 
     public IActionResult Login()
     {
+        return View();
+    }
+
+    [HttpPost]
+    public IActionResult Login(LoginView creds)
+    {
+        var res= _context.Account.FirstOrDefault(acc => acc.email == creds.email && acc.password == creds.password);
+        Console.WriteLine(res);
+        if (res != null)
+        {
+            HttpContext.Session.SetString("SessionID", res.id.ToString());
+            return Redirect("User/Dashboard/");
+        }
+
         return View();
     }
 
@@ -85,6 +103,10 @@ public class HomeController : Controller
         return View();
     }
 
+    public IActionResult InvalidLink()
+    {
+        return View();
+    }
     public string GenerateRandom(int len)
     {
         const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
@@ -97,4 +119,6 @@ public class HomeController : Controller
 
         return code;
     }
+    
+    
 }

@@ -21,6 +21,8 @@ public class Middleware
             context.Response.Redirect("/");
         else if (path == "/" && SessionID != null)
             context.Response.Redirect("/User/Dashboard");
+        
+        
         await _next(context);
     }
 }

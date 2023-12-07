@@ -1,30 +1,43 @@
+@model Web.Models.View.LoginView
+
 @{
     ViewData["Title"] = "Login | Pater";
 }
-
-<div class="h-screen flex items-center justify-center bg-base-200">
-  <div class="card shrink-0 w-full max-w-sm shadow-2xl bg-base-100">
-    <form class="card-body">
-      <div class="card-title">Login in With Existing Account</div>
-      <div class="form-control">
-        <label class="label">
-          <span class="label-text">Email</span>
-        </label>
-        <input type="email" placeholder="email" class="input input-bordered" required/>
+<div class="min-h-screen bg-base-200 py-20">
+  <div class="hero">
+      <div class="hero-content text-center">
+          <div >
+              <div class="flex flex-col justify-center item-center">
+                  <h2 class="text-2xl font-bold sm:text-3xl">Welcome Back to Pater - Your Link Management Hub</h2>
+                <p class="py-6">Welcome back to Pater! We're delighted to have you here.With Pater, managing and optimizing your links has never been more straightforward. If you're new here, feel free to join us and experience the ease of effective link management. Let's get started on your journey with Pater!</p>
+                <p class="py-2">Not a member yet? <a class="link link-info" asp-controller="Home" asp-action="Signup">Sign up Now</a></p>
+              </div>
+          </div>
       </div>
-      <div class="form-control">
-        <label class="label">
-          <span class="label-text">Password</span>
-        </label>
-        <input type="password" placeholder="password" class="input input-bordered" required/>
-        <label class="label">
-          <a href="#" class="label-text-alt link link-hover">Forgot password?</a>
-        </label>
-      </div>
-      <div class="form-control mt-6">
-        <button class="btn btn-primary">Login</button>
-        
-      </div>
-    </form>
+  </div>
+  <div class="flex items-center justify-center bg-base-200">
+    <div class="card shrink-0 w-full max-w-sm shadow-2xl bg-base-100">
+      <form class="card-body" method="post">
+        <div class="card-title">Login in</div>
+        <div class="form-control">
+          <label class="label">
+            <span class="label-text">Email</span>
+          </label>
+          <input type="email" placeholder="email" class="input input-bordered" asp-for="email" required/>
+        </div>
+        <div class="form-control">
+          <label class="label">
+            <span class="label-text">Password</span>
+          </label>
+          <input type="password" placeholder="password" class="input input-bordered" asp-for="password" required/>
+          <label class="label">
+            <a href="#" class="label-text-alt link link-hover">Forgot password?</a>
+          </label>
+        </div>
+        <div class="form-control mt-6">
+          <button type="submit" class="btn btn-primary">Login</button>
+        </div>
+      </form>
+    </div>
   </div>
 </div>

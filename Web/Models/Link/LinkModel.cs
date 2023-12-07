@@ -13,6 +13,9 @@ public class LinkModel
     public string url { get; set; }
     
     [Required]
+    public string name { get; set; }
+    
+    [Required]
     [DataType(DataType.Date)]
     public DateOnly CreatedAt { get; set; }
     

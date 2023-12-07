@@ -1,7 +1,7 @@
-using Microsoft.EntityFrameworkCore;
 using Web;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Web.ApplicationDbContext;
-using Web.Models.Link;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -38,7 +38,6 @@ app.UseRouting();
 app.UseAuthorization();
 
 app.UseSession();
-
 app.UseMiddleware<Middleware>();
 
 app.MapControllerRoute(
