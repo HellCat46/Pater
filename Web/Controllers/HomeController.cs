@@ -20,7 +20,7 @@ public class HomeController : Controller
     {
         if (HttpContext.Session.GetString("SessionID") != null)
         {
-            return Redirect("User/Dashboard");
+            return RedirectToAction("Dashboard", "User");
         }
         return View();
     }

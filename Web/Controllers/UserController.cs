@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Web.Controllers;
 
-[Authorize]
 public class UserController : Controller
 {
     public IActionResult Dashboard()
