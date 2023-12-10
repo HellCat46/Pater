@@ -18,63 +18,6 @@ public class HomeController : Controller
 
     public IActionResult Index()
     {
-        if (HttpContext.Session.GetString("SessionID") != null)
-        {
-            return RedirectToAction("Dashboard", "User");
-        }
-        return View();
-    }
-
-    [HttpPost]
-    public IActionResult Index(IndexView paraIndex)
-    {
-        String code = GenerateRandom(8);
-        try
-        {
-            _context.Link.Add(new LinkModel()
-            {
-                code = code,
-                name = DateTime.Today.ToString(),
-                CreatedAt = DateOnly.FromDateTime(DateTime.Today),
-                url = paraIndex.url
-            });
-            _context.SaveChanges();
-
-            ViewBag.Message = "Created Link : " + code;
-            ViewBag.isError = false;
-            return View();
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine(ex );
-            ViewBag.Message = "Failed to create link.";
-            ViewBag.isError = true;
-            return View();
-
-        }
-    }
-
-    public IActionResult Login()
-    {
-        return View();
-    }
-
-    [HttpPost]
-    public IActionResult Login(LoginView creds)
-    {
-        var res= _context.Account.FirstOrDefault(acc => acc.email == creds.email && acc.password == creds.password);
-        Console.WriteLine(res);
-        if (res != null)
-        {
-            HttpContext.Session.SetString("SessionID", res.id.ToString());
-            return Redirect("User/Dashboard/");
-        }
-
-        return View();
-    }
-
-    public IActionResult Signup()
-    {
         return View();
     }
     
@@ -102,23 +45,61 @@ public class HomeController : Controller
     {
         return View();
     }
-
-    public IActionResult InvalidLink()
+    
+    public IActionResult Login()
     {
+        if (HttpContext.Session.GetString("SessionID") != null)
+            return RedirectToAction("Dashboard", "User");
+        
         return View();
     }
-    public string GenerateRandom(int len)
-    {
-        const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-        Random random = new Random();
-        String code = "";
-        for (int i = 0; i < len; i++)
-        {
-            code += chars[random.Next(1, chars.Length)];
-        }
 
-        return code;
+    [HttpPost]
+    public IActionResult Login(LoginView data)
+    {
+        var res= _context.Account.FirstOrDefault(acc => acc.email == data.email && acc.password == data.password);
+        Console.WriteLine(res);
+        if (res != null)
+        {
+            HttpContext.Session.SetString("SessionID", res.id.ToString());
+            return RedirectToAction("Dashboard", "User");
+        }
+    
+        return View();
     }
-    
-    
+
+    public IActionResult Signup()
+    {
+        if (HttpContext.Session.GetString("SessionID") != null)
+            return RedirectToAction("Dashboard", "User");
+        
+        return View();
+    }
+
+    [HttpPost]
+    public IActionResult Signup(SignupView data)
+    { 
+        try
+        {
+            _context.Account.Add(new AccountModel()
+            {
+                email = data.email,
+                password = data.password,
+                createdAt = DateTime.Now,
+                name = data.name
+            });
+            _context.SaveChanges();
+            var acc = _context.Account.FirstOrDefault(acc => acc.email == data.email && acc.password == data.password);
+            if (acc != null)
+            {
+                HttpContext.Session.SetString("SessionID", acc.id.ToString());
+            }
+            return RedirectToAction("Dashboard", "User");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex);
+            return View();
+        }
+    }
 }
