@@ -10,7 +10,7 @@
             <p class="py-6">Pater is your go-to link shortening service designed to streamline your online experience. Whether you're sharing content, promoting a product, or simplifying communication, our tool ensures concise and memorable links. Say goodbye to lengthy URLs and hello to a sleek online presence. Shorten with Pater, and make every link count!</p>
         </div>
         <div class="card shrink-0 w-full max-w-sm shadow-2xl bg-base-100">
-            <form class="card-body" method="post">
+            <form class="card-body">
                 <h2 class="card-title">Shorten a Link</h2>
                 <div class="form-control">
                     <label class="label">
@@ -22,33 +22,13 @@
                     <label class="label">
                         <span class="label-text">Custom Link</span>
                     </label>
-                    <input type="password" placeholder="Sign up to use this feature" class="input input-bordered" disabled/>
+                    <input type="password"  class="input input-bordered"/>
                 </div>
                 <div class="form-control mt-6">
-                    <button class="btn btn-primary">Create</button>
+                    <a href="/Home/Signup/" class="btn btn-primary">Sign up to Create</a>
                 </div>
             </form>
-            @if (@ViewBag.Message != null)
-            {
-                @if (@ViewBag.isError == true)
-                {
-                    <div role="alert" class="alert alert-error">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                        </svg>
-                        <span>@ViewBag.Message</span>
-                    </div>
-                }
-                else
-                {
-                    <div role="alert" class="alert alert-success">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                        </svg>
-                        <span>@ViewBag.Message</span>
-                    </div>
-                }
-            }
+            
         </div>
     </div>
 </div>
