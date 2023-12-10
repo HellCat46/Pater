@@ -28,6 +28,10 @@ public class AccountModel
     public bool isVerified { get; set; }
     
     [Required]
+    [DefaultValue(Plans.Free)]
+    public Plans Plan { get; set; }
+    
+    [Required]
     public DateTime createdAt { get; set; }
     
     [Required]
@@ -49,4 +53,12 @@ public class AccountModel
     public ICollection<LinkModel> Links { get; set; }
     
     public ICollection<ActivityLogsModel> Logs { get; set; }
+
+    public enum Plans
+    {
+        Free,
+        Premium,
+        Business,
+        Custom
+    }
 }
