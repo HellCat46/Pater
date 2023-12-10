@@ -61,3 +61,34 @@
     </div>
 </div>
 
+
+@* Modals *@
+<dialog id="create" class="modal modal-bottom sm:modal-middle">
+    <div class="modal-box card">
+        <form class="card-body">
+            <h2 class="card-title">Shorten a Link</h2>
+            
+            <div class="form-control mt-2">
+                <input type="text" placeholder="Long Link" class="input input-bordered" required/>
+            </div>
+            
+            <div class="form-control mt-2">
+                <input type="text" placeholder="Name" class="input input-bordered"/>
+            </div>
+            
+            <div class="form-control mt-2">
+                <input type="text" placeholder="Custom Code" class="input input-bordered"/>
+            </div>
+            
+            <div class="form-control mt-6">
+                <button class="btn btn-primary">Create</button>
+            </div>
+        </form>
+
+        <div class="modal-action">
+            <form method="dialog">
+                <button class="btn">Close</button>
+            </form>
+            </div>
+    </div>
+</dialog>
