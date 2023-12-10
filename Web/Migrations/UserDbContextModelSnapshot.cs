@@ -26,21 +26,72 @@ namespace Web.Migrations
                 {
                     b.Property<int>("id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("int")
+                        .HasColumnOrder(0);
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("id"));
 
+                    b.Property<DateTime>("createdAt")
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("email")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnOrder(1);
+
+                    b.Property<bool>("isAdmin")
+                        .HasColumnType("bit")
+                        .HasColumnOrder(5);
+
+                    b.Property<string>("name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnOrder(3);
 
                     b.Property<string>("password")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnOrder(2);
+
+                    b.Property<string>("picPath")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnOrder(4);
 
                     b.HasKey("id");
 
                     b.ToTable("Account");
+                });
+
+            modelBuilder.Entity("Web.Models.Account.ActivityLogsModel", b =>
+                {
+                    b.Property<int>("id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("id"));
+
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("IPAddr")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Userid")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("date")
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("id");
+
+                    b.HasIndex("Userid");
+
+                    b.ToTable("ActivityLogsModel");
                 });
 
             modelBuilder.Entity("Web.Models.Account.ExternalAuthModel", b =>
@@ -71,8 +122,9 @@ namespace Web.Migrations
                     b.Property<int>("AccountId")
                         .HasColumnType("int");
 
-                    b.Property<DateOnly>("CreatedAt")
-                        .HasColumnType("date");
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("name")
                         .IsRequired()
@@ -87,6 +139,17 @@ namespace Web.Migrations
                     b.HasIndex("AccountId");
 
                     b.ToTable("Link");
+                });
+
+            modelBuilder.Entity("Web.Models.Account.ActivityLogsModel", b =>
+                {
+                    b.HasOne("Web.Models.Account.AccountModel", "User")
+                        .WithMany("Logs")
+                        .HasForeignKey("Userid")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Web.Models.Account.ExternalAuthModel", b =>
@@ -117,6 +180,8 @@ namespace Web.Migrations
                         .IsRequired();
 
                     b.Navigation("Links");
+
+                    b.Navigation("Logs");
                 });
 #pragma warning restore 612, 618
         }

@@ -16,8 +16,8 @@ public class LinkModel
     public string name { get; set; }
     
     [Required]
-    [DataType(DataType.Date)]
-    public DateOnly CreatedAt { get; set; }
+    [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
+    public DateTime CreatedAt { get; set; }
     
     public int AccountId { get; set; }
     public AccountModel Account { get; set; }
