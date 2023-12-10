@@ -57,14 +57,22 @@ public class HomeController : Controller
     [HttpPost]
     public IActionResult Login(LoginView data)
     {
-        var res= _context.Account.FirstOrDefault(acc => acc.email == data.email && acc.password == data.password);
-        Console.WriteLine(res);
-        if (res != null)
+        try
         {
-            HttpContext.Session.SetString("SessionID", res.id.ToString());
-            return RedirectToAction("Dashboard", "User");
+            var res = _context.Account.FirstOrDefault(acc => acc.email == data.email && acc.password == data.password);
+            Console.WriteLine(res);
+            if (res != null)
+            {
+                HttpContext.Session.SetString("SessionID", res.id.ToString());
+                return RedirectToAction("Dashboard", "User");
+            }
         }
-    
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex);
+            return View();
+        }
+
         return View();
     }
 
