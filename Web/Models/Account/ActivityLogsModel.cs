@@ -9,7 +9,6 @@ public class ActivityLogsModel
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public int id { get; set; }
     
-    [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
     public DateTime date { get; set; }
     
     

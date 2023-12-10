@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Web.ApplicationDbContext;
 
@@ -11,9 +12,11 @@ using Web.ApplicationDbContext;
 namespace Web.Migrations
 {
     [DbContext(typeof(UserDbContext))]
-    partial class UserDbContextModelSnapshot : ModelSnapshot
+    [Migration("20231210095122_Adds Default Values")]
+    partial class AddsDefaultValues
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -31,17 +34,12 @@ namespace Web.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("id"));
 
-                    b.Property<string>("PicPath")
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnOrder(4);
-
                     b.Property<DateTime>("createdAt")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("email")
                         .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("VARCHAR")
+                        .HasColumnType("nvarchar(max)")
                         .HasColumnOrder(1);
 
                     b.Property<bool>("isAdmin")
@@ -54,14 +52,18 @@ namespace Web.Migrations
 
                     b.Property<string>("name")
                         .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("VARCHAR")
+                        .HasColumnType("nvarchar(max)")
                         .HasColumnOrder(3);
 
                     b.Property<string>("password")
-                        .HasMaxLength(15)
-                        .HasColumnType("VARCHAR")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)")
                         .HasColumnOrder(2);
+
+                    b.Property<string>("picPath")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnOrder(4);
 
                     b.HasKey("id");
 

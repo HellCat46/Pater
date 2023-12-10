@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Web.Models.Link;
@@ -12,26 +13,36 @@ public class AccountModel
     public int id { get; set; }
     
     [Required]
-    [DataType(DataType.EmailAddress)]
-    [Column(Order = 1)]
+    [Column(Order = 1, TypeName = "VARCHAR")]
+    [StringLength(255)]
     public string email { get; set; }
     
     [Required]
+    [DefaultValue(false)]
     [Column(Order = 5)]
     public bool isAdmin { get; set; }
-
     
-    [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
+    [Required]
+    [DefaultValue(false)]
+    [Column(Order = 6)]
+    public bool isVerified { get; set; }
+    
+    [Required]
     public DateTime createdAt { get; set; }
     
-    [Column(Order = 3)]
+    [Required]
+    [Column(Order = 3, TypeName = "VARCHAR")]
+    [StringLength(20)]
     public string name { get; set; }
     
-    [Column(Order = 2)]
-    public string password { get; set; } 
+    [Column(Order = 2, TypeName = "VARCHAR")]
+    [StringLength(15)]
+    public string? password { get; set; } 
+    
     
     [Column(Order = 4)]
-    public string picPath { get; set; }
+    [DefaultValue(" ")]
+    public string? PicPath { get; set; }
     
     public ExternalAuthModel ExternalAuth { get; set; }
     
