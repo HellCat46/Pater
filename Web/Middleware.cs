@@ -12,14 +12,14 @@ public class Middleware
     public async Task InvokeAsync(HttpContext context)
     {
         String path = context.Request.Path.ToString();
-        var SessionID = context.Session.GetString("SessionID");
+        byte[]? UserData = context.Session.Get("UserData");
         
-        Console.WriteLine(path, SessionID);
-        if (path.StartsWith("/User") && SessionID == null)
+        Console.WriteLine(path, UserData);
+        if (path.StartsWith("/User") && UserData == null)
             context.Response.Redirect("/Home/Login");
-        else if (path.StartsWith("/Admin") && SessionID == null)
+        else if (path.StartsWith("/Admin") && UserData == null)
             context.Response.Redirect("/");
-        else if (path == "/" && SessionID != null)
+        else if (path == "/" && UserData != null)
             context.Response.Redirect("/User/Dashboard");
         
         
