@@ -1,8 +1,6 @@
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Web.ApplicationDbContext;
-using Web.Models.Account;
-using Web.Models.Link;
+using Web.Models;
 using Web.Models.View.User;
 
 namespace Web.Controllers;
@@ -17,27 +15,28 @@ public class UserController : Controller
     }
     public IActionResult Dashboard()
     {
-        var sessionId = HttpContext.Session.GetString("SessionID");
-        if (sessionId == null)
-            return RedirectToAction("Index", "Home");
-        
-        AccountModel? account = _context.Account.FirstOrDefault(model => model.id == Int32.Parse(sessionId));
-        if (account == null)
+        byte[]? bytes = HttpContext.Session.Get("UserData");
+        Console.Write(bytes);
+        if (bytes == null)
         {
             HttpContext.Session.Clear();
-            return RedirectToAction("Index", "Home");
+            return RedirectToAction("Login", "Home");
         }
-        
+        UserData data = UserData.Deserialize(bytes);
         return View(new DashboardView()
         {
-            UserName = account.name,
-            UserIsAdmin = account.isAdmin,
-            UserPicPath = account.PicPath,
-            UserPlan = account.Plan,
+            UserName = data.UserName,
+            UserIsAdmin = data.UserisAdmin,
+            UserPicPath = data.PicPath,
+            UserPlan = data.UserPlan,
             links = _context.Link.Where(model => model.AccountId == 1 ).ToList()
         });
     }
-    
+
+    public IActionResult Profile()
+    {
+        return View();
+    }
     public IActionResult Checkout()
     {
         return View();

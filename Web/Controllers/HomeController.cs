@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Web.ApplicationDbContext;
+using Web.Models;
 using Web.Models.Account;
 using Web.Models.View;
 using Web.Models.Link;
@@ -48,7 +49,7 @@ public class HomeController : Controller
     
     public IActionResult Login()
     {
-        if (HttpContext.Session.GetString("SessionID") != null)
+        if (HttpContext.Session.Get("UserData") != null)
             return RedirectToAction("Dashboard", "User");
         
         return View();
@@ -59,11 +60,22 @@ public class HomeController : Controller
     {
         try
         {
-            var res = _context.Account.FirstOrDefault(acc => acc.email == data.email && acc.password == data.password);
-            Console.WriteLine(res);
-            if (res != null)
+            var account = _context.Account.FirstOrDefault(acc => acc.email == data.email && acc.password == data.password);
+            Console.WriteLine(account);
+            if (account != null)
             {
-                HttpContext.Session.SetString("SessionID", res.id.ToString());
+                UserData userData = new UserData()
+                {
+                    UserId = account.id,
+                    UserName = account.name,
+                    UserEmail = account.email,
+                    UserPassword = account.password,
+                    PicPath = account.PicPath,
+                    UserisAdmin = account.isAdmin,
+                    UserisVerified = account.isVerified,
+                    UserPlan = account.Plan
+                };
+                HttpContext.Session.Set("UserData", UserData.Serialize(userData));
                 return RedirectToAction("Dashboard", "User");
             }
         }
@@ -78,7 +90,7 @@ public class HomeController : Controller
 
     public IActionResult Signup()
     {
-        if (HttpContext.Session.GetString("SessionID") != null)
+        if (HttpContext.Session.Get("UserData") != null)
             return RedirectToAction("Dashboard", "User");
         
         return View();
@@ -97,10 +109,21 @@ public class HomeController : Controller
                 name = data.name
             });
             _context.SaveChanges();
-            var acc = _context.Account.FirstOrDefault(acc => acc.email == data.email && acc.password == data.password);
-            if (acc != null)
+            var account = _context.Account.FirstOrDefault(acc => acc.email == data.email && acc.password == data.password);
+            if (account != null)
             {
-                HttpContext.Session.SetString("SessionID", acc.id.ToString());
+                UserData userData = new UserData()
+                {
+                    UserId = account.id,
+                    UserName = account.name,
+                    UserEmail = account.email,
+                    UserPassword = account.password,
+                    PicPath = account.PicPath,
+                    UserisAdmin = account.isAdmin,
+                    UserisVerified = account.isVerified,
+                    UserPlan = account.Plan
+                };
+                HttpContext.Session.Set("UserData", UserData.Serialize(userData));
             }
             return RedirectToAction("Dashboard", "User");
         }
