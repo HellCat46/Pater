@@ -45,7 +45,7 @@ public class AccountModel
     
     
     [Column(Order = 4)]
-    [DefaultValue(" ")]
+    [StringLength(41)]
     public string? PicPath { get; set; }
     
     public ExternalAuthModel ExternalAuth { get; set; }
