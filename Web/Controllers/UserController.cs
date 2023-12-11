@@ -17,22 +17,23 @@ public class UserController : Controller
     }
     public IActionResult Dashboard()
     {
-        var SessionID = HttpContext.Session.GetString("SessionID");
-        if (SessionID == null)
+        var sessionId = HttpContext.Session.GetString("SessionID");
+        if (sessionId == null)
             return RedirectToAction("Index", "Home");
         
-        AccountModel? Account = _context.Account.FirstOrDefault(model => model.id == Int32.Parse(SessionID));
-        if (Account == null)
+        AccountModel? account = _context.Account.FirstOrDefault(model => model.id == Int32.Parse(sessionId));
+        if (account == null)
         {
             HttpContext.Session.Clear();
             return RedirectToAction("Index", "Home");
         }
-
+        
         return View(new DashboardView()
         {
-            UserName = Account.name,
-            UserIsAdmin = Account.isAdmin,
-            UserPicPath = Account.PicPath,
+            UserName = account.name,
+            UserIsAdmin = account.isAdmin,
+            UserPicPath = account.PicPath,
+            UserPlan = account.Plan,
             links = _context.Link.Where(model => model.AccountId == 1 ).ToList()
         });
     }
