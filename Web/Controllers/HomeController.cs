@@ -60,22 +60,12 @@ public class HomeController : Controller
     {
         try
         {
-            var account = _context.Account.FirstOrDefault(acc => acc.email == data.email && acc.password == data.password);
+            AccountModel? account = _context.Account.FirstOrDefault(acc => acc.email == data.email && acc.password == data.password);
             Console.WriteLine(account);
             if (account != null)
             {
-                UserData userData = new UserData()
-                {
-                    UserId = account.id,
-                    UserName = account.name,
-                    UserEmail = account.email,
-                    UserPassword = account.password,
-                    PicPath = account.PicPath,
-                    UserisAdmin = account.isAdmin,
-                    UserisVerified = account.isVerified,
-                    UserPlan = account.Plan
-                };
-                HttpContext.Session.Set("UserData", UserData.Serialize(userData));
+                
+                HttpContext.Session.Set("UserData", AccountModel.Serialize(account));
                 return RedirectToAction("Dashboard", "User");
             }
         }
@@ -109,21 +99,10 @@ public class HomeController : Controller
                 name = data.name
             });
             _context.SaveChanges();
-            var account = _context.Account.FirstOrDefault(acc => acc.email == data.email && acc.password == data.password);
+            AccountModel? account = _context.Account.FirstOrDefault(acc => acc.email == data.email && acc.password == data.password);
             if (account != null)
             {
-                UserData userData = new UserData()
-                {
-                    UserId = account.id,
-                    UserName = account.name,
-                    UserEmail = account.email,
-                    UserPassword = account.password,
-                    PicPath = account.PicPath,
-                    UserisAdmin = account.isAdmin,
-                    UserisVerified = account.isVerified,
-                    UserPlan = account.Plan
-                };
-                HttpContext.Session.Set("UserData", UserData.Serialize(userData));
+                HttpContext.Session.Set("UserData", AccountModel.Serialize(account));
             }
             return RedirectToAction("Dashboard", "User");
         }

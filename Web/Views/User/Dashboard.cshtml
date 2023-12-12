@@ -1,9 +1,9 @@
 @using Web.Models.View.User
 @model DashboardView
 @{
+    ViewData["Title"] = "Dashboard | Pater";
     Layout = "_UserLayout";
 }
-
 @Html.Partial("_Header", new _HeaderView()
 {
     isAdmin = Model.UserIsAdmin,

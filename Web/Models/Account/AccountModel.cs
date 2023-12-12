@@ -1,7 +1,9 @@
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json;
 using Web.Models.Link;
+
 
 namespace Web.Models.Account;
 
@@ -60,5 +62,13 @@ public class AccountModel
         Premium,
         Business,
         Custom
+    }
+    public static byte[] Serialize(AccountModel account)
+    {
+        return JsonSerializer.SerializeToUtf8Bytes(account);
+    }
+    public static AccountModel Deserialize(byte[] bytes)
+    {
+        return JsonSerializer.Deserialize<AccountModel>(bytes);
     }
 }
