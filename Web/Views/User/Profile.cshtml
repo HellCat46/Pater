@@ -1,0 +1,98 @@
+@using Web.Models.View.User
+@model Web.Models.View.User.ProfileView
+@{
+    ViewData["Title"] = "Profile | Pater";
+    Layout = "_UserLayout";
+}
+@Html.Partial("_Header", new _HeaderView()
+{
+    isAdmin = Model.UserIsAdmin,
+    name = Model.UserName,
+    picPath = Model.UserPicPath,
+    plan = Model.UserPlan
+})
+
+<div class="my-10 flex flex-col h-screen">
+    <form class="flex flex-col">
+        <div class="flex w-auto items-center justify-center py-6">
+            <div class="py-3 center mx-auto">
+                <div class="bg-base-300 px-4 py-5 rounded-lg shadow-lg text-center w-48">
+                    <div class="mb-4">
+                        <img class="w-auto mx-auto rounded-full object-cover object-center" src="~/UserPics/@(Model.UserPicPath == null ? "default-avatar.svg" : Model.UserPicPath)" alt="Avatar"/>
+                    </div>
+                    <label class="cursor-pointer mt-6">
+                        <span class="mt-2 text-base leading-normal px-4 py-2 bg-blue-500 text-white text-sm rounded-full">Select Avatar</span>
+                        <input type='file' class="hidden" :multiple="multiple" :accept="accept"/>
+                    </label>
+                </div>
+            </div>
+        </div>
+        <div class="flex w-auto flex-row items-center py-6">
+            <div class="grow">
+                <div class="form-control items-center">
+                    <input type="email" placeholder=@Model.UserName class="input input-bordered w-96" asp-for="NewName" on="@Model.Changes = true"  />
+                </div>
+            </div>
+            <div class="grow">
+                <div class="form-control items-center">
+                    <input type="email" placeholder=@Model.UserEmail class="input input-bordered w-96" asp-for="NewEmail" onchange="@Model.Changes = true"/>
+                </div>
+            </div>
+        </div>
+        <div class="flex justify-center items-center py-6">
+            <button type="reset" class="btn @(!Model.Changes ? "btn-disabled" : "btn-secondary" ) mx-2">Reset</button>
+            <button class="btn @(!Model.Changes ? "btn-disabled" : "btn-success" ) mx-2">Save</button>
+        </div>
+    </form>
+    <div class="flex justify-center items-center pt-20">
+        <button class="btn btn-info" onclick="change_pass.showModal()">Reset Password</button>
+    </div>
+    <div class="flex justify-center items-center py-12">
+        <button class="btn btn-error" onclick="delete_acc.showModal()">Delete Account</button>
+    </div>
+</div>
+
+@* Modals *@
+<dialog id="change_pass" class="modal modal-bottom sm:modal-middle">
+    <div class="modal-box card">
+        <form class="card-body" method="post" asp-action="CreateLink">
+            <h2 class="card-title justify-center mb-6">Change Password</h2>
+            <div class="form-control mt-2">
+                <input type="text" placeholder="Old Password" class="input input-bordered" asp-for="OldPassword"/>
+            </div>
+            
+            <div class="form-control mt-2">
+                <input type="text" placeholder="New Password" class="input input-bordered" asp-for="NewPassword"/>
+            </div>
+            
+            <div class="form-control mt-6">
+                <button class="btn btn-primary">Change Password</button>
+            </div>
+        </form>
+
+        <div class="modal-action">
+            <form method="dialog">
+                <button class="btn">Close</button>
+            </form>
+        </div>
+    </div>
+</dialog>
+
+@* Modals *@
+<dialog id="delete_acc" class="modal modal-bottom sm:modal-middle">
+    <div class="modal-box card">
+        <form class="card-body" method="post" asp-action="DeleteAccount">
+            <h2 class="card-title justify-center mb-6">Delete Password</h2>
+            <p class="py-4">This action will permanently delete all information including your Personal Info, Billing Info and all the links associated with your account.</p>
+            <div class="form-control my-6">
+                <button class="btn btn-error" asp-action="DeleteAccount">Delete Account</button>
+            </div>
+        </form>
+
+        <div class="modal-action">
+            <form method="dialog">
+                <button class="btn">Close</button>
+            </form>
+        </div>
+    </div>
+</dialog>

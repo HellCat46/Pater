@@ -105,8 +105,45 @@ public class UserController : Controller
         };
     }
     
-    
-    
+    [HttpPost]
+    public IActionResult ChangePassword()
+    {
+        return Redirect("Profile");
+    }
+
+    public IActionResult DeleteAccount()
+    {
+        byte[]? bytes = HttpContext.Session.Get("UserData");
+        if (bytes == null)
+        {
+            HttpContext.Session.Clear();
+            return RedirectToAction("Login", "Home");
+        }
+        AccountModel account = AccountModel.Deserialize(bytes);
+        try
+        {
+            _context.Account.Remove(_context.Account.Single(acc => acc.id == account.id));
+
+            var links = _context.Link.Where(link => link.AccountId == account.id);
+            foreach (LinkModel link in links)
+            {
+                _context.Link.Remove(link);
+            }
+            var logs = _context.ActivityLogs.Where(logs => logs.Userid == account.id);
+            foreach (ActivityLogModel log in logs)
+            {
+                _context.ActivityLogs.Remove(log);
+            }
+            _context.SaveChanges();
+            HttpContext.Session.Clear();
+            return RedirectToAction("Index", "Home");
+        }
+        catch (Exception ex)
+        {
+            Console.Write(ex);
+            return RedirectToAction("Profile");
+        }
+    }
     // Non-Action Functions
     private string GenerateRandom(int len)
     {
