@@ -70,7 +70,43 @@ public class UserController : Controller
         HttpContext.Session.Clear();
         return RedirectToAction("Index", "Home");
     }
-
+    [HttpPost]
+    public IActionResult CreateLink(CreateLinkView link)
+    {
+        if (!ModelState.IsValid)
+        {
+            return View("Dashboard");
+        }
+    
+        byte[]? bytes = HttpContext.Session.Get("UserData");
+        if (bytes == null)
+        {
+            HttpContext.Session.Clear();
+            return RedirectToAction("Login", "Home");
+        }
+        AccountModel account = AccountModel.Deserialize(bytes);
+        try
+        {
+            _context.Link.Add(new LinkModel()
+            {
+                AccountId = account.id,
+                code = (link.NewLinkCode != null ? link.NewLinkCode : GenerateRandom(8)),
+                CreatedAt = DateTime.Now,
+                name = (link.NewLinkName != null ? link.NewLinkName : DateTime.Now.ToString()),
+                url = link.NewLinkURL
+            });
+            _context.SaveChanges();
+            return RedirectToAction("Dashboard");
+        }
+        catch (Exception ex)
+        {
+            Console.Write(ex);
+            return RedirectToAction("Dashboard");
+        };
+    }
+    
+    
+    
     // Non-Action Functions
     private string GenerateRandom(int len)
     {
