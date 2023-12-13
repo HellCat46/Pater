@@ -15,6 +15,7 @@ public class UserController : Controller
     {
         _context = context;
     }
+
     public IActionResult Dashboard()
     {
         byte[]? bytes = HttpContext.Session.Get("UserData");
@@ -23,6 +24,7 @@ public class UserController : Controller
             HttpContext.Session.Clear();
             return RedirectToAction("Login", "Home");
         }
+
         AccountModel account = AccountModel.Deserialize(bytes);
         return View(new DashboardView()
         {
@@ -30,10 +32,10 @@ public class UserController : Controller
             UserIsAdmin = account.isAdmin,
             UserPicPath = account.PicPath,
             UserPlan = account.Plan,
-            links = _context.Link.Where(model => model.AccountId == account.id ).ToList()
+            links = _context.Link.Where(model => model.AccountId == account.id).ToList()
         });
     }
-    
+
     public IActionResult Profile()
     {
         byte[]? bytes = HttpContext.Session.Get("UserData");
@@ -42,6 +44,7 @@ public class UserController : Controller
             HttpContext.Session.Clear();
             return RedirectToAction("Login", "Home");
         }
+
         AccountModel account = AccountModel.Deserialize(bytes);
         return View(new ProfileView()
         {
@@ -53,23 +56,25 @@ public class UserController : Controller
             Changes = false
         });
     }
+
     public IActionResult Checkout()
     {
         return View();
     }
+
     public IActionResult Details()
     {
         return View();
     }
 
-    
-    
+
     // Non-Page Actions
     public IActionResult Logout()
     {
         HttpContext.Session.Clear();
         return RedirectToAction("Index", "Home");
     }
+
     [HttpPost]
     public IActionResult CreateLink(CreateLinkView link)
     {
@@ -77,13 +82,14 @@ public class UserController : Controller
         {
             return View("Dashboard");
         }
-    
+
         byte[]? bytes = HttpContext.Session.Get("UserData");
         if (bytes == null)
         {
             HttpContext.Session.Clear();
             return RedirectToAction("Login", "Home");
         }
+
         AccountModel account = AccountModel.Deserialize(bytes);
         try
         {
@@ -102,9 +108,54 @@ public class UserController : Controller
         {
             Console.Write(ex);
             return RedirectToAction("Dashboard");
-        };
+        }
+
+        ;
     }
-    
+
+    [HttpPost]
+    public IActionResult ChangeAvatar(IFormFile file)
+    {
+        if (file == null)
+        {
+            return View("Profile");
+        }
+
+        try
+        {
+            byte[]? bytes = HttpContext.Session.Get("UserData");
+            if (bytes == null)
+            {
+                HttpContext.Session.Clear();
+                return RedirectToAction("Login", "Home");
+            }
+            AccountModel account = AccountModel.Deserialize(bytes);
+
+            if (System.IO.File.Exists( "wwwroot/UserPics/" +account.PicPath))
+            {
+                System.IO.File.Delete("wwwroot/UserPics/" + account.PicPath);
+            }
+
+            using (var fileStream = System.IO.File.Create("wwwroot/UserPics/" + file.FileName)){
+                file.CopyTo(fileStream);
+                fileStream.Close();
+            }
+            
+
+            account.PicPath = file.FileName;
+
+            _context.Account.Update(account);
+            _context.SaveChanges();
+            HttpContext.Session.Set("UserData", AccountModel.Serialize(account));
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex);
+        }
+
+        return RedirectToAction("Profile");
+    }
+
     [HttpPost]
     public IActionResult ChangePassword()
     {
@@ -119,6 +170,7 @@ public class UserController : Controller
             HttpContext.Session.Clear();
             return RedirectToAction("Login", "Home");
         }
+
         AccountModel account = AccountModel.Deserialize(bytes);
         try
         {
@@ -129,11 +181,13 @@ public class UserController : Controller
             {
                 _context.Link.Remove(link);
             }
+
             var logs = _context.ActivityLogs.Where(logs => logs.Userid == account.id);
             foreach (ActivityLogModel log in logs)
             {
                 _context.ActivityLogs.Remove(log);
             }
+
             _context.SaveChanges();
             HttpContext.Session.Clear();
             return RedirectToAction("Index", "Home");
@@ -144,6 +198,7 @@ public class UserController : Controller
             return RedirectToAction("Profile");
         }
     }
+
     // Non-Action Functions
     private string GenerateRandom(int len)
     {
@@ -157,5 +212,4 @@ public class UserController : Controller
 
         return code;
     }
-    
 }

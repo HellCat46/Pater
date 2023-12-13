@@ -13,7 +13,7 @@ public class ProfileView
     
     
     public bool Changes { get; set; }
-    public IFormFile File { get; set; }
+    public IFormFile file { get; set; }
     public string NewName { get; set; }
     public string NewEmail { get; set; }
     public string OldPassword { get; set; }
