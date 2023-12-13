@@ -64,8 +64,15 @@ public class HomeController : Controller
             Console.WriteLine(account);
             if (account != null)
             {
-                
                 HttpContext.Session.Set("UserData", AccountModel.Serialize(account));
+                _context.ActivityLogs.Add(new ActivityLogModel()
+                {
+                    Action = account.name + " Logged in with Email.",
+                    date = DateTime.Now,
+                    IPAddr = "0.0.0.0",
+                    Userid = account.id
+                });
+                _context.SaveChanges();
                 return RedirectToAction("Dashboard", "User");
             }
         }
@@ -87,8 +94,13 @@ public class HomeController : Controller
     }
 
     [HttpPost]
+    [ValidateAntiForgeryToken]
     public IActionResult Signup(SignupView data)
-    { 
+    {
+        if (!ModelState.IsValid)
+        {
+            return View();
+        }
         try
         {
             _context.Account.Add(new AccountModel()
@@ -98,11 +110,20 @@ public class HomeController : Controller
                 createdAt = DateTime.Now,
                 name = data.name
             });
+            
             _context.SaveChanges();
             AccountModel? account = _context.Account.FirstOrDefault(acc => acc.email == data.email && acc.password == data.password);
             if (account != null)
             {
                 HttpContext.Session.Set("UserData", AccountModel.Serialize(account));
+                _context.ActivityLogs.Add(new ActivityLogModel()
+                {
+                    Action = account.name + " just Signed up with Email.",
+                    date = DateTime.Now,
+                    IPAddr = "0.0.0.0",
+                    Userid = account.id
+                });
+                _context.SaveChanges();
             }
             return RedirectToAction("Dashboard", "User");
         }
@@ -112,4 +133,6 @@ public class HomeController : Controller
             return View();
         }
     }
+    
+    
 }
