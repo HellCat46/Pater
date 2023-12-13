@@ -14,4 +14,5 @@ public class UserDbContext : DbContext
     public DbSet<LinkModel> Link { get; set; }
     public DbSet<AccountModel> Account { get; set; }
     public DbSet<ExternalAuthModel> ExternalAuth { get; set; }
+    public DbSet<ActivityLogModel> ActivityLogs { get; set; }
 }

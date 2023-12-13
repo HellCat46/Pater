@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Web.ApplicationDbContext;
 
@@ -11,9 +12,11 @@ using Web.ApplicationDbContext;
 namespace Web.Migrations
 {
     [DbContext(typeof(UserDbContext))]
-    partial class UserDbContextModelSnapshot : ModelSnapshot
+    [Migration("20231212040721_Remove DatabaseGenerated Annotation")]
+    partial class RemoveDatabaseGeneratedAnnotation
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -63,7 +66,7 @@ namespace Web.Migrations
                         .HasColumnOrder(3);
 
                     b.Property<string>("password")
-                        .HasMaxLength(50)
+                        .HasMaxLength(15)
                         .HasColumnType("VARCHAR")
                         .HasColumnOrder(2);
 
@@ -72,7 +75,7 @@ namespace Web.Migrations
                     b.ToTable("Account");
                 });
 
-            modelBuilder.Entity("Web.Models.Account.ActivityLogModel", b =>
+            modelBuilder.Entity("Web.Models.Account.ActivityLogsModel", b =>
                 {
                     b.Property<int>("id")
                         .ValueGeneratedOnAdd()
@@ -98,7 +101,7 @@ namespace Web.Migrations
 
                     b.HasIndex("Userid");
 
-                    b.ToTable("ActivityLogs");
+                    b.ToTable("ActivityLogsModel");
                 });
 
             modelBuilder.Entity("Web.Models.Account.ExternalAuthModel", b =>
@@ -146,7 +149,7 @@ namespace Web.Migrations
                     b.ToTable("Link");
                 });
 
-            modelBuilder.Entity("Web.Models.Account.ActivityLogModel", b =>
+            modelBuilder.Entity("Web.Models.Account.ActivityLogsModel", b =>
                 {
                     b.HasOne("Web.Models.Account.AccountModel", "User")
                         .WithMany("Logs")

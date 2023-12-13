@@ -42,7 +42,7 @@ public class AccountModel
     public string name { get; set; }
     
     [Column(Order = 2, TypeName = "VARCHAR")]
-    [StringLength(15)]
+    [StringLength(50)]
     public string? password { get; set; } 
     
     
@@ -54,7 +54,7 @@ public class AccountModel
     
     public ICollection<LinkModel> Links { get; set; }
     
-    public ICollection<ActivityLogsModel> Logs { get; set; }
+    public ICollection<ActivityLogModel> Logs { get; set; }
 
     public enum Plans
     {

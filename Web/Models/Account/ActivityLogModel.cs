@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Web.Models.Account;
 
-public class ActivityLogsModel
+public class ActivityLogModel
 {
     [Key]
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
