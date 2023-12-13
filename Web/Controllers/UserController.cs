@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 using Web.ApplicationDbContext;
 using Web.Models;
+using Web.Models.Account;
+using Web.Models.Link;
 using Web.Models.View.User;
 
 namespace Web.Controllers;
@@ -16,26 +18,40 @@ public class UserController : Controller
     public IActionResult Dashboard()
     {
         byte[]? bytes = HttpContext.Session.Get("UserData");
-        Console.Write(bytes);
         if (bytes == null)
         {
             HttpContext.Session.Clear();
             return RedirectToAction("Login", "Home");
         }
-        UserData data = UserData.Deserialize(bytes);
+        AccountModel account = AccountModel.Deserialize(bytes);
         return View(new DashboardView()
         {
-            UserName = data.UserName,
-            UserIsAdmin = data.UserisAdmin,
-            UserPicPath = data.PicPath,
-            UserPlan = data.UserPlan,
-            links = _context.Link.Where(model => model.AccountId == 1 ).ToList()
+            UserName = account.name,
+            UserIsAdmin = account.isAdmin,
+            UserPicPath = account.PicPath,
+            UserPlan = account.Plan,
+            links = _context.Link.Where(model => model.AccountId == account.id ).ToList()
         });
     }
-
+    
     public IActionResult Profile()
     {
-        return View();
+        byte[]? bytes = HttpContext.Session.Get("UserData");
+        if (bytes == null)
+        {
+            HttpContext.Session.Clear();
+            return RedirectToAction("Login", "Home");
+        }
+        AccountModel account = AccountModel.Deserialize(bytes);
+        return View(new ProfileView()
+        {
+            UserName = account.name,
+            UserEmail = account.email,
+            UserPicPath = account.PicPath,
+            UserPlan = account.Plan,
+            UserIsAdmin = account.isAdmin,
+            Changes = false
+        });
     }
     public IActionResult Checkout()
     {
@@ -45,20 +61,17 @@ public class UserController : Controller
     {
         return View();
     }
-    public IActionResult Settings()
-    {
-        return View();
-        
-    }
 
-
+    
+    
+    // Non-Page Actions
     public IActionResult Logout()
     {
         HttpContext.Session.Clear();
         return RedirectToAction("Index", "Home");
     }
-    
-    
+
+    // Non-Action Functions
     private string GenerateRandom(int len)
     {
         const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
@@ -71,4 +84,5 @@ public class UserController : Controller
 
         return code;
     }
+    
 }
