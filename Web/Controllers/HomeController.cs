@@ -61,18 +61,11 @@ public class HomeController : Controller
         try
         {
             AccountModel? account = _context.Account.FirstOrDefault(acc => acc.email == data.email && acc.password == data.password);
-            Console.WriteLine(account);
             if (account != null)
             {
                 HttpContext.Session.Set("UserData", AccountModel.Serialize(account));
-                _context.ActivityLogs.Add(new ActivityLogModel()
-                {
-                    Action = account.name + " Logged in with Email.",
-                    date = DateTime.Now,
-                    IPAddr = "0.0.0.0",
-                    Userid = account.id
-                });
-                _context.SaveChanges();
+                ActivityLogModel.WriteLogs(_context, ActivityLogModel.Event.EmailLoggedIn, account, "0.0.0.0");
+                Console.Write(account.ToString());
                 return RedirectToAction("Dashboard", "User");
             }
         }
@@ -116,14 +109,7 @@ public class HomeController : Controller
             if (account != null)
             {
                 HttpContext.Session.Set("UserData", AccountModel.Serialize(account));
-                _context.ActivityLogs.Add(new ActivityLogModel()
-                {
-                    Action = account.name + " just Signed up with Email.",
-                    date = DateTime.Now,
-                    IPAddr = "0.0.0.0",
-                    Userid = account.id
-                });
-                _context.SaveChanges();
+                ActivityLogModel.WriteLogs(_context, ActivityLogModel.Event.EmailSignedIn, account, "0.0.0.0");
             }
             return RedirectToAction("Dashboard", "User");
         }

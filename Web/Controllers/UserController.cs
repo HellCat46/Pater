@@ -71,17 +71,26 @@ public class UserController : Controller
     // Non-Page Actions
     public IActionResult Logout()
     {
+        byte[]? bytes = HttpContext.Session.Get("UserData");
         HttpContext.Session.Clear();
+        
+        if (bytes == null)
+        {
+            HttpContext.Session.Clear();
+            return RedirectToAction("Login", "Home");
+        }
+        ActivityLogModel.WriteLogs(_context, ActivityLogModel.Event.LoggedOut, AccountModel.Deserialize(bytes), "0.0.0.0");
+        
         return RedirectToAction("Index", "Home");
     }
 
     [HttpPost]
     public IActionResult CreateLink(CreateLinkView link)
     {
-        if (!ModelState.IsValid)
-        {
-            return View("Dashboard");
-        }
+        // if (!ModelState.IsValid)
+        // {
+        //     return RedirectToAction("Dashboard");
+        // }
 
         byte[]? bytes = HttpContext.Session.Get("UserData");
         if (bytes == null)
@@ -102,6 +111,7 @@ public class UserController : Controller
                 url = link.NewLinkURL
             });
             _context.SaveChanges();
+            ActivityLogModel.WriteLogs(_context, ActivityLogModel.Event.CreatedLink, account, "0.0.0.0");
             return RedirectToAction("Dashboard");
         }
         catch (Exception ex)
@@ -136,17 +146,16 @@ public class UserController : Controller
                 System.IO.File.Delete("wwwroot/UserPics/" + account.PicPath);
             }
 
-            using (var fileStream = System.IO.File.Create("wwwroot/UserPics/" + file.FileName)){
+            account.PicPath = Guid.NewGuid() + "." + file.FileName.Split(".").Last();
+            using (var fileStream = System.IO.File.Create("wwwroot/UserPics/" + account.PicPath)){
                 file.CopyTo(fileStream);
                 fileStream.Close();
             }
-            
-
-            account.PicPath = file.FileName;
 
             _context.Account.Update(account);
             _context.SaveChanges();
             HttpContext.Session.Set("UserData", AccountModel.Serialize(account));
+            ActivityLogModel.WriteLogs(_context, ActivityLogModel.Event.ChangedAvatar, account, "0.0.0.0");
         }
         catch (Exception ex)
         {
