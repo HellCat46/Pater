@@ -52,8 +52,7 @@ public class UserController : Controller
             UserEmail = account.email,
             UserPicPath = account.PicPath,
             UserPlan = account.Plan,
-            UserIsAdmin = account.isAdmin,
-            Changes = false
+            UserIsAdmin = account.isAdmin
         });
     }
 
@@ -166,8 +165,35 @@ public class UserController : Controller
     }
 
     [HttpPost]
-    public IActionResult ChangePassword()
+    public IActionResult ChangePassword(string oldPassword, string newPassword)
     {
+        try
+        {
+            byte[]? bytes = HttpContext.Session.Get("UserData");
+
+            if (bytes == null)
+            {
+                HttpContext.Session.Clear();
+                return RedirectToAction("Login", "Home");
+            }
+
+            AccountModel account = AccountModel.Deserialize(bytes);
+
+            if (account.password == oldPassword)
+            {
+                account.password = newPassword;
+                _context.Account.Update(account);
+                _context.SaveChanges();
+            
+                HttpContext.Session.Set("UserData", AccountModel.Serialize(account));
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.Write(ex);
+            
+        }
+
         return Redirect("Profile");
     }
 

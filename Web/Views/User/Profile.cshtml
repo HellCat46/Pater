@@ -20,10 +20,10 @@
                         <img class="w-auto mx-auto rounded-full object-cover object-center" src="~/UserPics/@(Model.UserPicPath == null ? "default-avatar.svg" : Model.UserPicPath)" alt="Avatar"/>
                     </div>
                     <label class="cursor-pointer mt-6">
-                        <span class="mt-2 text-base leading-normal px-4 py-2 bg-blue-500 text-white text-sm rounded-full">Select Avatar</span>
+                        <span class="mt-2 text-base leading-normal px-4 py-2 bg-blue-500 text-white text-sm rounded-full">Change Avatar</span>
                         <form class="hidden" method="post" asp-action="ChangeAvatar" enctype="multipart/form-data">
                             <input type="file" asp-for="file" class="hidden" accept="image/*" oninput="SubmitAvtChng()"/>
-                            <button id="imgsubmit"></button>
+                            <button id="imgSubmit"></button>
                         </form>
                     </label>
                 </div>
@@ -32,18 +32,18 @@
         <div class="flex w-auto flex-row items-center py-6">
             <div class="grow">
                 <div class="form-control items-center">
-                    <input type="email" placeholder=@Model.UserName class="input input-bordered w-96" asp-for="NewName" on="@Model.Changes = true"  />
+                    <input type="email" placeholder=@Model.UserName class="input input-bordered w-96" asp-for="NewName" />
                 </div>
             </div>
             <div class="grow">
                 <div class="form-control items-center">
-                    <input type="email" placeholder=@Model.UserEmail class="input input-bordered w-96" asp-for="NewEmail" onchange="@Model.Changes = true"/>
+                    <input type="email" placeholder=@Model.UserEmail class="input input-bordered w-96" asp-for="NewEmail" />
                 </div>
             </div>
         </div>
         <div class="flex justify-center items-center py-6">
-            <button type="reset" class="btn @(!Model.Changes ? "btn-disabled" : "btn-secondary" ) mx-2">Reset</button>
-            <button class="btn @(!Model.Changes ? "btn-disabled" : "btn-success" ) mx-2">Save</button>
+            <button type="reset" class="btn btn-secondary mx-2">Reset</button>
+            <button class="btn btn-success mx-2">Save</button>
         </div>
     <div class="flex justify-center items-center pt-20">
         <button class="btn btn-info" onclick="change_pass.showModal()">Reset Password</button>
@@ -53,21 +53,25 @@
     </div>
 </div>
 
+
+
 @* Modals *@
+@* Change Password *@
 <dialog id="change_pass" class="modal modal-bottom sm:modal-middle">
     <div class="modal-box card">
-        <form class="card-body" method="post" asp-action="CreateLink">
+        <form class="card-body" method="post" asp-action="ChangePassword">
             <h2 class="card-title justify-center mb-6">Change Password</h2>
             <div class="form-control mt-2">
-                <input type="text" placeholder="Old Password" class="input input-bordered" asp-for="OldPassword"/>
+                <input type="text" placeholder="Old Password" class="input input-bordered" asp-for="oldPassword" required/>
             </div>
             
             <div class="form-control mt-2">
-                <input type="text" placeholder="New Password" class="input input-bordered" asp-for="NewPassword"/>
+                <input type="text" placeholder="New Password" class="input input-bordered" asp-for="newPassword" id="newPass" oninput="CheckPass('newPass')" required/>
+                <span class="hidden text-error m-2" id="passError">Password doesn't meet the requirements. (Minimum 8 Character, 1 Number, 1 Lowercase and 1 Uppercase)</span>
             </div>
             
             <div class="form-control mt-6">
-                <button class="btn btn-primary">Change Password</button>
+                <button id="submitPass" class="btn btn-primary">Change Password</button>
             </div>
         </form>
 
@@ -79,7 +83,7 @@
     </div>
 </dialog>
 
-@* Modals *@
+@* Delete Account *@
 <dialog id="delete_acc" class="modal modal-bottom sm:modal-middle">
     <div class="modal-box card">
         <form class="card-body" method="post" asp-action="DeleteAccount">
@@ -100,6 +104,19 @@
 
 <script>
     function SubmitAvtChng(){
-        document.querySelector("#imgsubmit").click();
+        $("#imgSubmit").click();
+    }
+    
+    function CheckPass(id){
+        const newPass = document.querySelector(`#${id}`);
+        // Double At is used because Razor Page uses single one for their syntax. 
+        // Remove one At from the pair if you want to use it anywhere other than razor page.
+        if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{8,50}$/.test(newPass.value)){
+            $("#passError").css("display", "block");
+            $("#submitPass").prop("disabled", true);
+        }else {
+            $("#passError").css("display", "none");
+            $("#submitPass").prop("disabled", false);
+        }
     }
 </script>

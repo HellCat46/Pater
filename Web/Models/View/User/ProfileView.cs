@@ -11,14 +11,18 @@ public class ProfileView
     public bool UserIsAdmin { get; set; }
     public string UserEmail { get; set; }
     
-    
-    public bool Changes { get; set; }
+    // Change Avatar/Profile Picture
     public IFormFile file { get; set; }
+    
+    // Change Name and Email
     public string NewName { get; set; }
     public string NewEmail { get; set; }
-    public string OldPassword { get; set; }
+    
+    
     // Change Password
-    public string NewPassword { get; set; }
+    public string oldPassword { get; set; }
+    public string newPassword { get; set; }
+    
     
     // Delete Account
     public bool Delete { get; set; }
