@@ -15,8 +15,8 @@ public class ProfileView
     public IFormFile file { get; set; }
     
     // Change Name and Email
-    public string NewName { get; set; }
-    public string NewEmail { get; set; }
+    public string newName { get; set; }
+    public string newEmail { get; set; }
     
     
     // Change Password

@@ -68,21 +68,39 @@ public class UserController : Controller
 
 
     // Non-Page Actions
-    public IActionResult Logout()
+    [HttpPost]
+    public IActionResult UpdateNameMail(string newName, string newEmail)
     {
-        byte[]? bytes = HttpContext.Session.Get("UserData");
-        HttpContext.Session.Clear();
+        if (newName == null && newEmail == null) return RedirectToAction("Profile");
         
-        if (bytes == null)
+        try
         {
-            HttpContext.Session.Clear();
-            return RedirectToAction("Login", "Home");
-        }
-        ActivityLogModel.WriteLogs(_context, ActivityLogModel.Event.LoggedOut, AccountModel.Deserialize(bytes), "0.0.0.0");
-        
-        return RedirectToAction("Index", "Home");
-    }
+            byte[]? bytes = HttpContext.Session.Get("UserData");
+            if (bytes == null)
+            {
+                HttpContext.Session.Clear();
+                return RedirectToAction("Login", "Home");
+            }
+            AccountModel account = AccountModel.Deserialize(bytes);
 
+            if (newName != null) account.name = newName;
+            if (newEmail != null) account.email = newEmail;
+
+            _context.Account.Update(account);
+            _context.SaveChanges();
+            HttpContext.Session.Set("UserData", AccountModel.Serialize(account));
+            
+            if(newName != null) ActivityLogModel.WriteLogs(_context, ActivityLogModel.Event.ChangedName, account, "0.0.0.0");
+            if(newEmail != null) ActivityLogModel.WriteLogs(_context, ActivityLogModel.Event.ChangedEmail, account, "0.0.0.0");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex);
+        }
+
+        return RedirectToAction("Profile");
+    }
+    
     [HttpPost]
     public IActionResult CreateLink(CreateLinkView link)
     {
@@ -90,17 +108,16 @@ public class UserController : Controller
         // {
         //     return RedirectToAction("Dashboard");
         // }
-
-        byte[]? bytes = HttpContext.Session.Get("UserData");
-        if (bytes == null)
-        {
-            HttpContext.Session.Clear();
-            return RedirectToAction("Login", "Home");
-        }
-
-        AccountModel account = AccountModel.Deserialize(bytes);
         try
         {
+            byte[]? bytes = HttpContext.Session.Get("UserData");
+            if (bytes == null)
+            {
+                HttpContext.Session.Clear();
+                return RedirectToAction("Login", "Home");
+            }
+
+            AccountModel account = AccountModel.Deserialize(bytes);
             _context.Link.Add(new LinkModel()
             {
                 AccountId = account.id,
@@ -198,6 +215,21 @@ public class UserController : Controller
         return Redirect("Profile");
     }
 
+    public IActionResult Logout()
+    {
+        byte[]? bytes = HttpContext.Session.Get("UserData");
+        HttpContext.Session.Clear();
+        
+        if (bytes == null)
+        {
+            HttpContext.Session.Clear();
+            return RedirectToAction("Login", "Home");
+        }
+        ActivityLogModel.WriteLogs(_context, ActivityLogModel.Event.LoggedOut, AccountModel.Deserialize(bytes), "0.0.0.0");
+        
+        return RedirectToAction("Index", "Home");
+    }
+    
     public IActionResult DeleteAccount()
     {
         byte[]? bytes = HttpContext.Session.Get("UserData");

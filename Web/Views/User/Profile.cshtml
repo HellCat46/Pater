@@ -13,38 +13,41 @@
 })
 
 <div class="my-10 flex flex-col h-screen">
-        <div class="flex w-auto items-center justify-center py-6">
-            <div class="py-3 center mx-auto">
-                <div class="bg-base-300 px-4 py-5 rounded-lg shadow-lg text-center w-48">
-                    <div class="mb-4">
-                        <img class="w-auto mx-auto rounded-full object-cover object-center" src="~/UserPics/@(Model.UserPicPath == null ? "default-avatar.svg" : Model.UserPicPath)" alt="Avatar"/>
-                    </div>
-                    <label class="cursor-pointer mt-6">
-                        <span class="mt-2 text-base leading-normal px-4 py-2 bg-blue-500 text-white text-sm rounded-full">Change Avatar</span>
-                        <form class="hidden" method="post" asp-action="ChangeAvatar" enctype="multipart/form-data">
-                            <input type="file" asp-for="file" class="hidden" accept="image/*" oninput="SubmitAvtChng()"/>
-                            <button id="imgSubmit"></button>
-                        </form>
-                    </label>
+    <div class="flex w-auto items-center justify-center py-6">
+        <div class="py-3 center mx-auto">
+            <div class="bg-base-300 px-4 py-5 rounded-lg shadow-lg text-center w-48">
+                <div class="mb-4">
+                    <img class="w-auto mx-auto rounded-full object-cover object-center" src="~/UserPics/@(Model.UserPicPath == null ? "default-avatar.svg" : Model.UserPicPath)" alt="Avatar"/>
                 </div>
+                <label class="cursor-pointer mt-6">
+                    <span class="mt-2 text-base leading-normal px-4 py-2 bg-blue-500 text-white text-sm rounded-full">Change Avatar</span>
+                    <form class="hidden" method="post" asp-action="ChangeAvatar" enctype="multipart/form-data">
+                        <input type="file" asp-for="file" class="hidden" accept="image/*" oninput="SubmitAvtChng()"/>
+                        <button id="imgSubmit"></button>
+                    </form>
+                </label>
             </div>
         </div>
+    </div>
+    
+    <form class="flex flex-col" asp-action="UpdateNameMail" method="post">
         <div class="flex w-auto flex-row items-center py-6">
             <div class="grow">
                 <div class="form-control items-center">
-                    <input type="email" placeholder=@Model.UserName class="input input-bordered w-96" asp-for="NewName" />
+                    <input type="text" placeholder=@Model.UserName class="input input-bordered w-96" asp-for="newName" />
                 </div>
             </div>
             <div class="grow">
                 <div class="form-control items-center">
-                    <input type="email" placeholder=@Model.UserEmail class="input input-bordered w-96" asp-for="NewEmail" />
+                    <input type="email" placeholder=@Model.UserEmail class="input input-bordered w-96" asp-for="newEmail" />
                 </div>
             </div>
         </div>
         <div class="flex justify-center items-center py-6">
-            <button type="reset" class="btn btn-secondary mx-2">Reset</button>
             <button class="btn btn-success mx-2">Save</button>
         </div>
+    </form>
+    
     <div class="flex justify-center items-center pt-20">
         <button class="btn btn-info" onclick="change_pass.showModal()">Reset Password</button>
     </div>
