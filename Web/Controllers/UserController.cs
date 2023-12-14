@@ -184,8 +184,9 @@ public class UserController : Controller
                 account.password = newPassword;
                 _context.Account.Update(account);
                 _context.SaveChanges();
-            
+                
                 HttpContext.Session.Set("UserData", AccountModel.Serialize(account));
+                ActivityLogModel.WriteLogs(_context, ActivityLogModel.Event.ChangedPassword, account, "0.0.0.0");
             }
         }
         catch (Exception ex)
