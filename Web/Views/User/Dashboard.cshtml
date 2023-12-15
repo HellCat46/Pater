@@ -36,20 +36,20 @@
     <div class="modal-box card">
         <form class="card-body" method="post" asp-action="CreateLink">
             <h2 class="card-title">Shorten a Link</h2>
-            
+
             <div class="form-control mt-2">
                 <input type="text" placeholder="Long Link" class="input input-bordered" asp-for="NewLinkURL" required/>
                 <span asp-validation-for="NewLinkURL">Link sucks</span>
             </div>
-            
+
             <div class="form-control mt-2">
                 <input type="text" placeholder="Name" class="input input-bordered" asp-for="NewLinkName"/>
             </div>
-            
+
             <div class="form-control mt-2">
                 <input type="text" placeholder="Custom Code" class="input input-bordered" asp-for="NewLinkCode"/>
             </div>
-            
+
             <div class="form-control mt-6">
                 <button class="btn btn-primary">Create</button>
             </div>
@@ -59,6 +59,6 @@
             <form method="dialog">
                 <button class="btn">Close</button>
             </form>
-            </div>
+        </div>
     </div>
 </dialog>

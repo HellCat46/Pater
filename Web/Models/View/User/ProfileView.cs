@@ -22,8 +22,4 @@ public class ProfileView
     // Change Password
     public string oldPassword { get; set; }
     public string newPassword { get; set; }
-    
-    
-    // Delete Account
-    public bool Delete { get; set; }
 }

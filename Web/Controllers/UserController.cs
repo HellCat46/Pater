@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
 using Web.ApplicationDbContext;
-using Web.Models;
 using Web.Models.Account;
 using Web.Models.Link;
 using Web.Models.View.User;
@@ -128,19 +127,16 @@ public class UserController : Controller
             });
             _context.SaveChanges();
             ActivityLogModel.WriteLogs(_context, ActivityLogModel.Event.CreatedLink, account, "0.0.0.0");
-            return RedirectToAction("Dashboard");
         }
         catch (Exception ex)
         {
             Console.Write(ex);
-            return RedirectToAction("Dashboard");
         }
-
-        ;
+        return RedirectToAction("Dashboard");
     }
 
     [HttpPost]
-    public IActionResult ChangeAvatar(IFormFile file)
+    public IActionResult ChangeAvatar(IFormFile? file)
     {
         if (file == null)
         {

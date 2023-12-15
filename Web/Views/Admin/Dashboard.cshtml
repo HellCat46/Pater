@@ -1,0 +1,45 @@
+@model Web.Models.View.Admin.AdminDashboardView
+@using Web.Models.View.User
+@using Web.Models.Account
+@{
+    ViewData["Title"] = "Admin Dashboard";
+    Layout = "_UserLayout";
+}
+
+@Html.Partial("~/Views/User/_Header.cshtml", Model.Header)
+
+<div class="my-10 flex flex-col ">
+    <div class="basis-1/6 flex justify-center items-center">
+        <form class="form-control">
+            <input type="text" placeholder="Search" class="input input-bordered w-24 md:w-auto" />
+        </form>
+    </div>
+    <div class="basis-5/6 flex justify-center items-center my-12 ">
+        <div class="overflow-x-auto">
+          <table class="table bg-base-300">
+            <!-- head -->
+            <thead>
+              <tr>
+                <th></th>
+                <th>Date</th>
+                <th>UserId</th>
+                <th>IP Address</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              @foreach (ActivityLogModel log in Model.logs)
+              {
+                  <tr>
+                      <th>@log.id</th>
+                      <td>@log.date</td>
+                      <td>@log.Userid</td>  @* Add link to it later *@
+                      <td>@log.IPAddr</td>
+                      <td>@log.Action</td>
+                  </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+    </div>
+</div>
