@@ -7,7 +7,7 @@ public class AdminDashboardView
 {
     public _HeaderView Header { get; set; }
 
-    public string Search { get; set; }
+    public string userEmail { get; set; }
 
     public List<ActivityLogModel> logs { get; set; }
 }

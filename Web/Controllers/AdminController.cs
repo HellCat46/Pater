@@ -24,17 +24,17 @@ public class AdminController : Controller
                 HttpContext.Session.Clear();
                 return RedirectToAction("Login", "Home");
             }
-            AccountModel account = AccountModel.Deserialize(bytes);
-            if (account.isAdmin != true) return RedirectToAction("Dashboard", "User");
+            AccountModel adminAccount = AccountModel.Deserialize(bytes);
+            if (adminAccount.isAdmin != true) return RedirectToAction("Dashboard", "User");
             
             return View(new AdminDashboardView()
             {
                 Header = new _HeaderView()
                 {
-                    isAdmin = account.isAdmin,
-                    name = account.name,
-                    picPath = account.PicPath,
-                    plan = account.Plan
+                    isAdmin = adminAccount.isAdmin,
+                    name = adminAccount.name,
+                    picPath = adminAccount.PicPath,
+                    plan = adminAccount.Plan
                 },
                 logs = _context.ActivityLogs.OrderByDescending(log => log.date).ToList()
             });
@@ -44,5 +44,52 @@ public class AdminController : Controller
             Console.WriteLine(ex);
             return RedirectToAction("Dashboard", "User");
         }
+    }
+
+    public IActionResult ManageUser(String userEmail)
+    {
+        string? userId = HttpContext.Request.Query["UserId"];
+        
+        try
+        {
+            byte[]? bytes = HttpContext.Session.Get("UserData");
+            if (bytes == null)
+            {
+                HttpContext.Session.Clear();
+                return RedirectToAction("Login", "Home");
+            }
+
+            AccountModel adminAccount = AccountModel.Deserialize(bytes);
+            if (adminAccount.isAdmin != true) return RedirectToAction("Dashboard", "User");
+
+            AccountModel? userAccount;
+            if(userEmail != null) userAccount = _context.Account.Single(acc => acc.email == userEmail);
+            else if (userId != null ) userAccount = _context.Account.Single(acc => acc.id == int.Parse(userId));
+            else return RedirectToAction("Dashboard");
+            
+            
+            return View(new ManageUserView()
+            {
+                header = new _HeaderView()
+                {
+                    isAdmin = adminAccount.isAdmin,
+                    name = adminAccount.name,
+                    picPath = adminAccount.PicPath,
+                    plan = adminAccount.Plan
+                },
+                links = _context.Link.Where(link => link.AccountId == userAccount.id).ToList(),
+                logs = _context.ActivityLogs.Where(log => log.Userid == userAccount.id).ToList(),
+                UserAccountCreated = userAccount.createdAt,
+                UserEmail = userAccount.email,
+                UserName = userAccount.name,
+                UserPlan = userAccount.Plan,
+                UserPicPath = userAccount.PicPath
+            });
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex);
+        }
+        return View();
     }
 }

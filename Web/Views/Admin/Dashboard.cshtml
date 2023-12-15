@@ -1,5 +1,4 @@
 @model Web.Models.View.Admin.AdminDashboardView
-@using Web.Models.View.User
 @using Web.Models.Account
 @{
     ViewData["Title"] = "Admin Dashboard";
@@ -10,14 +9,13 @@
 
 <div class="my-10 flex flex-col ">
     <div class="basis-1/6 flex justify-center items-center">
-        <form class="form-control">
-            <input type="text" placeholder="Search" class="input input-bordered w-24 md:w-auto" />
+        <form class="form-control" asp-action="ManageUser">
+            <input type="text" placeholder="Search using Email" asp-for="userEmail" class="input input-bordered input-info w-full max-w-xs" />
         </form>
     </div>
-    <div class="basis-5/6 flex justify-center items-center my-12 ">
+    <div class="basis-5/6 flex justify-center items-center m-12 ">
         <div class="overflow-x-auto">
-          <table class="table bg-base-300">
-            <!-- head -->
+          <table class="table  table-lg bg-base-300">
             <thead>
               <tr>
                 <th></th>
@@ -33,7 +31,7 @@
                   <tr>
                       <th>@log.id</th>
                       <td>@log.date</td>
-                      <td>@log.Userid</td>  @* Add link to it later *@
+                      <td><a href="/Admin/ManageUser?UserId=@log.Userid" class="link link-info">@log.Userid</a></td>  @* Add link to it later *@
                       <td>@log.IPAddr</td>
                       <td>@log.Action</td>
                   </tr>
