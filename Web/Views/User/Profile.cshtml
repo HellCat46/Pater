@@ -31,13 +31,13 @@
     </div>
     
     <form class="flex flex-col" asp-action="UpdateNameMail" method="post">
-        <div class="flex w-auto flex-row items-center py-6">
-            <div class="grow">
+        <div class="flex w-auto flex-col lg:flex-row items-center py-6">
+            <div class="grow my-2">
                 <div class="form-control items-center">
                     <input type="text" placeholder=@Model.UserName class="input input-bordered w-96" asp-for="newName" />
                 </div>
             </div>
-            <div class="grow">
+            <div class="grow my-2">
                 <div class="form-control items-center">
                     <input type="email" placeholder=@Model.UserEmail class="input input-bordered w-96" asp-for="newEmail" />
                 </div>
