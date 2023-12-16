@@ -1,4 +1,5 @@
 @using Web.Models.View.User
+@using Web.Models.Link
 @model DashboardView
 @{
     ViewData["Title"] = "Dashboard | Pater";
@@ -13,7 +14,7 @@
 })
 
 <div class="my-10">
-    <div class="card w-auto mx-5 bg-base-200 shadow-xl  ">
+    <div class="card w-auto mx-10 bg-base-200 shadow-xl  ">
         <div class="card-body">
             <div class="card-title">
                 <h2>Links</h2>
@@ -24,6 +25,72 @@
                 @if (Model.links.Count == 0)
                 {
                     <span class="p-2">Nothing to show here</span>
+                }
+                else
+                {
+                    <div>
+                        <table class="table table-sm lg:table-lg ">
+                            <thead>
+                            <tr>
+                                <th>
+                                    <label>
+                                        <input type="checkbox" class="checkbox"/>
+                                    </label>
+                                </th>
+                                <th></th>
+                                <th class="hidden lg:table-cell"></th>
+                                <th></th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            @foreach (LinkModel link in Model.links)
+                            {
+                                <tr>
+                                    <th>
+                                        <label>
+                                            <input type="checkbox" class="checkbox"/>
+                                        </label>
+                                    </th>
+                                    <td>
+                                        <div class="flex items-center gap-3">
+                                            <div class="avatar">
+                                                <div class="mask mask-squircle w-12 h-12">
+                                                    <img src="https://t2.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=@(link.url)&size=48" alt="Favicon"/>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <div class="font-bold">@link.name</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="hidden lg:table-cell">@link.CreatedAt</td>
+                                    <th>
+                                        <div class="dropdown dropdown-end">
+                                            <label tabindex="0" class="btn btn-ghost lg:hidden">
+                                                <svg class="h-5 w-5" src="~/assets/svg/three-dots-icon.svg" alt="Options"/>
+                                            </label>
+                                            <ul
+                                                tabindex="0"
+                                                class="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-300 rounded-box w-52"
+                                            >
+                                                <li><button>Copy Link</button></li>
+                                                <li><button>Edit</button></li>
+                                                <li><button>Delete</button></li>
+                                            </ul>
+                                        </div>
+                                        <div class="hidden lg:flex">
+                                            <ul class="menu menu-horizontal px-1">
+                                                <li><img  src="~/assets/svg/copy-icon.svg"/></li>
+                                                <li><img  src="~/assets/svg/edit-icon.svg"/></li>
+                                                <li><img  src="~/assets/svg/delete-icon.svg"/></li>
+                                            </ul>
+                                        </div>
+                                    </th>
+                                </tr>
+                            }
+                            </tbody>
+                        </table>
+                    </div>
                 }
             </div>
         </div>
