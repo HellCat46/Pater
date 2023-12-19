@@ -64,7 +64,7 @@ public class HomeController : Controller
             if (account != null)
             {
                 HttpContext.Session.Set("UserData", AccountModel.Serialize(account));
-                ActivityLogModel.WriteLogs(_context, ActivityLogModel.Event.EmailLoggedIn, account, "0.0.0.0");
+                ActivityLogModel.WriteLogs(_context, ActivityLogModel.Event.EmailLoggedIn, account, HttpContext.Connection.RemoteIpAddress.ToString());
                 Console.Write(account.ToString());
                 return RedirectToAction("Dashboard", "User");
             }
@@ -109,7 +109,7 @@ public class HomeController : Controller
             if (account != null)
             {
                 HttpContext.Session.Set("UserData", AccountModel.Serialize(account));
-                ActivityLogModel.WriteLogs(_context, ActivityLogModel.Event.EmailSignedIn, account, "0.0.0.0");
+                ActivityLogModel.WriteLogs(_context, ActivityLogModel.Event.EmailSignedIn, account, HttpContext.Connection.RemoteIpAddress.ToString());
             }
             return RedirectToAction("Dashboard", "User");
         }

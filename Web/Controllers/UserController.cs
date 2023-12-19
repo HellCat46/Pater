@@ -89,8 +89,8 @@ public class UserController : Controller
             _context.SaveChanges();
             HttpContext.Session.Set("UserData", AccountModel.Serialize(account));
             
-            if(newName != null) ActivityLogModel.WriteLogs(_context, ActivityLogModel.Event.ChangedName, account, "0.0.0.0");
-            if(newEmail != null) ActivityLogModel.WriteLogs(_context, ActivityLogModel.Event.ChangedEmail, account, "0.0.0.0");
+            if(newName != null) ActivityLogModel.WriteLogs(_context, ActivityLogModel.Event.ChangedName, account, HttpContext.Connection.RemoteIpAddress.ToString());
+            if(newEmail != null) ActivityLogModel.WriteLogs(_context, ActivityLogModel.Event.ChangedEmail, account, HttpContext.Connection.RemoteIpAddress.ToString());
         }
         catch (Exception ex)
         {
@@ -126,7 +126,7 @@ public class UserController : Controller
                 url = link.NewLinkURL
             });
             _context.SaveChanges();
-            ActivityLogModel.WriteLogs(_context, ActivityLogModel.Event.CreatedLink, account, "0.0.0.0");
+            ActivityLogModel.WriteLogs(_context, ActivityLogModel.Event.CreatedLink, account, HttpContext.Connection.RemoteIpAddress.ToString());
         }
         catch (Exception ex)
         {
@@ -167,7 +167,7 @@ public class UserController : Controller
             _context.Account.Update(account);
             _context.SaveChanges();
             HttpContext.Session.Set("UserData", AccountModel.Serialize(account));
-            ActivityLogModel.WriteLogs(_context, ActivityLogModel.Event.ChangedAvatar, account, "0.0.0.0");
+            ActivityLogModel.WriteLogs(_context, ActivityLogModel.Event.ChangedAvatar, account, HttpContext.Connection.RemoteIpAddress.ToString());
         }
         catch (Exception ex)
         {
@@ -199,7 +199,7 @@ public class UserController : Controller
                 _context.SaveChanges();
                 
                 HttpContext.Session.Set("UserData", AccountModel.Serialize(account));
-                ActivityLogModel.WriteLogs(_context, ActivityLogModel.Event.ChangedPassword, account, "0.0.0.0");
+                ActivityLogModel.WriteLogs(_context, ActivityLogModel.Event.ChangedPassword, account, HttpContext.Connection.RemoteIpAddress.ToString());
             }
         }
         catch (Exception ex)
@@ -221,7 +221,7 @@ public class UserController : Controller
             HttpContext.Session.Clear();
             return RedirectToAction("Login", "Home");
         }
-        ActivityLogModel.WriteLogs(_context, ActivityLogModel.Event.LoggedOut, AccountModel.Deserialize(bytes), "0.0.0.0");
+        ActivityLogModel.WriteLogs(_context, ActivityLogModel.Event.LoggedOut, AccountModel.Deserialize(bytes), HttpContext.Connection.RemoteIpAddress.ToString());
         
         return RedirectToAction("Index", "Home");
     }
