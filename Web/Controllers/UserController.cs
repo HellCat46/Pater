@@ -101,12 +101,8 @@ public class UserController : Controller
     }
     
     [HttpPost]
-    public IActionResult CreateLink(CreateLinkView link)
+    public IActionResult CreateLink([FromBody] CreateLinkView link)
     {
-        // if (!ModelState.IsValid)
-        // {
-        //     return RedirectToAction("Dashboard");
-        // }
         try
         {
             byte[]? bytes = HttpContext.Session.Get("UserData");
@@ -120,19 +116,20 @@ public class UserController : Controller
             _context.Link.Add(new LinkModel()
             {
                 AccountId = account.id,
-                code = (link.NewLinkCode != null ? link.NewLinkCode : GenerateRandom(8)),
+                code = (link.NewLinkCode != String.Empty ? link.NewLinkCode : GenerateRandom(8)),
                 CreatedAt = DateTime.Now,
-                name = (link.NewLinkName != null ? link.NewLinkName : DateTime.Now.ToString()),
+                name = (link.NewLinkName != String.Empty ? link.NewLinkName : DateTime.Now.ToString()),
                 url = link.NewLinkURL
             });
             _context.SaveChanges();
             ActivityLogModel.WriteLogs(_context, ActivityLogModel.Event.CreatedLink, account, HttpContext.Connection.RemoteIpAddress.ToString());
+            return Ok();
         }
         catch (Exception ex)
         {
             Console.Write(ex);
+            return StatusCode(500);
         }
-        return RedirectToAction("Dashboard");
     }
 
     [HttpPost]

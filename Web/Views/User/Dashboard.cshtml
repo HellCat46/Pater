@@ -14,6 +14,12 @@
 })
 
 <div class="my-10">
+    <div class="my-6 mx-10">
+        <div role="alert" class="alert hidden" id="alert">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-info shrink-0 w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            <span id="alertMessage"></span>
+        </div>
+        </div>
     <div class="card w-auto mx-10 bg-base-200 shadow-xl  ">
         <div class="card-body">
             <div class="card-title">
@@ -64,28 +70,39 @@
                                         </div>
                                     </td>
                                     <td class="hidden lg:table-cell">@link.CreatedAt</td>
-                                    <th>
-                                        <div class="dropdown dropdown-end">
-                                            <label tabindex="0" class="btn btn-ghost lg:hidden">
-                                                <svg class="h-5 w-5" src="~/assets/svg/three-dots-icon.svg" alt="Options"/>
+                                    <td>
+                                        <div class="hidden lg:flex">
+                                            <ul class="menu menu-horizontal px-1">
+                                                <li>
+                                                    <img src="~/assets/svg/copy-icon.svg" alt="Copy"/>
+                                                </li>
+                                                <li>
+                                                    <img src="~/assets/svg/edit-icon.svg" alt="Edit"/>
+                                                </li>
+                                                <li>
+                                                    <img src="~/assets/svg/delete-icon.svg" alt="Delete"/>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                        <div class="dropdown dropdown-end lg:hidden">
+                                            <label tabindex="0" class="btn btn-ghost ">
+                                                <img class="h-5 w-5" src="~/assets/svg/three-dots-icon.svg" alt="Options"/>
                                             </label>
                                             <ul
                                                 tabindex="0"
-                                                class="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-300 rounded-box w-52"
-                                            >
-                                                <li><button>Copy Link</button></li>
-                                                <li><button>Edit</button></li>
-                                                <li><button>Delete</button></li>
+                                                class="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-300 rounded-box w-52">
+                                                <li>
+                                                    <button>Copy Link</button>
+                                                </li>
+                                                <li>
+                                                    <button>Edit</button>
+                                                </li>
+                                                <li>
+                                                    <button>Delete</button>
+                                                </li>
                                             </ul>
                                         </div>
-                                        <div class="hidden lg:flex">
-                                            <ul class="menu menu-horizontal px-1">
-                                                <li><img  src="~/assets/svg/copy-icon.svg"/></li>
-                                                <li><img  src="~/assets/svg/edit-icon.svg"/></li>
-                                                <li><img  src="~/assets/svg/delete-icon.svg"/></li>
-                                            </ul>
-                                        </div>
-                                    </th>
+                                    </td>
                                 </tr>
                             }
                             </tbody>
@@ -99,22 +116,22 @@
 
 
 @* Modals *@
+@* Create Link *@
 <dialog id="create" class="modal modal-bottom sm:modal-middle">
     <div class="modal-box card">
-        <form class="card-body" method="post" asp-action="CreateLink">
+        <form class="card-body" id="createLinkForm">
             <h2 class="card-title">Shorten a Link</h2>
 
             <div class="form-control mt-2">
-                <input type="text" placeholder="Long Link" class="input input-bordered" asp-for="NewLinkURL" required/>
-                <span asp-validation-for="NewLinkURL">Link sucks</span>
+                <input type="text" placeholder="Long Link" class="input input-bordered" id="newLink" required/>
             </div>
 
             <div class="form-control mt-2">
-                <input type="text" placeholder="Name" class="input input-bordered" asp-for="NewLinkName"/>
+                <input type="text" placeholder="Name" class="input input-bordered" id="newLinkName"/>
             </div>
 
             <div class="form-control mt-2">
-                <input type="text" placeholder="Custom Code" class="input input-bordered" asp-for="NewLinkCode"/>
+                <input type="text" placeholder="Custom Code" class="input input-bordered" id="newLinkCode"/>
             </div>
 
             <div class="form-control mt-6">
@@ -129,3 +146,40 @@
         </div>
     </div>
 </dialog>
+
+
+<script>
+    const alert = document.querySelector("#alert");
+    const alertMessage = document.querySelector("#alertMessage");
+    
+    function CreateNewLink(e){
+        e.preventDefault();
+        createLinkModal.close();
+        const link = document.querySelector("#newLink");
+        const code = document.querySelector("#newLinkCode");
+        const name = document.querySelector("#newLinkName");
+
+        fetch(`@Url.Action("CreateLink")`, {
+            method : "POST",
+            headers : new Headers({'Content-Type': 'application/json'}),
+            body : JSON.stringify({
+                NewLinkURL : link.value,
+                NewLinkName: code.value,
+                NewLinkCode: name.value
+            }),
+            credentials : "include"
+        }).then(res => {
+            if (res.status === 200){
+                alert.className = "alert alert-success";
+                alertMessage.innerText = "Successfully Shorten the Link!"
+                setTimeout(()=> {
+                    alert.className= "alert hidden"; 
+                    alertMessage.innerHTML = ""
+                    }, 5000);
+            }
+        }).catch(err => console.log(err))
+    }
+    const createLinkModal = document.querySelector("#create");
+    const createLink = document.querySelector("#createLinkForm");
+    createLink.addEventListener("submit", CreateNewLink);
+</script>
