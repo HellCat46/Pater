@@ -132,14 +132,13 @@ public class UserController : Controller
         }
     }
 
-    [HttpPost]
-    public IActionResult ChangeAvatar(IFormFile? file)
+    [HttpPatch]
+    public IActionResult ChangeAvatar(IFormFile? newAvatar)
     {
-        if (file == null)
+        if (newAvatar == null)
         {
-            return View("Profile");
+            return StatusCode(400, new {error = "Unable to receive Image."});
         }
-
         try
         {
             byte[]? bytes = HttpContext.Session.Get("UserData");
@@ -155,9 +154,9 @@ public class UserController : Controller
                 System.IO.File.Delete("wwwroot/UserPics/" + account.PicPath);
             }
 
-            account.PicPath = Guid.NewGuid() + "." + file.FileName.Split(".").Last();
+            account.PicPath = account.id + "." + newAvatar.FileName.Split(".").Last();
             using (var fileStream = System.IO.File.Create("wwwroot/UserPics/" + account.PicPath)){
-                file.CopyTo(fileStream);
+                newAvatar.CopyTo(fileStream);
                 fileStream.Close();
             }
 
@@ -165,13 +164,13 @@ public class UserController : Controller
             _context.SaveChanges();
             HttpContext.Session.Set("UserData", AccountModel.Serialize(account));
             ActivityLogModel.WriteLogs(_context, ActivityLogModel.Event.ChangedAvatar, account, HttpContext.Connection.RemoteIpAddress.ToString());
+            return Ok("/UserPics/"+ account.PicPath);
         }
         catch (Exception ex)
         {
             Console.WriteLine(ex);
+            return StatusCode(500, new {error = "Unexpected Error while trying to Update Avatar."});
         }
-
-        return RedirectToAction("Profile");
     }
 
     [HttpPost]

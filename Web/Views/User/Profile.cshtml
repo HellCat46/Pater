@@ -13,33 +13,38 @@
 })
 
 <div class="my-10 flex flex-col h-screen">
+    <div class="my-6 mx-10">
+        <div role="alert" class="alert hidden" id="alert">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-info shrink-0 w-6 h-6">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            <span id="alertMessage"></span>
+        </div>
+    </div>
     <div class="flex w-auto items-center justify-center py-6">
         <div class="py-3 center mx-auto">
             <div class="bg-base-300 px-4 py-5 rounded-lg shadow-lg text-center w-48">
                 <div class="mb-4">
-                    <img class="w-auto mx-auto rounded-full object-cover object-center" src="~/UserPics/@(Model.UserPicPath == null ? "default-avatar.svg" : Model.UserPicPath)" alt="Avatar"/>
+                    <img class="w-auto mx-auto rounded-full object-cover object-center" id="userAvatar" src="~/UserPics/@(Model.UserPicPath == null ? "default-avatar.svg" : Model.UserPicPath)" alt="Avatar"/>
                 </div>
                 <label class="cursor-pointer mt-6">
                     <span class="mt-2 text-base leading-normal px-4 py-2 bg-blue-500 text-white text-sm rounded-full">Change Avatar</span>
-                    <form class="hidden" method="post" asp-action="ChangeAvatar" enctype="multipart/form-data">
-                        <input type="file" asp-for="file" class="hidden" accept="image/*" oninput="SubmitAvtChng()"/>
-                        <button id="imgSubmit"></button>
-                    </form>
+                    <input type="file" asp-for="file" id="newAvatar" class="hidden" accept="image/*" oninput="ChangeAvatar()"/>
                 </label>
             </div>
         </div>
     </div>
-    
+
     <form class="flex flex-col" asp-action="UpdateNameMail" method="post">
         <div class="flex w-auto flex-col lg:flex-row items-center py-6">
             <div class="grow my-2">
                 <div class="form-control items-center">
-                    <input type="text" placeholder=@Model.UserName class="input input-bordered w-96" asp-for="newName" />
+                    <input type="text" placeholder=@Model.UserName class="input input-bordered w-96" asp-for="newName"/>
                 </div>
             </div>
             <div class="grow my-2">
                 <div class="form-control items-center">
-                    <input type="email" placeholder=@Model.UserEmail class="input input-bordered w-96" asp-for="newEmail" />
+                    <input type="email" placeholder=@Model.UserEmail class="input input-bordered w-96" asp-for="newEmail"/>
                 </div>
             </div>
         </div>
@@ -47,7 +52,7 @@
             <button class="btn btn-success mx-2">Save</button>
         </div>
     </form>
-    
+
     <div class="flex justify-center items-center pt-20">
         <button class="btn btn-info" onclick="change_pass.showModal()">Reset Password</button>
     </div>
@@ -55,7 +60,6 @@
         <button class="btn btn-error" onclick="delete_acc.showModal()">Delete Account</button>
     </div>
 </div>
-
 
 
 @* Modals *@
@@ -67,12 +71,12 @@
             <div class="form-control mt-2">
                 <input type="text" placeholder="Old Password" class="input input-bordered" asp-for="oldPassword" required/>
             </div>
-            
+
             <div class="form-control mt-2">
                 <input type="text" placeholder="New Password" class="input input-bordered" asp-for="newPassword" id="newPass" oninput="CheckPass('newPass')" required/>
                 <span class="hidden text-error m-2" id="passError">Password doesn't meet the requirements. (Minimum 8 Character, 1 Number, 1 Lowercase and 1 Uppercase)</span>
             </div>
-            
+
             <div class="form-control mt-6">
                 <button id="submitPass" class="btn btn-primary">Change Password</button>
             </div>
@@ -106,8 +110,43 @@
 </dialog>
 
 <script>
-    function SubmitAvtChng(){
-        $("#imgSubmit").click();
+    const alert = document.querySelector("#alert");
+    const alertMessage = document.querySelector("#alertMessage");
+    
+    async function ChangeAvatar(){
+        const newAvatar = document.querySelector("#newAvatar");
+    
+        const formData = new FormData();
+        formData.append("newAvatar", newAvatar.files[0]);
+        
+        await  fetch("@Url.Action("ChangeAvatar")", {
+            method : "PATCH",
+            body : formData
+        }).then(async res => {
+            if(res.status === 200) {
+               alert.className = "alert alert-success";
+               alertMessage.innerText = "Successfully Shorten the Link!"
+               
+               
+               // Don't Simplify!!! This forces browser to not use cached image
+               const userAvatar = document.querySelector("#userAvatar");
+               const newSrc = userAvatar.src.split("/UserPics/")[0] + await res.text();
+               userAvatar.src = '';
+               userAvatar.src = newSrc + "?time=" + new Date().getTime();
+            }else {
+                alert.className = "alert alert-error";
+                const json = await res.json();
+                alertMessage.innerText = json.error;              
+            }
+        }).catch(err => { 
+            alert.className = "alert alert-error";
+            alertMessage.innerText = "Request Failed. Please try again!"
+            console.log(err)
+        });
+        setTimeout(()=> {
+            alert.className= "alert hidden";
+            alertMessage.innerHTML = "";
+            }, 5000);
     }
     
     function CheckPass(id){
