@@ -53,7 +53,7 @@ public class UserController : Controller
             header = new _HeaderView()
             {
                 isAdmin = account.isAdmin,
-                name =account.name,
+                name = account.name,
                 picPath = account.PicPath,
                 plan = account.Plan
             },
@@ -83,7 +83,10 @@ public class UserController : Controller
             if (bytes == null)
             {
                 HttpContext.Session.Clear();
-                return RedirectToAction("Login", "Home");
+                return StatusCode(403, new
+                {
+                    error = "Session Expired. Please Login Again!"
+                });
             }
 
             AccountModel account = AccountModel.Deserialize(bytes);
@@ -96,13 +99,14 @@ public class UserController : Controller
                 url = link.NewLinkURL
             });
             _context.SaveChanges();
-            ActivityLogModel.WriteLogs(_context, ActivityLogModel.Event.CreatedLink, account, HttpContext.Connection.RemoteIpAddress.ToString());
+            ActivityLogModel.WriteLogs(_context, ActivityLogModel.Event.CreatedLink, account,
+                HttpContext.Connection.RemoteIpAddress.ToString());
             return Ok();
         }
         catch (Exception ex)
         {
             Console.Write(ex);
-            return StatusCode(500, new {error = "Unexpected Error while trying to Update Avatar."});
+            return StatusCode(500, new { error = "Unexpected Error while trying to Update Avatar." });
         }
     }
 
@@ -111,25 +115,31 @@ public class UserController : Controller
     {
         if (newAvatar == null)
         {
-            return StatusCode(400, new {error = "Unable to receive Image."});
+            return StatusCode(400, new { error = "Unable to receive Image." });
         }
+
         try
         {
             byte[]? bytes = HttpContext.Session.Get("UserData");
             if (bytes == null)
             {
                 HttpContext.Session.Clear();
-                return RedirectToAction("Login", "Home");
+                return StatusCode(403, new
+                {
+                    error = "Session Expired. Please Login Again!"
+                });
             }
+
             AccountModel account = AccountModel.Deserialize(bytes);
 
-            if (System.IO.File.Exists( "wwwroot/UserPics/" +account.PicPath))
+            if (System.IO.File.Exists("wwwroot/UserPics/" + account.PicPath))
             {
                 System.IO.File.Delete("wwwroot/UserPics/" + account.PicPath);
             }
 
             account.PicPath = account.id + "." + newAvatar.FileName.Split(".").Last();
-            using (var fileStream = System.IO.File.Create("wwwroot/UserPics/" + account.PicPath)){
+            using (var fileStream = System.IO.File.Create("wwwroot/UserPics/" + account.PicPath))
+            {
                 newAvatar.CopyTo(fileStream);
                 fileStream.Close();
             }
@@ -137,33 +147,38 @@ public class UserController : Controller
             _context.Account.Update(account);
             _context.SaveChanges();
             HttpContext.Session.Set("UserData", AccountModel.Serialize(account));
-            ActivityLogModel.WriteLogs(_context, ActivityLogModel.Event.ChangedAvatar, account, HttpContext.Connection.RemoteIpAddress.ToString());
-            return Ok("/UserPics/"+ account.PicPath);
+            ActivityLogModel.WriteLogs(_context, ActivityLogModel.Event.ChangedAvatar, account,
+                HttpContext.Connection.RemoteIpAddress.ToString());
+            return Ok("/UserPics/" + account.PicPath);
         }
         catch (Exception ex)
         {
             Console.WriteLine(ex);
-            return StatusCode(500, new {error = "Unexpected Error while trying to Update Avatar."});
+            return StatusCode(500, new { error = "Unexpected Error while trying to Update Avatar." });
         }
     }
 
     [HttpPatch]
     public IActionResult UpdateNameMail(string? newName, string? newEmail)
     {
-        if (newName == null && newEmail == null) 
+        if (newName == null && newEmail == null)
             return StatusCode(400, new
             {
                 error = "At least One of the field needs to be filled."
             });
-        
+
         try
         {
             byte[]? bytes = HttpContext.Session.Get("UserData");
             if (bytes == null)
             {
                 HttpContext.Session.Clear();
-                return RedirectToAction("Login", "Home");
+                return StatusCode(403, new
+                {
+                    error = "Session Expired. Please Login Again!"
+                });
             }
+
             AccountModel account = AccountModel.Deserialize(bytes);
 
             if (newName != null) account.name = newName;
@@ -172,18 +187,22 @@ public class UserController : Controller
             _context.Account.Update(account);
             _context.SaveChanges();
             HttpContext.Session.Set("UserData", AccountModel.Serialize(account));
-            
-            if(newName != String.Empty) ActivityLogModel.WriteLogs(_context, ActivityLogModel.Event.ChangedName, account, HttpContext.Connection.RemoteIpAddress.ToString());
-            if(newEmail != String.Empty) ActivityLogModel.WriteLogs(_context, ActivityLogModel.Event.ChangedEmail, account, HttpContext.Connection.RemoteIpAddress.ToString());
+
+            if (newName != String.Empty)
+                ActivityLogModel.WriteLogs(_context, ActivityLogModel.Event.ChangedName, account,
+                    HttpContext.Connection.RemoteIpAddress.ToString());
+            if (newEmail != String.Empty)
+                ActivityLogModel.WriteLogs(_context, ActivityLogModel.Event.ChangedEmail, account,
+                    HttpContext.Connection.RemoteIpAddress.ToString());
             return Ok();
         }
         catch (Exception ex)
         {
             Console.WriteLine(ex);
-            return StatusCode(500, new {error = "Unexpected Error while trying to Update Avatar."});
+            return StatusCode(500, new { error = "Unexpected Error while trying to Update Avatar." });
         }
     }
-    
+
     [HttpPatch]
     public IActionResult ChangePassword(string oldPassword, string newPassword)
     {
@@ -194,29 +213,33 @@ public class UserController : Controller
             if (bytes == null)
             {
                 HttpContext.Session.Clear();
-                return RedirectToAction("Login", "Home");
+                return StatusCode(403, new
+                {
+                    error = "Session Expired. Please Login Again!"
+                });
             }
 
             AccountModel account = AccountModel.Deserialize(bytes);
 
-            if (account.password != oldPassword) 
+            if (account.password != oldPassword)
                 return StatusCode(400, new
                 {
                     error = "Provided Old Password was incorrect!"
                 });
-                
+
             account.password = newPassword;
             _context.Account.Update(account);
             _context.SaveChanges();
-                
+
             HttpContext.Session.Set("UserData", AccountModel.Serialize(account));
-            ActivityLogModel.WriteLogs(_context, ActivityLogModel.Event.ChangedPassword, account, HttpContext.Connection.RemoteIpAddress.ToString());
+            ActivityLogModel.WriteLogs(_context, ActivityLogModel.Event.ChangedPassword, account,
+                HttpContext.Connection.RemoteIpAddress.ToString());
             return Ok();
         }
         catch (Exception ex)
         {
             Console.Write(ex);
-            return StatusCode(500, new {error = "Unexpected Error while trying to Update Avatar!"});
+            return StatusCode(500, new { error = "Unexpected Error while trying to Update Avatar!" });
         }
     }
 
@@ -224,17 +247,19 @@ public class UserController : Controller
     {
         byte[]? bytes = HttpContext.Session.Get("UserData");
         HttpContext.Session.Clear();
-        
+
         if (bytes == null)
         {
             HttpContext.Session.Clear();
             return RedirectToAction("Login", "Home");
         }
-        ActivityLogModel.WriteLogs(_context, ActivityLogModel.Event.LoggedOut, AccountModel.Deserialize(bytes), HttpContext.Connection.RemoteIpAddress.ToString());
-        
+
+        ActivityLogModel.WriteLogs(_context, ActivityLogModel.Event.LoggedOut, AccountModel.Deserialize(bytes),
+            HttpContext.Connection.RemoteIpAddress.ToString());
+
         return RedirectToAction("Index", "Home");
     }
-    
+
     public IActionResult DeleteAccount()
     {
         byte[]? bytes = HttpContext.Session.Get("UserData");
