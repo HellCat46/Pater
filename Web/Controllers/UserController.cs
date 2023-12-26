@@ -68,39 +68,6 @@ public class UserController : Controller
 
     // Non-Page Actions
     [HttpPost]
-    public IActionResult UpdateNameMail(string newName, string newEmail)
-    {
-        if (newName == null && newEmail == null) return RedirectToAction("Profile");
-        
-        try
-        {
-            byte[]? bytes = HttpContext.Session.Get("UserData");
-            if (bytes == null)
-            {
-                HttpContext.Session.Clear();
-                return RedirectToAction("Login", "Home");
-            }
-            AccountModel account = AccountModel.Deserialize(bytes);
-
-            if (newName != null) account.name = newName;
-            if (newEmail != null) account.email = newEmail;
-
-            _context.Account.Update(account);
-            _context.SaveChanges();
-            HttpContext.Session.Set("UserData", AccountModel.Serialize(account));
-            
-            if(newName != null) ActivityLogModel.WriteLogs(_context, ActivityLogModel.Event.ChangedName, account, HttpContext.Connection.RemoteIpAddress.ToString());
-            if(newEmail != null) ActivityLogModel.WriteLogs(_context, ActivityLogModel.Event.ChangedEmail, account, HttpContext.Connection.RemoteIpAddress.ToString());
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine(ex);
-        }
-
-        return RedirectToAction("Profile");
-    }
-    
-    [HttpPost]
     public IActionResult CreateLink([FromBody] CreateLinkView link)
     {
         try
@@ -128,7 +95,7 @@ public class UserController : Controller
         catch (Exception ex)
         {
             Console.Write(ex);
-            return StatusCode(500);
+            return StatusCode(500, new {error = "Unexpected Error while trying to Update Avatar."});
         }
     }
 
@@ -173,6 +140,43 @@ public class UserController : Controller
         }
     }
 
+    [HttpPatch]
+    public IActionResult UpdateNameMail(string? newName, string? newEmail)
+    {
+        if (newName == null && newEmail == null) 
+            return StatusCode(400, new
+            {
+                error = "At least One of the field needs to be filled."
+            });
+        
+        try
+        {
+            byte[]? bytes = HttpContext.Session.Get("UserData");
+            if (bytes == null)
+            {
+                HttpContext.Session.Clear();
+                return RedirectToAction("Login", "Home");
+            }
+            AccountModel account = AccountModel.Deserialize(bytes);
+
+            if (newName != null) account.name = newName;
+            if (newEmail != null) account.email = newEmail;
+
+            _context.Account.Update(account);
+            _context.SaveChanges();
+            HttpContext.Session.Set("UserData", AccountModel.Serialize(account));
+            
+            if(newName != String.Empty) ActivityLogModel.WriteLogs(_context, ActivityLogModel.Event.ChangedName, account, HttpContext.Connection.RemoteIpAddress.ToString());
+            if(newEmail != String.Empty) ActivityLogModel.WriteLogs(_context, ActivityLogModel.Event.ChangedEmail, account, HttpContext.Connection.RemoteIpAddress.ToString());
+            return Ok();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex);
+            return StatusCode(500, new {error = "Unexpected Error while trying to Update Avatar."});
+        }
+    }
+    
     [HttpPost]
     public IActionResult ChangePassword(string oldPassword, string newPassword)
     {

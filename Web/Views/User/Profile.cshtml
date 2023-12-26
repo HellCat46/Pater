@@ -29,22 +29,22 @@
                 </div>
                 <label class="cursor-pointer mt-6">
                     <span class="mt-2 text-base leading-normal px-4 py-2 bg-blue-500 text-white text-sm rounded-full">Change Avatar</span>
-                    <input type="file" asp-for="file" id="newAvatar" class="hidden" accept="image/*" oninput="ChangeAvatar()"/>
+                    <input type="file" asp-for="file" id="newAvatar" class="hidden" accept="image/*" />
                 </label>
             </div>
         </div>
     </div>
 
-    <form class="flex flex-col" asp-action="UpdateNameMail" method="post">
+    <form class="flex flex-col" method="post" id="newInfo">
         <div class="flex w-auto flex-col lg:flex-row items-center py-6">
             <div class="grow my-2">
                 <div class="form-control items-center">
-                    <input type="text" placeholder=@Model.UserName class="input input-bordered w-96" asp-for="newName"/>
+                    <input type="text" placeholder=@Model.UserName class="input input-bordered w-96" id="newName"/>
                 </div>
             </div>
             <div class="grow my-2">
                 <div class="form-control items-center">
-                    <input type="email" placeholder=@Model.UserEmail class="input input-bordered w-96" asp-for="newEmail"/>
+                    <input type="email" placeholder=@Model.UserEmail class="input input-bordered w-96" id="newEmail"/>
                 </div>
             </div>
         </div>
@@ -113,7 +113,8 @@
     const alert = document.querySelector("#alert");
     const alertMessage = document.querySelector("#alertMessage");
     
-    async function ChangeAvatar(){
+    const newAvatar = document.querySelector("#newAvatar");
+    newAvatar.addEventListener("input", async () => {
         const newAvatar = document.querySelector("#newAvatar");
     
         const formData = new FormData();
@@ -125,7 +126,7 @@
         }).then(async res => {
             if(res.status === 200) {
                alert.className = "alert alert-success";
-               alertMessage.innerText = "Successfully Shorten the Link!"
+               alertMessage.innerText = "Successfully Updated the Avatar!"
                
                
                // Don't Simplify!!! This forces browser to not use cached image
@@ -140,14 +141,57 @@
             }
         }).catch(err => { 
             alert.className = "alert alert-error";
-            alertMessage.innerText = "Request Failed. Please try again!"
-            console.log(err)
+            alertMessage.innerText = "Request Failed. Please try again!";
+            console.log(err);
         });
         setTimeout(()=> {
             alert.className= "alert hidden";
             alertMessage.innerHTML = "";
             }, 5000);
-    }
+    });
+    
+    const newInfo = document.querySelector("#newInfo");
+    newInfo.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        
+        const newName = document.querySelector("#newName");
+        const newEmail = document.querySelector("#newEmail");
+        
+        const formData = new FormData();
+        formData.append("newName", newName.value);
+        formData.append("newEmail", newEmail.value);
+        await fetch("@Url.Action("UpdateNameMail")", {
+            method : "PATCH",
+            body: formData
+        }).then(async (res) => {
+            if (res.status === 200){
+                alert.className = "alert alert-success";
+                alertMessage.innerText = "Successfully Updated the Info!"
+                
+                if(newName.value !== '' && newName.value != null){
+                    newName.placeholder = newName.value;
+                    newName.value = '';
+                }
+                if(newEmail.value !== '' && newEmail.value != null) {
+                    newEmail.placeholder = newEmail.value;
+                    newEmail.value = '';
+                }
+            }else {
+                alert.className = "alert alert-error";
+                const json = await res.json();
+                alertMessage.innerText = json.error;
+            }
+        }).catch(err => {
+            alert.className = "alert alert-error";
+            alertMessage.innerText = "Request Failed. Please try again!";
+            console.log(err);
+        });
+        setTimeout(()=> {
+            alert.className= "alert hidden";
+            alertMessage.innerHTML = "";
+            }, 5000);
+    });
+    
     
     function CheckPass(id){
         const newPass = document.querySelector(`#${id}`);
@@ -161,4 +205,5 @@
             $("#submitPass").prop("disabled", false);
         }
     }
+    
 </script>
