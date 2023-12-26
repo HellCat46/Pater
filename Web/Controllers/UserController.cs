@@ -27,10 +27,13 @@ public class UserController : Controller
         AccountModel account = AccountModel.Deserialize(bytes);
         return View(new DashboardView()
         {
-            UserName = account.name,
-            UserIsAdmin = account.isAdmin,
-            UserPicPath = account.PicPath,
-            UserPlan = account.Plan,
+            header = new _HeaderView()
+            {
+                isAdmin = account.isAdmin,
+                name = account.name,
+                picPath = account.PicPath,
+                plan = account.Plan
+            },
             links = _context.Link.Where(model => model.AccountId == account.id).ToList()
         });
     }
@@ -47,11 +50,15 @@ public class UserController : Controller
         AccountModel account = AccountModel.Deserialize(bytes);
         return View(new ProfileView()
         {
+            header = new _HeaderView()
+            {
+                isAdmin = account.isAdmin,
+                name =account.name,
+                picPath = account.PicPath,
+                plan = account.Plan
+            },
             UserName = account.name,
             UserEmail = account.email,
-            UserPicPath = account.PicPath,
-            UserPlan = account.Plan,
-            UserIsAdmin = account.isAdmin
         });
     }
 

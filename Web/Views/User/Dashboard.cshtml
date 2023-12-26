@@ -5,13 +5,7 @@
     ViewData["Title"] = "Dashboard | Pater";
     Layout = "_UserLayout";
 }
-@Html.Partial("_Header", new _HeaderView()
-{
-    isAdmin = Model.UserIsAdmin,
-    name = Model.UserName,
-    picPath = Model.UserPicPath,
-    plan = Model.UserPlan
-})
+@Html.Partial("_Header", Model.header)
 
 <div class="my-10">
     <div class="my-6 mx-10">
