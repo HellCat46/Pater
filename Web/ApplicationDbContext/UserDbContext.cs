@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Web.Models;
 using Web.Models.Account;
 using Web.Models.Link;
 
@@ -15,4 +16,5 @@ public class UserDbContext : DbContext
     public DbSet<AccountModel> Account { get; set; }
     public DbSet<ExternalAuthModel> ExternalAuth { get; set; }
     public DbSet<ActivityLogModel> ActivityLogs { get; set; }
+    public DbSet<AnalyticsModel> Analytics { get; set; }
 }

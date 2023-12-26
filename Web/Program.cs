@@ -1,7 +1,8 @@
 using Web;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Web.ApplicationDbContext;
+using Web.Models.Link;
+using Web.Models.View;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -44,15 +45,42 @@ app.MapControllerRoute(
     name: "web",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
-app.MapGet("/{code}", (string code, UserDbContext db) =>
+app.MapGet("/{code}", async (HttpContext context, string code, UserDbContext db) =>
 {
-    Console.Write(code);
-    var linkobj  = db.Link.Find(code);
-    if (linkobj == null)
+    Console.Write(context.Connection.RemoteIpAddress);
+    string redirectUrl = "/";
+    try
     {
-        return Results.Redirect("/"); 
+        var linkobj  = db.Link.Find(code);
+        if (linkobj == null) throw new Exception();
+        redirectUrl = linkobj.url;
+        
+        
+        Uri url = new Uri("http://ip-api.com/json/"+context.Connection.RemoteIpAddress+"?fields=status,message,country,city");
+        var info = await new HttpClient().GetFromJsonAsync<VisitorGeoLoc>(url);
+        var (browser, device, os) = AnalyticsModel.ParseUserAgent(context.Request.Headers.UserAgent);
+        
+        
+        if (info != null)
+        {
+            db.Analytics.Add(new AnalyticsModel()
+            {
+                city = info.City,
+                country = info.Country,
+                LinkModelCode = code,
+                browser = browser,
+                device = device,
+                os = os,
+                visitedAt = DateTime.Now,
+            });
+            db.SaveChanges();
+        }
+        
     }
-
-    return Results.Redirect(linkobj.url);
+    catch (Exception ex)
+    {
+        Console.Write(ex);
+    }
+    return Results.Redirect(redirectUrl);
 });
 app.Run();
