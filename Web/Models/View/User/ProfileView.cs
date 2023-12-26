@@ -9,9 +9,4 @@ public class ProfileView
     
     public string UserName { get; set; }
     public string UserEmail { get; set; }
-    
-    
-    // Change Password
-    public string oldPassword { get; set; }
-    public string newPassword { get; set; }
 }

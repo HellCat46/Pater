@@ -60,14 +60,14 @@
 @* Change Password *@
 <dialog id="change_pass" class="modal modal-bottom sm:modal-middle">
     <div class="modal-box card">
-        <form class="card-body" method="post" asp-action="ChangePassword">
+        <form class="card-body" id="newPassword">
             <h2 class="card-title justify-center mb-6">Change Password</h2>
             <div class="form-control mt-2">
-                <input type="text" placeholder="Old Password" class="input input-bordered" asp-for="oldPassword" required/>
+                <input type="password" placeholder="Old Password" class="input input-bordered" id="oldPass" required/>
             </div>
 
             <div class="form-control mt-2">
-                <input type="text" placeholder="New Password" class="input input-bordered" asp-for="newPassword" id="newPass" oninput="CheckPass('newPass')" required/>
+                <input type="password" placeholder="New Password" class="input input-bordered" id="newPass" oninput="CheckPass()" required/>
                 <span class="hidden text-error m-2" id="passError">Password doesn't meet the requirements. (Minimum 8 Character, 1 Number, 1 Lowercase and 1 Uppercase)</span>
             </div>
 
@@ -186,17 +186,54 @@
             }, 5000);
     });
     
+    const newPassword = document.querySelector("#newPassword");
+    newPassword.addEventListener("submit", async (e) => {
+        document.querySelector("#change_pass").close();
+        e.preventDefault();
+        
+        const oldPass = document.querySelector("#oldPass");
+        const newPass = document.querySelector("#newPass");
+        
+        const formData = new FormData();
+        formData.append("oldPassword", oldPass.value);
+        formData.append("newPassword", newPass.value);
+        
+        await fetch("@Url.Action("ChangePassword")", {
+            method : "PATCH",
+            body : formData
+        }).then(async res => {
+            if (res.status === 200){
+                alert.className = "alert alert-success";
+                alertMessage.innerText = "Successfully Updated the Info!"
+            }else {
+                alert.className = "alert alert-error";
+                const json = await res.json();
+                alertMessage.innerText = json.error;
+            }
+        }).catch(err => {
+            alert.className = "alert alert-error";
+            alertMessage.innerText = "Request Failed. Please try again!";
+            console.log(err);
+        })
+        
+        oldPass.value = "";
+        newPass.value = "";
+        
+        setTimeout(()=> {
+            alert.className= "alert hidden";
+            alertMessage.innerHTML = "";
+            }, 5000);
+    })
     
-    function CheckPass(id){
-        const newPass = document.querySelector(`#${id}`);
-        // Double At is used because Razor Page uses single one for their syntax. 
-        // Remove one At from the pair if you want to use it anywhere other than razor page.
+    function CheckPass(){
+        const newPass = document.querySelector(`#newPass`);
+        
         if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{8,50}$/.test(newPass.value)){
-            $("#passError").css("display", "block");
-            $("#submitPass").prop("disabled", true);
+            document.querySelector("#passError").style.display = "block";
+            document.querySelector("#submitPass").disabled = true;
         }else {
-            $("#passError").css("display", "none");
-            $("#submitPass").prop("disabled", false);
+            document.querySelector("#passError").style.display = "none";
+            document.querySelector("#submitPass").disabled = false;
         }
     }
     

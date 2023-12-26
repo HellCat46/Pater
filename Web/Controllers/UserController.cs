@@ -184,7 +184,7 @@ public class UserController : Controller
         }
     }
     
-    [HttpPost]
+    [HttpPatch]
     public IActionResult ChangePassword(string oldPassword, string newPassword)
     {
         try
@@ -199,23 +199,25 @@ public class UserController : Controller
 
             AccountModel account = AccountModel.Deserialize(bytes);
 
-            if (account.password == oldPassword)
-            {
-                account.password = newPassword;
-                _context.Account.Update(account);
-                _context.SaveChanges();
+            if (account.password != oldPassword) 
+                return StatusCode(400, new
+                {
+                    error = "Provided Old Password was incorrect!"
+                });
                 
-                HttpContext.Session.Set("UserData", AccountModel.Serialize(account));
-                ActivityLogModel.WriteLogs(_context, ActivityLogModel.Event.ChangedPassword, account, HttpContext.Connection.RemoteIpAddress.ToString());
-            }
+            account.password = newPassword;
+            _context.Account.Update(account);
+            _context.SaveChanges();
+                
+            HttpContext.Session.Set("UserData", AccountModel.Serialize(account));
+            ActivityLogModel.WriteLogs(_context, ActivityLogModel.Event.ChangedPassword, account, HttpContext.Connection.RemoteIpAddress.ToString());
+            return Ok();
         }
         catch (Exception ex)
         {
             Console.Write(ex);
-            
+            return StatusCode(500, new {error = "Unexpected Error while trying to Update Avatar!"});
         }
-
-        return Redirect("Profile");
     }
 
     public IActionResult Logout()
