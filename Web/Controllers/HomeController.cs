@@ -61,21 +61,27 @@ public class HomeController : Controller
         try
         {
             AccountModel? account = _context.Account.FirstOrDefault(acc => acc.email == data.email && acc.password == data.password);
-            if (account != null)
+            if (account == null)
             {
-                HttpContext.Session.Set("UserData", AccountModel.Serialize(account));
-                ActivityLogModel.WriteLogs(_context, ActivityLogModel.Event.EmailLoggedIn, account, HttpContext.Connection.RemoteIpAddress.ToString());
-                Console.Write(account.ToString());
-                return RedirectToAction("Dashboard", "User");
+                ViewBag.ErrorMessage = "Invalid Credentials";
+                return View();
             }
+            if (account.password != data.password)
+            {
+                ViewBag.ErrorMessage = ".";
+                return View();
+            }
+            HttpContext.Session.Set("UserData", AccountModel.Serialize(account));
+            ActivityLogModel.WriteLogs(_context, ActivityLogModel.Event.EmailLoggedIn, account, HttpContext.Connection.RemoteIpAddress.ToString());
+            Console.Write(account.ToString());
+            return RedirectToAction("Dashboard", "User");
         }
         catch (Exception ex)
         {
             Console.WriteLine(ex);
+            ViewBag.ErrorMessage = "Unexpected Error while processing the request";
             return View();
         }
-
-        return View();
     }
 
     public IActionResult Signup()
@@ -87,15 +93,17 @@ public class HomeController : Controller
     }
 
     [HttpPost]
-    [ValidateAntiForgeryToken]
     public IActionResult Signup(SignupView data)
     {
-        if (!ModelState.IsValid)
-        {
-            return View();
-        }
         try
         {
+            AccountModel? account = _context.Account.FirstOrDefault(acc => acc.email == data.email);
+            if (account != null)
+            {
+                ViewBag.ErrorMessage = "Account Already Exist with this Email";
+                return View();
+            }
+
             _context.Account.Add(new AccountModel()
             {
                 email = data.email,
@@ -103,19 +111,24 @@ public class HomeController : Controller
                 createdAt = DateTime.Now,
                 name = data.name
             });
-            
             _context.SaveChanges();
-            AccountModel? account = _context.Account.FirstOrDefault(acc => acc.email == data.email && acc.password == data.password);
-            if (account != null)
+            
+            account = _context.Account.FirstOrDefault(acc => acc.email == data.email && acc.password == data.password);
+            if (account == null)
             {
-                HttpContext.Session.Set("UserData", AccountModel.Serialize(account));
-                ActivityLogModel.WriteLogs(_context, ActivityLogModel.Event.EmailSignedIn, account, HttpContext.Connection.RemoteIpAddress.ToString());
+                ViewBag.ErrorMessage = "Failed to create the Account. Please try again later.";
+                return View();
             }
+            
+            HttpContext.Session.Set("UserData", AccountModel.Serialize(account));
+            ActivityLogModel.WriteLogs(_context, ActivityLogModel.Event.EmailSignedIn, account, HttpContext.Connection.RemoteIpAddress.ToString());
+            
             return RedirectToAction("Dashboard", "User");
         }
         catch (Exception ex)
         {
             Console.WriteLine(ex);
+            ViewBag.ErrorMessage = "Unexpected Error while processing the request";
             return View();
         }
     }

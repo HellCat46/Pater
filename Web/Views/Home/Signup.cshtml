@@ -20,7 +20,15 @@
             <div class="card-body">
                 <form method="post">
                     <div class="card-title">Sign up</div>
-                    <div asp-validation-summary="ModelOnly">dokdkos</div>
+                    @if (ViewBag.ErrorMessage != null)
+                    {
+                        <div role="alert" id="errorAlert" class="alert alert-error my-5">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            <span>@ViewBag.ErrorMessage</span>
+                        </div>
+                    }
                     <div class="form-control">
                         <label class="label">
                             <span class="label-text">Name</span>
@@ -37,17 +45,34 @@
                         <label class="label">
                             <span class="label-text">Password</span>
                         </label>
-                        <input type="password" placeholder="Password" class="input input-bordered" asp-for="password" required/>
-                        <span class="text-error" asp-validation-for="password"></span>
+                        <input type="password" placeholder="Password" id="pass" class="input input-bordered" asp-for="password" oninput="CheckPass()" required/>
+                        <span id="passError" class="hidden text-error">Password doesn't meet the requirements. (Minimum 8 Character, 1 Number, 1 Lowercase and 1 Uppercase)</span>
                     </div>
                     <div class="form-control mt-6">
-                        <button class="btn btn-primary">Sign up</button>
+                        <button class="btn btn-primary" id="signup">Sign up</button>
                     </div>
                 </form>
                 <div class="divider">OR</div>
-                <div class="btn btn-primary" data-onsuccess="onSignIn">Google</div> 
+                <div class="btn btn-primary" data-onsuccess="onSignIn">Google</div>
             </div>
         </div>
     </div>
 </div>
 
+<script>
+    function CheckPass(){
+        const pass = document.querySelector(`#pass`);
+        
+        if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{8,50}$/.test(pass.value)){
+            document.querySelector("#passError").style.display = "block";
+            document.querySelector("#signup").disabled = true;
+        }else {
+            document.querySelector("#passError").style.display = "none";
+            document.querySelector("#signup").disabled = false;
+        }
+    }
+    setTimeout(() => {
+        document.querySelector("#errorAlert").remove();
+    }, 10000)
+    
+</script>
