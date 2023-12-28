@@ -22,34 +22,26 @@
         </td>
         <td class="hidden lg:table-cell">@link.CreatedAt</td>
         <td>
-            <div class="hidden lg:flex h-12">
-                <ul class="menu menu-horizontal px-1 h-full">
-                    <li>
-                        <img src="~/assets/svg/copy-icon.svg" alt="Copy"/>
-                    </li>
-                    <li>
-                        <img src="~/assets/svg/edit-icon.svg" alt="Edit"/>
-                    </li>
-                    <li>
-                        <img src="~/assets/svg/delete-icon.svg" alt="Delete"/>
-                    </li>
-                </ul>
+            <div class="hidden lg:flex h-14 gap-2">
+                <img class="btn btn-ghost" src="~/assets/svg/copy-icon.svg" alt="Copy" onclick="copyCode('@link.code')"/>
+                <img class="btn btn-ghost" src="~/assets/svg/edit-icon.svg" alt="Edit" onclick="editLink('@link.code')"/>
+                <img class="btn btn-ghost" src="~/assets/svg/delete-icon.svg" alt="Delete" onclick="deleteLink('@link.code')"/>
             </div>
             <div class="dropdown dropdown-end lg:hidden w-12 h-12">
-                <label tabindex="0" class="btn btn-ghost ">
+                <label tabindex="0" class="btn btn-outline btn-primary ">
                     <img class="" src="~/assets/svg/three-dots-icon.svg" alt="Options"/>
                 </label>
                 <ul
                     tabindex="0"
                     class="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-300 rounded-box w-52">
                     <li>
-                        <button >Copy Link</button>
+                        <button onclick="copyCode('@link.code')">Copy Link</button>
                     </li>
                     <li>
-                        <button>Edit</button>
+                        <button onclick="editLink('@link.code')">Edit</button>
                     </li>
                     <li>
-                        <button>Delete</button>
+                        <button onclick="deleteLink('@link.code')">Delete</button>
                     </li>
                 </ul>
             </div>

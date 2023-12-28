@@ -8,7 +8,6 @@ namespace Web.Controllers;
 
 public class UserController(UserDbContext context) : Controller
 {
-
     public IActionResult Dashboard()
     {
         byte[]? bytes = HttpContext.Session.Get("UserData");
@@ -19,7 +18,7 @@ public class UserController(UserDbContext context) : Controller
         }
 
         AccountModel account = AccountModel.Deserialize(bytes);
-        
+
         return View(new DashboardView()
         {
             header = new _HeaderView()
@@ -29,10 +28,10 @@ public class UserController(UserDbContext context) : Controller
                 picPath = account.PicPath,
                 plan = account.Plan
             },
-            hasLinks = context.Link.Any(link => link.AccountId == account.id) 
+            hasLinks = context.Link.Any(link => link.AccountId == account.id)
         });
     }
-    
+
     public IActionResult Profile()
     {
         byte[]? bytes = HttpContext.Session.Get("UserData");
@@ -91,7 +90,8 @@ public class UserController(UserDbContext context) : Controller
 
             return PartialView("_LinkRows", new _LinkRows()
             {
-                links = context.Link.Where(link => link.AccountId == account.id).OrderByDescending(log => log.CreatedAt).Skip((pageno - 1) * 10).Take(10).ToList()
+                links = context.Link.Where(link => link.AccountId == account.id).OrderByDescending(log => log.CreatedAt)
+                    .Skip((pageno - 1) * 10).Take(10).ToList()
             });
         }
         catch (Exception ex)
@@ -100,9 +100,9 @@ public class UserController(UserDbContext context) : Controller
             return StatusCode(500, new { error = "Unexpected Error while processing the request" });
         }
     }
-    
+
     [HttpPost]
-    public IActionResult CreateLink([FromBody] CreateLinkView link)
+    public IActionResult CreateLink([FromBody] LinkView link)
     {
         try
         {
@@ -120,10 +120,12 @@ public class UserController(UserDbContext context) : Controller
             context.Link.Add(new LinkModel()
             {
                 AccountId = account.id,
-                code = (link.NewLinkCode != String.Empty ? link.NewLinkCode : GenerateRandom(8)),
+                code = (link.LinkCode != String.Empty ? link.LinkCode : GenerateRandom(8)),
                 CreatedAt = DateTime.Now,
-                name = (link.NewLinkName != String.Empty ? link.NewLinkName :DateTime.Now.ToShortDateString()+" "+ DateTime.Now.ToLongTimeString()),
-                url = link.NewLinkURL
+                name = (link.LinkName != String.Empty
+                    ? link.LinkName
+                    : DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToLongTimeString()),
+                url = link.LinkURL
             });
             context.SaveChanges();
             ActivityLogModel.WriteLogs(context, ActivityLogModel.Event.CreatedLink, account,
@@ -137,6 +139,89 @@ public class UserController(UserDbContext context) : Controller
         }
     }
 
+    [HttpPatch]
+    public IActionResult EditLink([FromBody] LinkView link)
+    {
+        try
+        {
+            if (link.LinkName == String.Empty && link.LinkURL == String.Empty)
+                return StatusCode(400, new
+                {
+                    error = "At least one of the field are required to be field"
+                });
+            
+            byte[]? bytes = HttpContext.Session.Get("UserData");
+            if (bytes == null)
+            {
+                HttpContext.Session.Clear();
+                return StatusCode(403, new
+                {
+                    error = "Session Expired. Please Login Again!"
+                });
+            }
+
+            AccountModel account = AccountModel.Deserialize(bytes);
+
+            LinkModel? linkRow = context.Link.FirstOrDefault(l => l.code == link.LinkCode);
+            if (linkRow == null) return StatusCode(404, new { error = "Link Doesn't exist" });
+            
+            if (linkRow.AccountId != account.id)
+                return StatusCode(403, new { error = "You don't have permission to edit this link" });
+
+            if (link.LinkName != String.Empty) linkRow.name = link.LinkName;
+            if (link.LinkURL != String.Empty) linkRow.url = link.LinkURL;
+
+            context.SaveChanges();
+            return Ok();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex);
+            return StatusCode(500, new
+            {
+                error = "Unexpected Error while trying to Edit Link"
+            });
+        }
+    }
+
+    [HttpDelete]
+    public IActionResult DeleteLink(string code)
+    {
+        try
+        {
+            Console.WriteLine(code);
+            byte[]? bytes = HttpContext.Session.Get("UserData");
+            if (bytes == null)
+            {
+                HttpContext.Session.Clear();
+                return StatusCode(403, new
+                {
+                    error = "Session Expired. Please Login Again!"
+                });
+            }
+
+            AccountModel account = AccountModel.Deserialize(bytes);
+
+            LinkModel? linkRow = context.Link.FirstOrDefault(link => link.code == code);
+            if (linkRow == null) return StatusCode(404, new { error = "Link Doesn't exist" });
+            
+            if (linkRow.AccountId != account.id)
+                return StatusCode(403, new { error = "You don't have permission to edit this link" });
+
+            context.Link.Remove(linkRow);
+            context.SaveChanges();
+            return Ok();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex);
+            return StatusCode(500, new
+            {
+                error = "Unexpected Error while trying to Edit Link"
+            });
+        }
+    }
+    
     [HttpPatch]
     public IActionResult ChangeAvatar(IFormFile? newAvatar)
     {
