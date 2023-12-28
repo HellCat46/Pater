@@ -18,9 +18,10 @@ public class AdminController(UserDbContext context) : Controller
                 HttpContext.Session.Clear();
                 return RedirectToAction("Login", "Home");
             }
+
             AccountModel adminAccount = AccountModel.Deserialize(bytes);
             if (adminAccount.isAdmin != true) return RedirectToAction("Dashboard", "User");
-            
+
             return View(new AdminDashboardView()
             {
                 Header = new _HeaderView()
@@ -30,7 +31,6 @@ public class AdminController(UserDbContext context) : Controller
                     picPath = adminAccount.PicPath,
                     plan = adminAccount.Plan
                 },
-                logs = context.ActivityLogs.OrderByDescending(log => log.date).ToList()
             });
         }
         catch (Exception ex)
@@ -43,7 +43,7 @@ public class AdminController(UserDbContext context) : Controller
     public IActionResult ManageUser(String userEmail)
     {
         string? userId = HttpContext.Request.Query["UserId"];
-        
+
         try
         {
             byte[]? bytes = HttpContext.Session.Get("UserData");
@@ -57,11 +57,11 @@ public class AdminController(UserDbContext context) : Controller
             if (adminAccount.isAdmin != true) return RedirectToAction("Dashboard", "User");
 
             AccountModel? userAccount;
-            if(userEmail != null) userAccount = context.Account.Single(acc => acc.email == userEmail);
-            else if (userId != null ) userAccount = context.Account.Single(acc => acc.id == int.Parse(userId));
+            if (userEmail != null) userAccount = context.Account.Single(acc => acc.email == userEmail);
+            else if (userId != null) userAccount = context.Account.Single(acc => acc.id == int.Parse(userId));
             else return RedirectToAction("Dashboard");
-            
-            
+
+
             return View(new ManageUserView()
             {
                 header = new _HeaderView()
@@ -84,6 +84,42 @@ public class AdminController(UserDbContext context) : Controller
         {
             Console.WriteLine(ex);
         }
+
         return View();
+    }
+
+    // API Endpoint
+    public IActionResult GetLogs()
+    {
+        try
+        {
+            int pageno = Convert.ToInt32(HttpContext.Request.Query["pageno"]);
+            if (pageno < 1)
+                return StatusCode(400, new
+                {
+                    error = "Page Number is too low."
+                });
+
+            byte[]? bytes = HttpContext.Session.Get("UserData");
+            if (bytes == null)
+            {
+                HttpContext.Session.Clear();
+                return StatusCode(403, new { error = "Session Expired. Please Login in Again" });
+            }
+
+            AccountModel adminAccount = AccountModel.Deserialize(bytes);
+            if (adminAccount.isAdmin != true)
+                return StatusCode(403, new { error = "This action requires Admin Access" });
+
+            return PartialView("_LogRows", new _LogsRows()
+            {
+                logs = context.ActivityLogs.OrderByDescending(log => log.date).Skip((pageno - 1) * 10).Take(10).ToList()
+            });
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex);
+            return StatusCode(500, new { error = "Unexpected Error while processing the request" });
+        }
     }
 }

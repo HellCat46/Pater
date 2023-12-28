@@ -1,0 +1,13 @@
+@using Web.Models.Account
+@model Web.Models.View.Admin._LogsRows
+
+@foreach (ActivityLogModel log in Model.logs)
+{
+    <tr>
+        <th>@log.id</th>
+        <td>@log.date</td>
+        <td><a href="/Admin/ManageUser?UserId=@log.Userid" class="link link-info">@log.Userid</a></td>
+        <td>@log.IPAddr</td>
+        <td>@log.Action</td>
+    </tr>
+}
