@@ -6,14 +6,8 @@ using Web.Models.View.Admin;
 
 namespace Web.Controllers;
 
-public class AdminController : Controller
+public class AdminController(UserDbContext context) : Controller
 {
-    private readonly UserDbContext _context;
-    public AdminController(UserDbContext context)
-    {
-        _context = context;
-    }
-    
     public IActionResult Dashboard()
     {
         try
@@ -36,7 +30,7 @@ public class AdminController : Controller
                     picPath = adminAccount.PicPath,
                     plan = adminAccount.Plan
                 },
-                logs = _context.ActivityLogs.OrderByDescending(log => log.date).ToList()
+                logs = context.ActivityLogs.OrderByDescending(log => log.date).ToList()
             });
         }
         catch (Exception ex)
@@ -63,8 +57,8 @@ public class AdminController : Controller
             if (adminAccount.isAdmin != true) return RedirectToAction("Dashboard", "User");
 
             AccountModel? userAccount;
-            if(userEmail != null) userAccount = _context.Account.Single(acc => acc.email == userEmail);
-            else if (userId != null ) userAccount = _context.Account.Single(acc => acc.id == int.Parse(userId));
+            if(userEmail != null) userAccount = context.Account.Single(acc => acc.email == userEmail);
+            else if (userId != null ) userAccount = context.Account.Single(acc => acc.id == int.Parse(userId));
             else return RedirectToAction("Dashboard");
             
             
@@ -77,8 +71,8 @@ public class AdminController : Controller
                     picPath = adminAccount.PicPath,
                     plan = adminAccount.Plan
                 },
-                links = _context.Link.Where(link => link.AccountId == userAccount.id).ToList(),
-                logs = _context.ActivityLogs.Where(log => log.Userid == userAccount.id).ToList(),
+                links = context.Link.Where(link => link.AccountId == userAccount.id).ToList(),
+                logs = context.ActivityLogs.Where(log => log.Userid == userAccount.id).ToList(),
                 UserAccountCreated = userAccount.createdAt,
                 UserEmail = userAccount.email,
                 UserName = userAccount.name,

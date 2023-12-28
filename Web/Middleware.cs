@@ -1,3 +1,5 @@
+using Microsoft.IdentityModel.Tokens;
+
 namespace Web;
 
 public class Middleware
@@ -12,14 +14,13 @@ public class Middleware
     public async Task InvokeAsync(HttpContext context)
     {
         String path = context.Request.Path.ToString();
-        byte[]? UserData = context.Session.Get("UserData");
+        bool userData = context.Session.Get("UserData").IsNullOrEmpty();
         
-        Console.WriteLine(path, UserData);
-        if (path.StartsWith("/User") && UserData == null)
+        if (path.StartsWith("/User") && userData)
             context.Response.Redirect("/Home/Login");
-        else if (path.StartsWith("/Admin") && UserData == null)
+        else if (path.StartsWith("/Admin") && userData)
             context.Response.Redirect("/");
-        else if (path == "/" && UserData != null)
+        else if (path == "/" && !userData)
             context.Response.Redirect("/User/Dashboard");
         
         

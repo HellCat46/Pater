@@ -6,14 +6,8 @@ using Web.Models.View.User;
 
 namespace Web.Controllers;
 
-public class UserController : Controller
+public class UserController(UserDbContext context) : Controller
 {
-    private readonly UserDbContext _context;
-
-    public UserController(UserDbContext context)
-    {
-        _context = context;
-    }
 
     public IActionResult Dashboard()
     {
@@ -34,7 +28,7 @@ public class UserController : Controller
                 picPath = account.PicPath,
                 plan = account.Plan
             },
-            links = _context.Link.Where(model => model.AccountId == account.id).ToList()
+            links = context.Link.Where(model => model.AccountId == account.id).ToList()
         });
     }
 
@@ -90,17 +84,17 @@ public class UserController : Controller
             }
 
             AccountModel account = AccountModel.Deserialize(bytes);
-            _context.Link.Add(new LinkModel()
+            context.Link.Add(new LinkModel()
             {
                 AccountId = account.id,
                 code = (link.NewLinkCode != String.Empty ? link.NewLinkCode : GenerateRandom(8)),
                 CreatedAt = DateTime.Now,
-                name = (link.NewLinkName != String.Empty ? link.NewLinkName : DateTime.Now.ToString()),
+                name = (link.NewLinkName != String.Empty ? link.NewLinkName :DateTime.Now.ToShortDateString()+" "+ DateTime.Now.ToLongTimeString()),
                 url = link.NewLinkURL
             });
-            _context.SaveChanges();
-            ActivityLogModel.WriteLogs(_context, ActivityLogModel.Event.CreatedLink, account,
-                HttpContext.Connection.RemoteIpAddress.ToString());
+            context.SaveChanges();
+            ActivityLogModel.WriteLogs(context, ActivityLogModel.Event.CreatedLink, account,
+                HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown");
             return Ok();
         }
         catch (Exception ex)
@@ -144,11 +138,11 @@ public class UserController : Controller
                 fileStream.Close();
             }
 
-            _context.Account.Update(account);
-            _context.SaveChanges();
+            context.Account.Update(account);
+            context.SaveChanges();
             HttpContext.Session.Set("UserData", AccountModel.Serialize(account));
-            ActivityLogModel.WriteLogs(_context, ActivityLogModel.Event.ChangedAvatar, account,
-                HttpContext.Connection.RemoteIpAddress.ToString());
+            ActivityLogModel.WriteLogs(context, ActivityLogModel.Event.ChangedAvatar, account,
+                HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown");
             return Ok("/UserPics/" + account.PicPath);
         }
         catch (Exception ex)
@@ -184,22 +178,22 @@ public class UserController : Controller
             if (newName != null) account.name = newName;
             if (newEmail != null) account.email = newEmail;
 
-            _context.Account.Update(account);
-            _context.SaveChanges();
+            context.Account.Update(account);
+            context.SaveChanges();
             HttpContext.Session.Set("UserData", AccountModel.Serialize(account));
 
             if (newName != String.Empty)
-                ActivityLogModel.WriteLogs(_context, ActivityLogModel.Event.ChangedName, account,
-                    HttpContext.Connection.RemoteIpAddress.ToString());
+                ActivityLogModel.WriteLogs(context, ActivityLogModel.Event.ChangedName, account,
+                    HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown");
             if (newEmail != String.Empty)
-                ActivityLogModel.WriteLogs(_context, ActivityLogModel.Event.ChangedEmail, account,
-                    HttpContext.Connection.RemoteIpAddress.ToString());
+                ActivityLogModel.WriteLogs(context, ActivityLogModel.Event.ChangedEmail, account,
+                    HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown");
             return Ok();
         }
         catch (Exception ex)
         {
             Console.WriteLine(ex);
-            return StatusCode(500, new { error = "Unexpected Error while trying to Update Avatar." });
+            return StatusCode(500, new { error = "Unexpected Error while trying to Update Info." });
         }
     }
 
@@ -228,12 +222,12 @@ public class UserController : Controller
                 });
 
             account.password = newPassword;
-            _context.Account.Update(account);
-            _context.SaveChanges();
+            context.Account.Update(account);
+            context.SaveChanges();
 
             HttpContext.Session.Set("UserData", AccountModel.Serialize(account));
-            ActivityLogModel.WriteLogs(_context, ActivityLogModel.Event.ChangedPassword, account,
-                HttpContext.Connection.RemoteIpAddress.ToString());
+            ActivityLogModel.WriteLogs(context, ActivityLogModel.Event.ChangedPassword, account,
+                HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown");
             return Ok();
         }
         catch (Exception ex)
@@ -254,8 +248,8 @@ public class UserController : Controller
             return RedirectToAction("Login", "Home");
         }
 
-        ActivityLogModel.WriteLogs(_context, ActivityLogModel.Event.LoggedOut, AccountModel.Deserialize(bytes),
-            HttpContext.Connection.RemoteIpAddress.ToString());
+        ActivityLogModel.WriteLogs(context, ActivityLogModel.Event.LoggedOut, AccountModel.Deserialize(bytes),
+            HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown");
 
         return RedirectToAction("Index", "Home");
     }
@@ -272,21 +266,21 @@ public class UserController : Controller
         AccountModel account = AccountModel.Deserialize(bytes);
         try
         {
-            _context.Account.Remove(_context.Account.Single(acc => acc.id == account.id));
+            context.Account.Remove(context.Account.Single(acc => acc.id == account.id));
 
-            var links = _context.Link.Where(link => link.AccountId == account.id);
+            var links = context.Link.Where(link => link.AccountId == account.id);
             foreach (LinkModel link in links)
             {
-                _context.Link.Remove(link);
+                context.Link.Remove(link);
             }
 
-            var logs = _context.ActivityLogs.Where(logs => logs.Userid == account.id);
+            var logs = context.ActivityLogs.Where(logs => logs.Userid == account.id);
             foreach (ActivityLogModel log in logs)
             {
-                _context.ActivityLogs.Remove(log);
+                context.ActivityLogs.Remove(log);
             }
 
-            _context.SaveChanges();
+            context.SaveChanges();
             HttpContext.Session.Clear();
             return RedirectToAction("Index", "Home");
         }
@@ -305,7 +299,7 @@ public class UserController : Controller
         String code = "";
         for (int i = 0; i < len; i++)
         {
-            code += chars[random.Next(1, chars.Length)];
+            code += chars[random.Next(0, chars.Length)];
         }
 
         return code;

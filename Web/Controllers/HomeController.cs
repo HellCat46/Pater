@@ -1,22 +1,13 @@
 using Microsoft.AspNetCore.Mvc;
 using Web.ApplicationDbContext;
-using Web.Models;
 using Web.Models.Account;
 using Web.Models.View;
-using Web.Models.Link;
 
 
 namespace Web.Controllers;
 
-public class HomeController : Controller
+public class HomeController(UserDbContext context) : Controller
 {
-    private readonly UserDbContext _context;
-
-    public HomeController(UserDbContext context)
-    {
-        _context = context;
-    }
-
     public IActionResult Index()
     {
         return View();
@@ -60,7 +51,7 @@ public class HomeController : Controller
     {
         try
         {
-            AccountModel? account = _context.Account.FirstOrDefault(acc => acc.email == data.email && acc.password == data.password);
+            AccountModel? account = context.Account.FirstOrDefault(acc => acc.email == data.email && acc.password == data.password);
             if (account == null)
             {
                 ViewBag.ErrorMessage = "Invalid Credentials";
@@ -72,7 +63,7 @@ public class HomeController : Controller
                 return View();
             }
             HttpContext.Session.Set("UserData", AccountModel.Serialize(account));
-            ActivityLogModel.WriteLogs(_context, ActivityLogModel.Event.EmailLoggedIn, account, HttpContext.Connection.RemoteIpAddress.ToString());
+            ActivityLogModel.WriteLogs(context, ActivityLogModel.Event.EmailLoggedIn, account, HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown");
             Console.Write(account.ToString());
             return RedirectToAction("Dashboard", "User");
         }
@@ -97,23 +88,23 @@ public class HomeController : Controller
     {
         try
         {
-            AccountModel? account = _context.Account.FirstOrDefault(acc => acc.email == data.email);
+            AccountModel? account = context.Account.FirstOrDefault(acc => acc.email == data.email);
             if (account != null)
             {
                 ViewBag.ErrorMessage = "Account Already Exist with this Email";
                 return View();
             }
 
-            _context.Account.Add(new AccountModel()
+            context.Account.Add(new AccountModel()
             {
                 email = data.email,
                 password = data.password,
                 createdAt = DateTime.Now,
                 name = data.name
             });
-            _context.SaveChanges();
+            context.SaveChanges();
             
-            account = _context.Account.FirstOrDefault(acc => acc.email == data.email && acc.password == data.password);
+            account = context.Account.FirstOrDefault(acc => acc.email == data.email && acc.password == data.password);
             if (account == null)
             {
                 ViewBag.ErrorMessage = "Failed to create the Account. Please try again later.";
@@ -121,7 +112,7 @@ public class HomeController : Controller
             }
             
             HttpContext.Session.Set("UserData", AccountModel.Serialize(account));
-            ActivityLogModel.WriteLogs(_context, ActivityLogModel.Event.EmailSignedIn, account, HttpContext.Connection.RemoteIpAddress.ToString());
+            ActivityLogModel.WriteLogs(context, ActivityLogModel.Event.EmailSignedIn, account, HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown");
             
             return RedirectToAction("Dashboard", "User");
         }
