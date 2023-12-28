@@ -19,6 +19,7 @@ public class UserController(UserDbContext context) : Controller
         }
 
         AccountModel account = AccountModel.Deserialize(bytes);
+        
         return View(new DashboardView()
         {
             header = new _HeaderView()
@@ -28,10 +29,10 @@ public class UserController(UserDbContext context) : Controller
                 picPath = account.PicPath,
                 plan = account.Plan
             },
-            links = context.Link.Where(model => model.AccountId == account.id).ToList()
+            hasLinks = context.Link.Any(link => link.AccountId == account.id) 
         });
     }
-
+    
     public IActionResult Profile()
     {
         byte[]? bytes = HttpContext.Session.Get("UserData");
@@ -68,6 +69,38 @@ public class UserController(UserDbContext context) : Controller
 
 
     // Non-Page Actions
+    public IActionResult GetLinks()
+    {
+        try
+        {
+            int pageno = Convert.ToInt32(HttpContext.Request.Query["pageno"]);
+            if (pageno < 1)
+                return StatusCode(400, new
+                {
+                    error = "Page Number is too low."
+                });
+
+            byte[]? bytes = HttpContext.Session.Get("UserData");
+            if (bytes == null)
+            {
+                HttpContext.Session.Clear();
+                return StatusCode(403, new { error = "Session Expired. Please Login in Again" });
+            }
+
+            AccountModel account = AccountModel.Deserialize(bytes);
+
+            return PartialView("_LinkRows", new _LinkRows()
+            {
+                links = context.Link.Where(link => link.AccountId == account.id).OrderByDescending(log => log.CreatedAt).Skip((pageno - 1) * 10).Take(10).ToList()
+            });
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex);
+            return StatusCode(500, new { error = "Unexpected Error while processing the request" });
+        }
+    }
+    
     [HttpPost]
     public IActionResult CreateLink([FromBody] CreateLinkView link)
     {
@@ -100,7 +133,7 @@ public class UserController(UserDbContext context) : Controller
         catch (Exception ex)
         {
             Console.Write(ex);
-            return StatusCode(500, new { error = "Unexpected Error while trying to Update Avatar." });
+            return StatusCode(500, new { error = "Unexpected Error while trying to Create Link." });
         }
     }
 

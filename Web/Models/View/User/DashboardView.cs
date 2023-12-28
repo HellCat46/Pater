@@ -8,7 +8,6 @@ public class DashboardView
 {
     public _HeaderView header { get; set; }
     
-    // Body's Data
-    public List<LinkModel> links { get; set; }
+    public bool hasLinks { get; set; }
 }
 

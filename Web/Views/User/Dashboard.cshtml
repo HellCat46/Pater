@@ -1,5 +1,4 @@
 @using Web.Models.View.User
-@using Web.Models.Link
 @model DashboardView
 @{
     ViewData["Title"] = "Dashboard | Pater";
@@ -22,13 +21,13 @@
                 <button class="btn btn-primary" onclick="create.showModal()">Create</button>
             </div>
             <div class="flex items-center justify-center mx-3">
-                @if (Model.links.Count == 0)
+                @if (!Model.hasLinks)
                 {
                     <span class="p-2">Nothing to show here</span>
                 }
                 else
                 {
-                    <div>
+                    <div class="overflow-x-auto">
                         <table class="table table-sm lg:table-lg ">
                             <thead>
                             <tr>
@@ -37,68 +36,15 @@
                                         <input type="checkbox" class="checkbox"/>
                                     </label>
                                 </th>
-                                <th></th>
-                                <th class="hidden lg:table-cell"></th>
-                                <th></th>
+                                <th colspan="3">
+                                    <div class="join grid grid-cols-2 ">
+                                      <button class="join-item btn btn-active" id="pagePrev">Previous page</button>
+                                      <button class="join-item btn btn-active" id="pageNext">Next</button>
+                                    </div>
+                                </th>
                             </tr>
                             </thead>
-                            <tbody>
-                            @foreach (LinkModel link in Model.links)
-                            {
-                                <tr>
-                                    <th>
-                                        <label>
-                                            <input type="checkbox" class="checkbox"/>
-                                        </label>
-                                    </th>
-                                    <td>
-                                        <div class="flex items-center gap-3">
-                                            <div class="avatar">
-                                                <div class="mask mask-squircle w-12 h-12">
-                                                    <img src="https://t2.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=@(link.url)&size=48" alt="Favicon"/>
-                                                </div>
-                                            </div>
-                                            <div>
-                                                <div class="font-bold">@link.name</div>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td class="hidden lg:table-cell">@link.CreatedAt</td>
-                                    <td>
-                                        <div class="hidden lg:flex">
-                                            <ul class="menu menu-horizontal px-1">
-                                                <li>
-                                                    <img src="~/assets/svg/copy-icon.svg" alt="Copy"/>
-                                                </li>
-                                                <li>
-                                                    <img src="~/assets/svg/edit-icon.svg" alt="Edit"/>
-                                                </li>
-                                                <li>
-                                                    <img src="~/assets/svg/delete-icon.svg" alt="Delete"/>
-                                                </li>
-                                            </ul>
-                                        </div>
-                                        <div class="dropdown dropdown-end lg:hidden">
-                                            <label tabindex="0" class="btn btn-ghost ">
-                                                <img class="h-5 w-5" src="~/assets/svg/three-dots-icon.svg" alt="Options"/>
-                                            </label>
-                                            <ul
-                                                tabindex="0"
-                                                class="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-300 rounded-box w-52">
-                                                <li>
-                                                    <button>Copy Link</button>
-                                                </li>
-                                                <li>
-                                                    <button>Edit</button>
-                                                </li>
-                                                <li>
-                                                    <button>Delete</button>
-                                                </li>
-                                            </ul>
-                                        </div>
-                                    </td>
-                                </tr>
-                            }
+                            <tbody id="links">
                             </tbody>
                         </table>
                     </div>
@@ -107,7 +53,6 @@
         </div>
     </div>
 </div>
-
 
 @* Modals *@
 @* Create Link *@
@@ -143,17 +88,22 @@
 
 
 <script>
+    let pageNo = 1;
+
     const alert = document.querySelector("#alert");
     const alertMessage = document.querySelector("#alertMessage");
+    const linkLists = document.querySelector("#links");
+    const createLinkModal = document.querySelector("#create");
     
-    function CreateNewLink(e){
+    const createLink = document.querySelector("#createLinkForm");
+    createLink.addEventListener("submit", async (e) => {
         e.preventDefault();
         createLinkModal.close();
         const link = document.querySelector("#newLink");
         const code = document.querySelector("#newLinkCode");
         const name = document.querySelector("#newLinkName");
 
-        fetch(`@Url.Action("CreateLink")`, {
+        await fetch(`@Url.Action("CreateLink")`, {
             method : "POST",
             headers : new Headers({'Content-Type': 'application/json'}),
             body : JSON.stringify({
@@ -162,18 +112,61 @@
                 NewLinkCode: name.value
             }),
             credentials : "include"
-        }).then(res => {
+        }).then(async (res) => {
             if (res.status === 200){
                 alert.className = "alert alert-success";
                 alertMessage.innerText = "Successfully Shorten the Link!"
-                setTimeout(()=> {
-                    alert.className= "alert hidden"; 
-                    alertMessage.innerHTML = ""
-                    }, 5000);
+                
+                await GetLinks();
+            }else {
+                 alert.className = "alert alert-error";
+                 const json = await res.json();
+                 alertMessage.innerText = json.error;
             }
-        }).catch(err => console.log(err))
-    }
-    const createLinkModal = document.querySelector("#create");
-    const createLink = document.querySelector("#createLinkForm");
-    createLink.addEventListener("submit", CreateNewLink);
+        }).catch(err =>{ 
+            alert.className = "alert alert-error";
+            alertMessage.innerHTML = "";
+            console.log(err)
+        })
+        setTimeout(()=> {
+            alert.className= "alert hidden";
+            alertMessage.innerHTML = ""
+            }, 5000);
+    });
+    
+    const pagePrev = document.querySelector("#pagePrev");
+    pagePrev.addEventListener("click", async () => {
+        if (pageNo === 1) return;
+        pageNo--;
+        await GetLinks();
+    });
+    
+    const pageNext = document.querySelector("#pageNext");
+    pageNext.addEventListener("click", async () => {
+        pageNo++;
+        await GetLinks();
+    });
+    
+    async function GetLinks(){
+        await fetch(`@Url.Action("GetLinks")?pageno=${pageNo}`).then(async (res) => {
+            if (res.status === 200){
+                linkLists.innerHTML = await res.text();
+            }else {
+                alert.className = "alert alert-error";
+                const json = await res.json();
+                alertMessage.innerText = json.error;
+            }
+        }).catch(err => {
+            alert.className = "alert alert-error";
+            alertMessage.innerText = "Unable to Fetch Links";
+            console.error(err);
+        });
+        setTimeout(()=> {
+            alert.className= "alert hidden";
+            alertMessage.innerText = "";
+          }, 5000);
+    } 
+    
+    
+    GetLinks();
 </script>

@@ -64,7 +64,6 @@ public class HomeController(UserDbContext context) : Controller
             }
             HttpContext.Session.Set("UserData", AccountModel.Serialize(account));
             ActivityLogModel.WriteLogs(context, ActivityLogModel.Event.EmailLoggedIn, account, HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown");
-            Console.Write(account.ToString());
             return RedirectToAction("Dashboard", "User");
         }
         catch (Exception ex)
