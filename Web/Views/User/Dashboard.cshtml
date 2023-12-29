@@ -152,14 +152,18 @@
             headers : new Headers({'Content-Type': 'application/json'}),
             body : JSON.stringify({
                 LinkURL : link.value,
-                LinkName: code.value,
-                LinkCode: name.value
+                LinkName: name.value,
+                LinkCode: code.value
             }),
             credentials : "include"
         }).then(async (res) => {
             if (res.status === 200){
                 alert.className = "alert alert-success";
                 alertMessage.innerText = "Successfully Shorten the Link!"
+                
+                link.value = "";
+                name.value = "";
+                code.value = "";
                 
                 await GetLinks();
             }else {
@@ -246,13 +250,11 @@
             console.log(err);
         })
         
-        
         setTimeout(() => {
             toastAlert.className = "hidden"
             toastAlertType.className = "hidden";
             toastAlertText.innerHTML = "";
         }, 2000);
-    
     }
     
     function editLink(code){

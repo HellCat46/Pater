@@ -116,6 +116,12 @@ public class UserController(UserDbContext context) : Controller
                 });
             }
 
+            if (context.Link.Any(l => l.code == link.LinkCode)) 
+                return StatusCode(409, new
+                {
+                    error = "Code Already Being used. Try another code."
+                });
+            
             AccountModel account = AccountModel.Deserialize(bytes);
             context.Link.Add(new LinkModel()
             {
