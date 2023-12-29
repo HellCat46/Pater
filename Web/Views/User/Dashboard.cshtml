@@ -239,7 +239,7 @@
     
     function copyCode(code){
         // This wouldn't work on unsecure connection
-        navigator.clipboard.writeText(code).then(() => {
+        navigator.clipboard.writeText("https://"+window.location.host+"/"+code).then(() => {
             toastAlert.className = "toast toast-center";
             toastAlertType.className = "alert alert-success"
             toastAlertText.innerText = "Successfully Copied Code to Clipboard";    
