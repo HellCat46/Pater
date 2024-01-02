@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Web.ApplicationDbContext;
 using Web.Models.Account;
 using Web.Models.Link;
@@ -8,7 +9,7 @@ namespace Web.Controllers;
 
 public class UserController(UserDbContext context) : Controller
 {
-    public IActionResult Dashboard()
+    public async Task<IActionResult> Dashboard()
     {
         byte[]? bytes = HttpContext.Session.Get("UserData");
         if (bytes == null)
@@ -28,7 +29,7 @@ public class UserController(UserDbContext context) : Controller
                 picPath = account.PicPath,
                 plan = account.Plan
             },
-            hasLinks = context.Link.Any(link => link.AccountId == account.id)
+            hasLinks = await context.Link.AnyAsync(link => link.AccountId == account.id)
         });
     }
 
@@ -68,7 +69,7 @@ public class UserController(UserDbContext context) : Controller
 
 
     // Non-Page Actions
-    public IActionResult GetLinks()
+    public async Task<IActionResult> GetLinks()
     {
         try
         {
@@ -90,8 +91,8 @@ public class UserController(UserDbContext context) : Controller
 
             return PartialView("_LinkRows", new _LinkRows()
             {
-                links = context.Link.Where(link => link.AccountId == account.id).OrderByDescending(log => log.CreatedAt)
-                    .Skip((pageno - 1) * 10).Take(10).ToList()
+                links = await context.Link.Where(link => link.AccountId == account.id).OrderByDescending(log => log.CreatedAt)
+                    .Skip((pageno - 1) * 10).Take(10).ToListAsync()
             });
         }
         catch (Exception ex)
@@ -102,7 +103,7 @@ public class UserController(UserDbContext context) : Controller
     }
 
     [HttpPost]
-    public IActionResult CreateLink([FromBody] LinkView link)
+    public async Task<IActionResult> CreateLink([FromBody] LinkView link)
     {
         try
         {
@@ -116,14 +117,14 @@ public class UserController(UserDbContext context) : Controller
                 });
             }
 
-            if (context.Link.Any(l => l.code == link.LinkCode)) 
+            if (await context.Link.AnyAsync(l => l.code == link.LinkCode)) 
                 return StatusCode(409, new
                 {
                     error = "Code Already Being used. Try another code."
                 });
             
             AccountModel account = AccountModel.Deserialize(bytes);
-            context.Link.Add(new LinkModel()
+            await context.Link.AddAsync(new LinkModel()
             {
                 AccountId = account.id,
                 code = (link.LinkCode != String.Empty ? link.LinkCode : GenerateRandom(8)),
@@ -133,7 +134,7 @@ public class UserController(UserDbContext context) : Controller
                     : DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToLongTimeString()),
                 url = link.LinkURL
             });
-            context.SaveChanges();
+            await context.SaveChangesAsync();
             ActivityLogModel.WriteLogs(context, ActivityLogModel.Event.CreatedLink, account,
                 HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown");
             return Ok();
@@ -146,14 +147,14 @@ public class UserController(UserDbContext context) : Controller
     }
 
     [HttpPatch]
-    public IActionResult EditLink([FromBody] LinkView link)
+    public async Task<IActionResult> EditLink([FromBody] LinkView link)
     {
         try
         {
             if (link.LinkName == String.Empty && link.LinkURL == String.Empty)
                 return StatusCode(400, new
                 {
-                    error = "At least one of the field are required to be field"
+                    error = "Required at least one of the field."
                 });
             
             byte[]? bytes = HttpContext.Session.Get("UserData");
@@ -168,7 +169,7 @@ public class UserController(UserDbContext context) : Controller
 
             AccountModel account = AccountModel.Deserialize(bytes);
 
-            LinkModel? linkRow = context.Link.FirstOrDefault(l => l.code == link.LinkCode);
+            LinkModel? linkRow = await context.Link.FirstOrDefaultAsync(l => l.code == link.LinkCode);
             if (linkRow == null) return StatusCode(404, new { error = "Link Doesn't exist" });
             
             if (linkRow.AccountId != account.id)
@@ -177,7 +178,7 @@ public class UserController(UserDbContext context) : Controller
             if (link.LinkName != String.Empty) linkRow.name = link.LinkName;
             if (link.LinkURL != String.Empty) linkRow.url = link.LinkURL;
 
-            context.SaveChanges();
+            await context.SaveChangesAsync();
             return Ok();
         }
         catch (Exception ex)
@@ -191,11 +192,10 @@ public class UserController(UserDbContext context) : Controller
     }
 
     [HttpDelete]
-    public IActionResult DeleteLink(string code)
+    public async Task<IActionResult> DeleteLink(string code)
     {
         try
         {
-            Console.WriteLine(code);
             byte[]? bytes = HttpContext.Session.Get("UserData");
             if (bytes == null)
             {
@@ -208,14 +208,14 @@ public class UserController(UserDbContext context) : Controller
 
             AccountModel account = AccountModel.Deserialize(bytes);
 
-            LinkModel? linkRow = context.Link.FirstOrDefault(link => link.code == code);
+            LinkModel? linkRow = await context.Link.FirstOrDefaultAsync(link => link.code == code);
             if (linkRow == null) return StatusCode(404, new { error = "Link Doesn't exist" });
             
             if (linkRow.AccountId != account.id)
                 return StatusCode(403, new { error = "You don't have permission to edit this link" });
 
             context.Link.Remove(linkRow);
-            context.SaveChanges();
+            await context.SaveChangesAsync();
             return Ok();
         }
         catch (Exception ex)
@@ -229,7 +229,7 @@ public class UserController(UserDbContext context) : Controller
     }
     
     [HttpPatch]
-    public IActionResult ChangeAvatar(IFormFile? newAvatar)
+    public async Task<IActionResult> ChangeAvatar(IFormFile? newAvatar)
     {
         if (newAvatar == null)
         {
@@ -256,14 +256,15 @@ public class UserController(UserDbContext context) : Controller
             }
 
             account.PicPath = account.id + "." + newAvatar.FileName.Split(".").Last();
-            using (var fileStream = System.IO.File.Create("wwwroot/UserPics/" + account.PicPath))
+            await using (var fileStream = System.IO.File.Create("wwwroot/UserPics/" + account.PicPath))
             {
-                newAvatar.CopyTo(fileStream);
+                await newAvatar.CopyToAsync(fileStream);
                 fileStream.Close();
             }
 
             context.Account.Update(account);
-            context.SaveChanges();
+            await context.SaveChangesAsync();
+            
             HttpContext.Session.Set("UserData", AccountModel.Serialize(account));
             ActivityLogModel.WriteLogs(context, ActivityLogModel.Event.ChangedAvatar, account,
                 HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown");
@@ -277,7 +278,7 @@ public class UserController(UserDbContext context) : Controller
     }
 
     [HttpPatch]
-    public IActionResult UpdateNameMail(string? newName, string? newEmail)
+    public async Task<IActionResult> UpdateNameMail(string? newName, string? newEmail)
     {
         if (newName == null && newEmail == null)
             return StatusCode(400, new
@@ -303,7 +304,7 @@ public class UserController(UserDbContext context) : Controller
             if (newEmail != null) account.email = newEmail;
 
             context.Account.Update(account);
-            context.SaveChanges();
+            await context.SaveChangesAsync();
             HttpContext.Session.Set("UserData", AccountModel.Serialize(account));
 
             if (newName != String.Empty)
@@ -322,7 +323,7 @@ public class UserController(UserDbContext context) : Controller
     }
 
     [HttpPatch]
-    public IActionResult ChangePassword(string oldPassword, string newPassword)
+    public async Task<IActionResult> ChangePassword(string oldPassword, string newPassword)
     {
         try
         {
@@ -347,7 +348,7 @@ public class UserController(UserDbContext context) : Controller
 
             account.password = newPassword;
             context.Account.Update(account);
-            context.SaveChanges();
+            await context.SaveChangesAsync();
 
             HttpContext.Session.Set("UserData", AccountModel.Serialize(account));
             ActivityLogModel.WriteLogs(context, ActivityLogModel.Event.ChangedPassword, account,
@@ -378,7 +379,7 @@ public class UserController(UserDbContext context) : Controller
         return RedirectToAction("Index", "Home");
     }
 
-    public IActionResult DeleteAccount()
+    public async Task<IActionResult> DeleteAccount()
     {
         byte[]? bytes = HttpContext.Session.Get("UserData");
         if (bytes == null)
@@ -390,7 +391,10 @@ public class UserController(UserDbContext context) : Controller
         AccountModel account = AccountModel.Deserialize(bytes);
         try
         {
-            context.Account.Remove(context.Account.Single(acc => acc.id == account.id));
+            AccountModel? userAcc = await context.Account.SingleOrDefaultAsync(acc => acc.id == account.id);
+            if (userAcc == null) return RedirectToAction("Index", "Home");
+                
+            context.Account.Remove(userAcc);
 
             var links = context.Link.Where(link => link.AccountId == account.id);
             foreach (LinkModel link in links)
@@ -404,7 +408,7 @@ public class UserController(UserDbContext context) : Controller
                 context.ActivityLogs.Remove(log);
             }
 
-            context.SaveChanges();
+            await context.SaveChangesAsync();
             HttpContext.Session.Clear();
             return RedirectToAction("Index", "Home");
         }

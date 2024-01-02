@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Web.ApplicationDbContext;
 using Web.Models.Account;
 using Web.Models.View.User;
@@ -40,7 +41,7 @@ public class AdminController(UserDbContext context) : Controller
         }
     }
 
-    public IActionResult ManageUser(String userEmail)
+    public async Task<IActionResult> ManageUser(String? userEmail)
     {
         string? userId = HttpContext.Request.Query["UserId"];
 
@@ -57,10 +58,11 @@ public class AdminController(UserDbContext context) : Controller
             if (adminAccount.isAdmin != true) return RedirectToAction("Dashboard", "User");
 
             AccountModel? userAccount;
-            if (userEmail != null) userAccount = context.Account.Single(acc => acc.email == userEmail);
-            else if (userId != null) userAccount = context.Account.Single(acc => acc.id == int.Parse(userId));
+            if (userEmail != null) userAccount = await context.Account.SingleOrDefaultAsync(acc => acc.email == userEmail);
+            else if (userId != null) userAccount = await context.Account.SingleOrDefaultAsync(acc => acc.id == int.Parse(userId));
             else return RedirectToAction("Dashboard");
 
+            if (userAccount == null) return RedirectToAction("Dashboard"); // Replace it proper error message
 
             return View(new ManageUserView()
             {
@@ -89,7 +91,7 @@ public class AdminController(UserDbContext context) : Controller
     }
 
     // API Endpoint
-    public IActionResult GetLogs()
+    public async Task<IActionResult> GetLogs()
     {
         try
         {
@@ -113,7 +115,7 @@ public class AdminController(UserDbContext context) : Controller
 
             return PartialView("_LogRows", new _LogsRows()
             {
-                logs = context.ActivityLogs.OrderByDescending(log => log.date).Skip((pageno - 1) * 10).Take(10).ToList()
+                logs = await context.ActivityLogs.OrderByDescending(log => log.date).Skip((pageno - 1) * 10).Take(10).ToListAsync()
             });
         }
         catch (Exception ex)

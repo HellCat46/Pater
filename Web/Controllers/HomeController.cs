@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Web.ApplicationDbContext;
 using Web.Models.Account;
 using Web.Models.View;
@@ -47,11 +48,11 @@ public class HomeController(UserDbContext context) : Controller
     }
 
     [HttpPost]
-    public IActionResult Login(LoginView data)
+    public async Task<IActionResult> Login(LoginView data)
     {
         try
         {
-            AccountModel? account = context.Account.FirstOrDefault(acc => acc.email == data.email && acc.password == data.password);
+            AccountModel? account = await context.Account.FirstOrDefaultAsync(acc => acc.email == data.email && acc.password == data.password);
             if (account == null)
             {
                 ViewBag.ErrorMessage = "Invalid Credentials";
@@ -63,7 +64,8 @@ public class HomeController(UserDbContext context) : Controller
                 return View();
             }
             HttpContext.Session.Set("UserData", AccountModel.Serialize(account));
-            ActivityLogModel.WriteLogs(context, ActivityLogModel.Event.EmailLoggedIn, account, HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown");
+            ActivityLogModel.WriteLogs(context, ActivityLogModel.Event.EmailLoggedIn, account,
+                HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown");
             return RedirectToAction("Dashboard", "User");
         }
         catch (Exception ex)
@@ -83,27 +85,27 @@ public class HomeController(UserDbContext context) : Controller
     }
 
     [HttpPost]
-    public IActionResult Signup(SignupView data)
+    public async Task<IActionResult> Signup(SignupView data)
     {
         try
         {
-            AccountModel? account = context.Account.FirstOrDefault(acc => acc.email == data.email);
+            AccountModel? account = await context.Account.FirstOrDefaultAsync(acc => acc.email == data.email);
             if (account != null)
             {
                 ViewBag.ErrorMessage = "Account Already Exist with this Email";
                 return View();
             }
 
-            context.Account.Add(new AccountModel()
+            await context.Account.AddAsync(new AccountModel()
             {
                 email = data.email,
                 password = data.password,
                 createdAt = DateTime.Now,
                 name = data.name
             });
-            context.SaveChanges();
+            await context.SaveChangesAsync();
             
-            account = context.Account.FirstOrDefault(acc => acc.email == data.email && acc.password == data.password);
+            account = await context.Account.FirstOrDefaultAsync(acc => acc.email == data.email && acc.password == data.password);
             if (account == null)
             {
                 ViewBag.ErrorMessage = "Failed to create the Account. Please try again later.";
