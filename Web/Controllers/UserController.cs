@@ -91,7 +91,8 @@ public class UserController(UserDbContext context) : Controller
 
             return PartialView("_LinkRows", new _LinkRows()
             {
-                links = await context.Link.Where(link => link.AccountId == account.id).OrderByDescending(log => log.CreatedAt)
+                links = await context.Link.Where(link => link.AccountId == account.id)
+                    .OrderByDescending(log => log.CreatedAt)
                     .Skip((pageno - 1) * 10).Take(10).ToListAsync()
             });
         }
@@ -117,12 +118,12 @@ public class UserController(UserDbContext context) : Controller
                 });
             }
 
-            if (await context.Link.AnyAsync(l => l.code == link.LinkCode)) 
+            if (await context.Link.AnyAsync(l => l.code == link.LinkCode))
                 return StatusCode(409, new
                 {
                     error = "Code Already Being used. Try another code."
                 });
-            
+
             AccountModel account = AccountModel.Deserialize(bytes);
             await context.Link.AddAsync(new LinkModel()
             {
@@ -156,7 +157,7 @@ public class UserController(UserDbContext context) : Controller
                 {
                     error = "Required at least one of the field."
                 });
-            
+
             byte[]? bytes = HttpContext.Session.Get("UserData");
             if (bytes == null)
             {
@@ -171,7 +172,7 @@ public class UserController(UserDbContext context) : Controller
 
             LinkModel? linkRow = await context.Link.FirstOrDefaultAsync(l => l.code == link.LinkCode);
             if (linkRow == null) return StatusCode(404, new { error = "Link Doesn't exist" });
-            
+
             if (linkRow.AccountId != account.id)
                 return StatusCode(403, new { error = "You don't have permission to edit this link" });
 
@@ -210,7 +211,7 @@ public class UserController(UserDbContext context) : Controller
 
             LinkModel? linkRow = await context.Link.FirstOrDefaultAsync(link => link.code == code);
             if (linkRow == null) return StatusCode(404, new { error = "Link Doesn't exist" });
-            
+
             if (linkRow.AccountId != account.id)
                 return StatusCode(403, new { error = "You don't have permission to edit this link" });
 
@@ -228,6 +229,187 @@ public class UserController(UserDbContext context) : Controller
         }
     }
     
+    [HttpGet]
+    public async Task<IActionResult> LinkOtherDetails(string? detailType, string? code, string? timeFrame)
+    {
+        if (code == null || timeFrame == null || detailType == null)
+        {
+            return StatusCode(400, new
+            {
+                error = "Required Parameters are missing."
+            });
+        }
+
+        try
+        {
+            byte[]? bytes = HttpContext.Session.Get("UserData");
+            if (bytes == null)
+            {
+                HttpContext.Session.Clear();
+                return StatusCode(403, new
+                {
+                    error = "Session Expired. Please Login Again!"
+                });
+            }
+
+            AccountModel account = AccountModel.Deserialize(bytes);
+
+            if (!(await context.Link.AnyAsync(link => link.AccountId == account.id && link.code == code)))
+            {
+                return StatusCode(400, new
+                {
+                    error = "This Link is either Invalid or You don't have access to check it's details."
+                });
+            }
+            
+            if (account.Plan == AccountModel.Plans.Free)
+            {
+                return StatusCode(403, new
+                {
+                    error = "This is a premium Only Feature."
+                });
+            }
+
+            DateTime dataSince;
+            switch (timeFrame)
+            {
+                case "24h" : dataSince = DateTime.Now.Subtract(TimeSpan.FromHours(24));
+                    break;
+                case "7d" : dataSince = DateTime.Now.Subtract(TimeSpan.FromDays(7));
+                    break;
+                case "30d" : dataSince = DateTime.Now.Subtract(TimeSpan.FromDays(30));
+                    break;
+                default: return StatusCode(404, new
+                {
+                    error = "Unknown Time Frame. Allowed Time Frames are 24h, 7d and 30d."
+                });
+            }
+
+
+            IQueryable<AnalyticsModel> baseQuery = context.Analytics.Where(a => a.visitedAt >= dataSince);
+            IQueryable<LinkDetailsResponse> query;
+            switch (detailType)
+            {
+                case "browser" :
+                    query = baseQuery.GroupBy(ana => ana.browser)
+                        .Select(g => new  LinkDetailsResponse() { label= g.Key.ToString(), data = g.Count() });
+                    break;
+                case "os" : 
+                    query = baseQuery.GroupBy(ana => ana.os)
+                        .Select(g => new  LinkDetailsResponse() { label= g.Key.ToString(), data = g.Count() });
+                    break;
+                case "country" : 
+                    query = baseQuery.GroupBy(ana => ana.country)
+                        .Select(g => new  LinkDetailsResponse() { label= g.Key.ToString(), data = g.Count() });
+                    break;
+                case "city" : 
+                    query = baseQuery.GroupBy(ana => ana.city)
+                        .Select(g => new  LinkDetailsResponse() { label= g.Key.ToString(), data = g.Count() });
+                    break;
+                case "device" : 
+                    query = baseQuery.GroupBy(ana => ana.device)
+                        .Select(g => new  LinkDetailsResponse() { label= g.Key.ToString(), data = g.Count() });
+                    break;
+                default:
+                    return StatusCode(404, new
+                    {
+                        error = "Unknown Analytics Type. Allowed Types are browser, os, country, city and device"
+                    });
+            }
+            
+             
+            
+            return Ok(await query.ToListAsync());
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex);
+            return StatusCode(500, new
+            {
+                error = "Unexpected Error while trying to get Link Details"
+            });
+        }
+    }
+    
+    [HttpGet]
+    public async Task<IActionResult> LinkVisitDetails(string? code, string? timeFrame)
+    {
+        if (code == null || timeFrame == null)
+        {
+            return StatusCode(400, new
+            {
+                error = "Required Parameters are missing."
+            });
+        }
+
+        try
+        {
+            byte[]? bytes = HttpContext.Session.Get("UserData");
+            if (bytes == null)
+            {
+                HttpContext.Session.Clear();
+                return StatusCode(403, new
+                {
+                    error = "Session Expired. Please Login Again!"
+                });
+            }
+
+            AccountModel account = AccountModel.Deserialize(bytes);
+            
+            
+            if (!(await context.Link.AnyAsync(link => link.AccountId == account.id && link.code == code)))
+            {
+                return StatusCode(400, new
+                {
+                    error = "This Link is either Invalid or You don't have access to check it's details."
+                });
+            }
+            
+            if (account.Plan == AccountModel.Plans.Free)
+            {
+                return StatusCode(403, new
+                {
+                    error = "Premium Only Feature."
+                });
+            }
+
+            DateTime dataSince;
+            switch (timeFrame)
+            {
+                case "24h" : dataSince = DateTime.Now.Subtract(TimeSpan.FromHours(24));
+                    break;
+                case "7d" : dataSince = DateTime.Now.Subtract(TimeSpan.FromDays(7));
+                    break;
+                case "30d" : dataSince = DateTime.Now.Subtract(TimeSpan.FromDays(30));
+                    break;
+                default: return StatusCode(404, new
+                {
+                    error = "Unknown Time Frame. Allowed Time Frames are 24h, 7d and 30d."
+                });
+            }
+            if (timeFrame == "24h")
+            {
+                return Ok(await context.Analytics.Where(a => a.visitedAt >= dataSince)
+                    .GroupBy(a => a.visitedAt.Hour)
+                    .Select(g => new { duration = g.Key, count = g.Count() })
+                    .OrderBy(res => res.duration).ToListAsync());
+            }
+
+            return Ok(await context.Analytics.Where(a => a.visitedAt >= dataSince)
+                .GroupBy(a => a.visitedAt.Date)
+                .Select(g => new LinkDetailsResponse(){ label = g.Key.ToString(), data = g.Count() })
+                .OrderBy(res => res.label).ToListAsync());
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex);
+            return StatusCode(500, new
+            {
+                error = "Unexpected Error while trying to get Link Details"
+            });
+        }
+    }
+
     [HttpPatch]
     public async Task<IActionResult> ChangeAvatar(IFormFile? newAvatar)
     {
@@ -264,7 +446,7 @@ public class UserController(UserDbContext context) : Controller
 
             context.Account.Update(account);
             await context.SaveChangesAsync();
-            
+
             HttpContext.Session.Set("UserData", AccountModel.Serialize(account));
             ActivityLogModel.WriteLogs(context, ActivityLogModel.Event.ChangedAvatar, account,
                 HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown");
@@ -393,7 +575,7 @@ public class UserController(UserDbContext context) : Controller
         {
             AccountModel? userAcc = await context.Account.SingleOrDefaultAsync(acc => acc.id == account.id);
             if (userAcc == null) return RedirectToAction("Index", "Home");
-                
+
             context.Account.Remove(userAcc);
 
             var links = context.Link.Where(link => link.AccountId == account.id);
@@ -432,4 +614,10 @@ public class UserController(UserDbContext context) : Controller
 
         return code;
     }
+}
+
+public class LinkDetailsResponse
+{
+    public string label { get; set; }
+    public int data { get; set; }
 }
