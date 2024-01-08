@@ -64,7 +64,21 @@ public class UserController(UserDbContext context) : Controller
 
     public IActionResult Details()
     {
-        return View();
+        byte[]? bytes = HttpContext.Session.Get("UserData");
+        if (bytes == null)
+        {
+            HttpContext.Session.Clear();
+            return RedirectToAction("Login", "Home");
+        }
+
+        AccountModel account = AccountModel.Deserialize(bytes);
+        return View(new _HeaderView()
+        {
+            isAdmin = account.isAdmin,
+            name = account.name,
+            picPath = account.PicPath,
+            plan = account.Plan
+        });
     }
 
 
@@ -319,7 +333,7 @@ public class UserController(UserDbContext context) : Controller
             
              
             
-            return Ok(await query.ToListAsync());
+            return Ok(await query.Take(10).ToListAsync());
         }
         catch (Exception ex)
         {
