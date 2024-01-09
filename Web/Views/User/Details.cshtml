@@ -10,15 +10,17 @@
 <div class="flex flex-col h-auto w-auto py-2 my-10 mx-5 gap-4 lg:mx-40">
     @* Main Info Card *@
     <div class="flex flex-col bg-base-300 px-5 rounded-lg">
-        <div class="flex gap-4 h-24 items-center">
+        <div class="flex flex-col lg:flex-row gap-4 py-5 items-center">
             <img src="https://t2.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=@Model.linkDetails.url&size=48" alt="favicon"/>
-            <span class="text-4xl font-bold grow">@Model.linkDetails.name</span>
+            <span class="text-4xl font-bold grow text-center lg:text-left">@Model.linkDetails.name</span>
             <div class="btn">@Model.linkDetails.code</div>
+            <div class="">
             <div class="btn btn-info">Edit</div>
             <div class="btn btn-error">Delete</div>
+            </div>
         </div>
         <div class="divider divider-info"></div>
-        <div class="flex flex-wrap pb-5 gap-4">
+        <div class="flex flex-col items-center md:flex-row lg:flex-row pb-5 gap-4">
             <a class="grow link link-info text-2xl flex justify-center items-center" href="@Model.linkDetails.url">Original Link</a>
             <label class="form-control w-full max-w-xs">
                 <div class="label">
@@ -36,7 +38,7 @@
     </div>
     
     
-    <div class="bg-base-200 flex flex-col ">
+    <div class="bg-base-200 flex flex-col p-5">
         <canvas id="VisitsChart"></canvas>
         <div class="h-min flex flex-row-reverse gap-6 p-4">
             <div class="badge badge-info" onclick="VisitsChart('@Url.Action("LinkVisitDetails")', '@Model.linkDetails.code', '30d')">30d</div>
@@ -44,7 +46,8 @@
             <div class="badge badge-info" onclick="VisitsChart('@Url.Action("LinkVisitDetails")', '@Model.linkDetails.code', '24h')">24h</div>
         </div>
     </div>
-    <div class="bg-base-200 flex flex-col">
+    
+    <div class="bg-base-200 flex flex-col p-5">
         <canvas id="BrowserChart"></canvas>
         <div class="h-min flex flex-row-reverse gap-6 p-4">
             <div class="badge badge-info" onclick="BrowserChart('@Url.Action("LinkOtherDetails")', '@Model.linkDetails.code', '30d')">30d</div>
@@ -54,7 +57,7 @@
     </div>
 
     @* Device and OS Pie Charts *@
-    <div class="bg-base-200 flex flex-col md:flex-row lg:flex-row">
+    <div class="bg-base-200 flex flex-col md:flex-row lg:flex-row p-5">
         <div class="basis-1/2">
             <canvas id="OSChart"></canvas>
             <div class="h-min flex flex-row-reverse gap-6 p-4">
@@ -73,17 +76,21 @@
         </div>
     </div>
 
-    <div class="bg-base-200 flex flex-col">
-        <div class="flex ">
-            <canvas id="CountryChart"></canvas>
-            @* <table class="table table-zebra"> *@
-            @*     <thead> *@
-            @*     <th>th</th> *@
-            @*     <th>Country</th> *@
-            @*     <th>Visitors</th> *@
-            @*     </thead> *@
-            @*     <tbody id="CountryTable"></tbody> *@
-            @* </table> *@
+    <div class="bg-base-200 flex flex-col p-5">
+        <div class="flex flex-col lg:flex-row gap-4">
+            <div class="basis-1/2">
+                <canvas id="CountryChart"></canvas>
+            </div>
+            <div class="basis-1/2 overflow-y-auto bg-base-300">
+                <table class="table table-xs">
+                    <thead>
+                    <th>th</th>
+                    <th>Country</th>
+                    <th>Visitors</th>
+                    </thead>
+                    <tbody id="CountryTable"></tbody>
+                </table>
+            </div>
         </div>
         <div class="h-min flex flex-row-reverse gap-6 p-4">
             <div class="badge badge-info" onclick="CountryChart('@Url.Action("LinkOtherDetails")', '@Model.linkDetails.code', '30d')">30d</div>
@@ -91,17 +98,22 @@
             <div class="badge badge-info" onclick="CountryChart('@Url.Action("LinkOtherDetails")', '@Model.linkDetails.code', '24h')">24h</div>
         </div>
     </div>
-    <div class="bg-base-200 flex flex-col">
-        <div class="flex ">
-            <canvas id="CityChart"></canvas>
-            @* <table class="table table-zebra"> *@
-            @*     <thead> *@
-            @*     <th>th</th> *@
-            @*     <th>Country</th> *@
-            @*     <th>Visitors</th> *@
-            @*     </thead> *@
-            @*     <tbody id="CityTable"></tbody> *@
-            @* </table> *@
+    
+    <div class="bg-base-200 flex flex-col p-5">
+        <div class="flex flex-col lg:flex-row gap-4">
+            <div class="basis-1/2">
+                <canvas id="CityChart"></canvas>
+            </div>
+            <div class="basis-1/2 overflow-y-auto bg-base-300">
+            <table class="table table-xs">
+                <thead>
+                <th>th</th>
+                <th>Country</th>
+                <th>Visitors</th>
+                </thead>
+                <tbody id="CityTable"></tbody>
+            </table>
+            </div>
         </div>
         <div class="h-min flex flex-row-reverse gap-6 p-4">
             <div class="badge badge-info" onclick="CityChart('@Url.Action("LinkOtherDetails")', '@Model.linkDetails.code', '30d')">30d</div>
