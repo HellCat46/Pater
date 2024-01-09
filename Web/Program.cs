@@ -51,22 +51,22 @@ app.MapGet("/{code}", async (HttpContext context, string code, UserDbContext db)
     string redirectUrl = "/";
     try
     {
-        var linkobj  = db.Link.Find(code);
-        if (linkobj == null) throw new Exception();
-        redirectUrl = linkobj.url;
+        var linkObj  = db.Link.Find(code);
+        if (linkObj == null) throw new Exception();
+        redirectUrl = linkObj.url;
         
         
-        Uri url = new Uri("http://ip-api.com/json/"+context.Connection.RemoteIpAddress+"?fields=status,message,country,city");
+        Uri url = new Uri("http://ip-api.com/json/"+context.Connection.RemoteIpAddress+"?fields=status,country,city");
         var info = await new HttpClient().GetFromJsonAsync<VisitorGeoLoc>(url);
         var (browser, device, os) = AnalyticsModel.ParseUserAgent(context.Request.Headers.UserAgent);
         
         
-        if (info != null)
+        if (info is {status: "success"})
         {
             db.Analytics.Add(new AnalyticsModel()
             {
-                city = info.City,
-                country = info.Country,
+                city = info.city,
+                country = info.country,
                 LinkModelCode = code,
                 browser = browser,
                 device = device,

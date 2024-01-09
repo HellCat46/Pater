@@ -17,6 +17,15 @@ async function VisitsChart(actionUrl, code, timeFrame){
         visitorChart.data.labels = data.map(d => d.label)
         visitorChart.data.datasets[0].data = data.map(d => d.data)
         visitorChart.update();
+
+        toastAlert.className = "toast toast-center";
+        toastAlertType.className = "alert alert-success"
+        toastAlertText.innerText = "Set Time Frame for Visitor Chart to "+timeFrame;
+        setTimeout(() => {
+            toastAlert.className = "hidden"
+            toastAlertType.className = "";
+            toastAlertText.innerText = "";
+        }, 2000);
         return;
     }
     
@@ -53,6 +62,15 @@ async function BrowserChart(actionUrl, code, timeFrame) {
         browserChart.data.labels = data.map(d => d.label)
         browserChart.data.datasets[0].data = data.map(d => d.data)
         browserChart.update();
+
+        toastAlert.className = "toast toast-center";
+        toastAlertType.className = "alert alert-success"
+        toastAlertText.innerText = "Set Time Frame for Browser Chart to "+timeFrame;
+        setTimeout(() => {
+            toastAlert.className = "hidden"
+            toastAlertType.className = "";
+            toastAlertText.innerText = "";
+        }, 2000);
         return;
     }
 
@@ -91,6 +109,15 @@ async function OSChart(actionUrl, code, timeFrame){
         osChart.data.labels = data.map(d => d.label)
         osChart.data.datasets[0].data = data.map(d => d.data)
         osChart.update();
+
+        toastAlert.className = "toast toast-center";
+        toastAlertType.className = "alert alert-success"
+        toastAlertText.innerText = "Set Time Frame for OS Chart to "+timeFrame;
+        setTimeout(() => {
+            toastAlert.className = "hidden"
+            toastAlertType.className = "";
+            toastAlertText.innerText = "";
+        }, 2000);
         return;
     }
     
@@ -126,6 +153,15 @@ async function DeviceChart(actionUrl, code, timeFrame){
         deviceChart.data.labels = data.map(d => d.label)
         deviceChart.data.datasets[0].data = data.map(d => d.data)
         deviceChart.update();
+
+        toastAlert.className = "toast toast-center";
+        toastAlertType.className = "alert alert-success"
+        toastAlertText.innerText = "Set Time Frame for Device Chart to "+timeFrame;
+        setTimeout(() => {
+            toastAlert.className = "hidden"
+            toastAlertType.className = "";
+            toastAlertText.innerText = "";
+        }, 2000);
         return;
     }
     
@@ -166,7 +202,16 @@ async function CountryChart(actionUrl, code, timeFrame){
         tbl.innerHTML = "";
         for(let i =0; i< data.length; i++){
             tbl.innerHTML += `<tr><th>${i+1}</th><th>${data[i].label}</th><th>${data[i].data}</th></tr>`;
-        }
+        }        
+        
+        toastAlert.className = "toast toast-center";
+        toastAlertType.className = "alert alert-success"
+        toastAlertText.innerText = "Set Time Frame for Country Chart to "+timeFrame;
+        setTimeout(() => {
+            toastAlert.className = "hidden"
+            toastAlertType.className = "";
+            toastAlertText.innerText = "";
+        }, 2000);
         return;
     }
     
@@ -214,6 +259,17 @@ async function CityChart(actionUrl, code, timeFrame){
         for(let i =0; i< data.length; i++){
             tbl.innerHTML += `<tr><th>${i+1}</th><th>${data[i].label}</th><th>${data[i].data}</th></tr>`;
         }
+
+
+        toastAlert.className = "toast toast-center";
+        toastAlertType.className = "alert alert-success"
+        toastAlertText.innerText = "Set Time Frame for City Chart to "+timeFrame;
+        setTimeout(() => {
+            toastAlert.className = "hidden"
+            toastAlertType.className = "";
+            toastAlertText.innerText = "";
+        }, 2000);
+        
         return;
     }
     
@@ -251,18 +307,42 @@ async function CityChart(actionUrl, code, timeFrame){
 }
 
 async function GetData(actionUrl, detailType, code, timeFrame) {
-    const res = await fetch(`${actionUrl}?detailType=${detailType}&code=${code}&timeFrame=${timeFrame}`, {
-        credentials : "include"
-    })
+    try {
+        const res = await fetch(`${actionUrl}?detailType=${detailType}&code=${code}&timeFrame=${timeFrame}`, {
+            credentials: "include"
+        })
 
-    return (await res.json());
+        return (await res.json());
+    }catch (e){
+        toastAlert.className = "toast toast-center";
+        toastAlertType.className = "alert alert-error"
+        toastAlertText.innerText = "Failed to Fetch Chart for "+timeFrame;
+        setTimeout(() => {
+            toastAlert.className = "hidden"
+            toastAlertType.className = "";
+            toastAlertText.innerText = "";
+        }, 2000);
+        throw e;
+    }
 }
 async function GetVisitsData(actionUrl, code, timeFrame) {
-    const res = await fetch(`${actionUrl}?code=${code}&timeFrame=${timeFrame}`, {
-        credentials : "include"
-    })
+    try {
+        const res = await fetch(`${actionUrl}?code=${code}&timeFrame=${timeFrame}`, {
+            credentials: "include"
+        })
 
-    return (await res.json());
+        return (await res.json());
+    }catch (e) {
+        toastAlert.className = "toast toast-center";
+        toastAlertType.className = "alert alert-error"
+        toastAlertText.innerText = "Failed to Fetch Chart for "+timeFrame;
+        setTimeout(() => {
+            toastAlert.className = "hidden"
+            toastAlertType.className = "";
+            toastAlertText.innerText = "";
+        }, 2000);
+        throw e;
+    }
 }
 
 
