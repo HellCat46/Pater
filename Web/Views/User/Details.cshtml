@@ -11,22 +11,22 @@
     @* Main Info Card *@
     <div class="flex flex-col bg-base-300 px-5 rounded-lg">
         <div class="flex flex-col lg:flex-row gap-4 py-5 items-center">
-            <img src="https://t2.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=@Model.linkDetails.url&size=48" alt="favicon"/>
-            <span class="text-4xl font-bold grow text-center lg:text-left">@Model.linkDetails.name</span>
-            <div class="btn">@Model.linkDetails.code</div>
-            <div class="">
-            <div class="btn btn-info">Edit</div>
-            <div class="btn btn-error">Delete</div>
+            <img src="https://t2.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=@Model.linkDetails.url&size=48" alt="favicon" id="LinkFavicon"/>
+            <span class="text-4xl font-bold grow text-center lg:text-left" id="LinkName">@Model.linkDetails.name</span>
+            <div class="btn" onclick="copyCode('@Url.ActionContext.HttpContext.Request.Headers.Host', '@Model.linkDetails.code')">@Url.ActionContext.HttpContext.Request.Headers.Host/@Model.linkDetails.code</div>
+            <div>
+                <div class="btn btn-info" onclick="editLink('@Model.linkDetails.code')">Edit</div>
+                <div class="btn btn-error" onclick="deleteLink('@Url.Action("DeleteLink")', '@Model.linkDetails.code')">Delete</div>
             </div>
         </div>
         <div class="divider divider-info"></div>
         <div class="flex flex-col items-center md:flex-row lg:flex-row pb-5 gap-4">
-            <a class="grow link link-info text-2xl flex justify-center items-center" href="@Model.linkDetails.url">Original Link</a>
+            <a class="grow link link-info text-2xl flex justify-center items-center" href="@Model.linkDetails.url" id="LinkURL">Original Link</a>
             <label class="form-control w-full max-w-xs">
                 <div class="label">
                     <span class="label-text">Last Updated</span>
                 </div>
-                <input type="date" class="input input-bordered w-full max-w-xs"  disabled/>
+                <input type="date" class="input input-bordered w-full max-w-xs" disabled/>
             </label>
             <label class="form-control w-full max-w-xs">
                 <div class="label">
@@ -36,8 +36,8 @@
             </label>
         </div>
     </div>
-    
-    
+
+
     <div class="bg-base-200 flex flex-col p-5">
         <canvas id="VisitsChart"></canvas>
         <div class="h-min flex flex-row-reverse gap-6 p-4">
@@ -46,7 +46,7 @@
             <div class="badge badge-info" onclick="VisitsChart('@Url.Action("LinkVisitDetails")', '@Model.linkDetails.code', '24h')">24h</div>
         </div>
     </div>
-    
+
     <div class="bg-base-200 flex flex-col p-5">
         <canvas id="BrowserChart"></canvas>
         <div class="h-min flex flex-row-reverse gap-6 p-4">
@@ -84,7 +84,7 @@
             <div class="basis-1/2 overflow-y-auto bg-base-300">
                 <table class="table table-xs">
                     <thead>
-                    <th>th</th>
+                    <th>Rank</th>
                     <th>Country</th>
                     <th>Visitors</th>
                     </thead>
@@ -98,21 +98,21 @@
             <div class="badge badge-info" onclick="CountryChart('@Url.Action("LinkOtherDetails")', '@Model.linkDetails.code', '24h')">24h</div>
         </div>
     </div>
-    
+
     <div class="bg-base-200 flex flex-col p-5">
         <div class="flex flex-col lg:flex-row gap-4">
             <div class="basis-1/2">
                 <canvas id="CityChart"></canvas>
             </div>
             <div class="basis-1/2 overflow-y-auto bg-base-300">
-            <table class="table table-xs">
-                <thead>
-                <th>th</th>
-                <th>Country</th>
-                <th>Visitors</th>
-                </thead>
-                <tbody id="CityTable"></tbody>
-            </table>
+                <table class="table table-xs">
+                    <thead>
+                    <th>Rank</th>
+                    <th>Country</th>
+                    <th>Visitors</th>
+                    </thead>
+                    <tbody id="CityTable"></tbody>
+                </table>
             </div>
         </div>
         <div class="h-min flex flex-row-reverse gap-6 p-4">
@@ -121,7 +121,43 @@
             <div class="badge badge-info" onclick="CityChart('@Url.Action("LinkOtherDetails")', '@Model.linkDetails.code', '24h')">24h</div>
         </div>
     </div>
+</div>
 
+@* Edit Link *@
+<dialog id="editLink" class="modal modal-bottom sm:modal-middle">
+    <div class="modal-box card">
+        <form class="card-body" id="editLinkForm">
+            <h2 class="card-title">Edit Link</h2>
+
+            <div class="form-control mt-2">
+                <input type="text" class="input input-bordered" id="editLinkCode" disabled/>
+            </div>
+
+            <div class="form-control mt-2">
+                <input type="text" placeholder="New URL" class="input input-bordered" id="editLinkURL"/>
+            </div>
+
+            <div class="form-control mt-2">
+                <input type="text" placeholder="New Name" class="input input-bordered" id="editLinkName"/>
+            </div>
+
+            <div class="form-control mt-6">
+                <button class="btn btn-primary">Save Edits</button>
+            </div>
+        </form>
+        <div class="modal-action">
+            <form method="dialog">
+                <button class="btn">Close</button>
+            </form>
+        </div>
+    </div>
+</dialog>
+
+
+<div class="hidden" id="toastAlert">
+    <div id="toastAlertType">
+        <span id="toastAlertText"></span>
+    </div>
 </div>
 
 <script src="~/js/User/Details.js"></script>
@@ -135,4 +171,11 @@
         await CityChart('@Url.Action("LinkOtherDetails")', "@Model.linkDetails.code", "30d");
         await DeviceChart('@Url.Action("LinkOtherDetails")', "@Model.linkDetails.code", "30d");
     })
+    
+    
+    const editLinkForm = document.querySelector("#editLinkForm");
+    editLinkForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        await editLinkSubmit("@Url.Action("EditLink")")
+    });
 </script>
