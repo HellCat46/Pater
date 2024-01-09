@@ -1,28 +1,37 @@
-@model Web.Models.View.User._HeaderView
+@model Web.Models.View.User.LinkDetails
 
 @{
     ViewData["Title"] = "Details | Pater";
     Layout = "_UserLayout";
 }
 
-@Html.Partial("_Header", Model)
+@Html.Partial("_Header", Model.header)
 
 <div class="flex flex-col h-auto w-auto py-2 my-10 mx-5 gap-4 lg:mx-40">
     @* Main Info Card *@
     <div class="flex flex-col bg-base-300 px-5 rounded-lg">
         <div class="flex gap-4 h-24 items-center">
-            <img src="https://t2.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://www.youtube.com/watch?v=znmZA_n485I&size=48" alt="d"/>
-            <span class="text-4xl font-bold basis-4/12">Youtube</span>
-            <div class="grow"></div>
-            <div class="btn"></div>
+            <img src="https://t2.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=@Model.linkDetails.url&size=48" alt="favicon"/>
+            <span class="text-4xl font-bold grow">@Model.linkDetails.name</span>
+            <div class="btn">@Model.linkDetails.code</div>
             <div class="btn btn-info">Edit</div>
             <div class="btn btn-error">Delete</div>
         </div>
         <div class="divider divider-info"></div>
-        <div class="flex pb-5">
-            <div class="basis-2/4">Original Link</div>
-            <div class="basis-1/4">Last Updated</div>
-            <div class="basis-1/4">Created At</div>
+        <div class="flex flex-wrap pb-5 gap-4">
+            <a class="grow link link-info text-2xl flex justify-center items-center" href="@Model.linkDetails.url">Original Link</a>
+            <label class="form-control w-full max-w-xs">
+                <div class="label">
+                    <span class="label-text">Last Updated</span>
+                </div>
+                <input type="date" class="input input-bordered w-full max-w-xs"  disabled/>
+            </label>
+            <label class="form-control w-full max-w-xs">
+                <div class="label">
+                    <span class="label-text">Created At</span>
+                </div>
+                <input type="date" class="input input-bordered w-full max-w-xs" value="@Model.linkDetails.CreatedAt.ToString("yyyy-MM-dd")" disabled/>
+            </label>
         </div>
     </div>
     
@@ -30,17 +39,17 @@
     <div class="bg-base-200 flex flex-col ">
         <canvas id="VisitsChart"></canvas>
         <div class="h-min flex flex-row-reverse gap-6 p-4">
-            <div class="badge badge-info" onclick="VisitsChart('@Url.Action("LinkVisitDetails")', '0raz2muF', '30d')">30d</div>
-            <div class="badge badge-info" onclick="VisitsChart('@Url.Action("LinkVisitDetails")', '0raz2muF', '7d')">7d</div>
-            <div class="badge badge-info" onclick="VisitsChart('@Url.Action("LinkVisitDetails")', '0raz2muF', '24h')">24h</div>
+            <div class="badge badge-info" onclick="VisitsChart('@Url.Action("LinkVisitDetails")', '@Model.linkDetails.code', '30d')">30d</div>
+            <div class="badge badge-info" onclick="VisitsChart('@Url.Action("LinkVisitDetails")', '@Model.linkDetails.code', '7d')">7d</div>
+            <div class="badge badge-info" onclick="VisitsChart('@Url.Action("LinkVisitDetails")', '@Model.linkDetails.code', '24h')">24h</div>
         </div>
     </div>
     <div class="bg-base-200 flex flex-col">
         <canvas id="BrowserChart"></canvas>
         <div class="h-min flex flex-row-reverse gap-6 p-4">
-            <div class="badge badge-info" onclick="BrowserChart('@Url.Action("LinkOtherDetails")', '0raz2muF', '30d')">30d</div>
-            <div class="badge badge-info" onclick="BrowserChart('@Url.Action("LinkOtherDetails")', '0raz2muF', '7d')">7d</div>
-            <div class="badge badge-info" onclick="BrowserChart('@Url.Action("LinkOtherDetails")', '0raz2muF', '24h')">24h</div>
+            <div class="badge badge-info" onclick="BrowserChart('@Url.Action("LinkOtherDetails")', '@Model.linkDetails.code', '30d')">30d</div>
+            <div class="badge badge-info" onclick="BrowserChart('@Url.Action("LinkOtherDetails")', '@Model.linkDetails.code', '7d')">7d</div>
+            <div class="badge badge-info" onclick="BrowserChart('@Url.Action("LinkOtherDetails")', '@Model.linkDetails.code', '24h')">24h</div>
         </div>
     </div>
 
@@ -49,17 +58,17 @@
         <div class="basis-1/2">
             <canvas id="OSChart"></canvas>
             <div class="h-min flex flex-row-reverse gap-6 p-4">
-                <div class="badge badge-info" onclick="OSChart('@Url.Action("LinkOtherDetails")', '0raz2muF', '30d')">30d</div>
-                <div class="badge badge-info" onclick="OSChart('@Url.Action("LinkOtherDetails")', '0raz2muF', '7d')">7d</div>
-                <div class="badge badge-info" onclick="OSChart('@Url.Action("LinkOtherDetails")', '0raz2muF', '24h')">24h</div>
+                <div class="badge badge-info" onclick="OSChart('@Url.Action("LinkOtherDetails")', '@Model.linkDetails.code', '30d')">30d</div>
+                <div class="badge badge-info" onclick="OSChart('@Url.Action("LinkOtherDetails")', '@Model.linkDetails.code', '7d')">7d</div>
+                <div class="badge badge-info" onclick="OSChart('@Url.Action("LinkOtherDetails")', '@Model.linkDetails.code', '24h')">24h</div>
             </div>
         </div>
         <div class="basis-1/2">
             <canvas id="DeviceChart"></canvas>
             <div class="h-min flex flex-row-reverse gap-6 p-4">
-                <div class="badge badge-info" onclick="DeviceChart('@Url.Action("LinkOtherDetails")', '0raz2muF', '30d')">30d</div>
-                <div class="badge badge-info" onclick="DeviceChart('@Url.Action("LinkOtherDetails")', '0raz2muF', '7d')">7d</div>
-                <div class="badge badge-info" onclick="DeviceChart('@Url.Action("LinkOtherDetails")', '0raz2muF', '24h')">24h</div>
+                <div class="badge badge-info" onclick="DeviceChart('@Url.Action("LinkOtherDetails")', '@Model.linkDetails.code', '30d')">30d</div>
+                <div class="badge badge-info" onclick="DeviceChart('@Url.Action("LinkOtherDetails")', '@Model.linkDetails.code', '7d')">7d</div>
+                <div class="badge badge-info" onclick="DeviceChart('@Url.Action("LinkOtherDetails")', '@Model.linkDetails.code', '24h')">24h</div>
             </div>
         </div>
     </div>
@@ -77,9 +86,9 @@
             @* </table> *@
         </div>
         <div class="h-min flex flex-row-reverse gap-6 p-4">
-            <div class="badge badge-info" onclick="CountryChart('@Url.Action("LinkOtherDetails")', '0raz2muF', '30d')">30d</div>
-            <div class="badge badge-info" onclick="CountryChart('@Url.Action("LinkOtherDetails")', '0raz2muF', '7d')">7d</div>
-            <div class="badge badge-info" onclick="CountryChart('@Url.Action("LinkOtherDetails")', '0raz2muF', '24h')">24h</div>
+            <div class="badge badge-info" onclick="CountryChart('@Url.Action("LinkOtherDetails")', '@Model.linkDetails.code', '30d')">30d</div>
+            <div class="badge badge-info" onclick="CountryChart('@Url.Action("LinkOtherDetails")', '@Model.linkDetails.code', '7d')">7d</div>
+            <div class="badge badge-info" onclick="CountryChart('@Url.Action("LinkOtherDetails")', '@Model.linkDetails.code', '24h')">24h</div>
         </div>
     </div>
     <div class="bg-base-200 flex flex-col">
@@ -95,9 +104,9 @@
             @* </table> *@
         </div>
         <div class="h-min flex flex-row-reverse gap-6 p-4">
-            <div class="badge badge-info" onclick="CityChart('@Url.Action("LinkOtherDetails")', '0raz2muF', '30d')">30d</div>
-            <div class="badge badge-info" onclick="CityChart('@Url.Action("LinkOtherDetails")', '0raz2muF', '7d')">7d</div>
-            <div class="badge badge-info" onclick="CityChart('@Url.Action("LinkOtherDetails")', '0raz2muF', '24h')">24h</div>
+            <div class="badge badge-info" onclick="CityChart('@Url.Action("LinkOtherDetails")', '@Model.linkDetails.code', '30d')">30d</div>
+            <div class="badge badge-info" onclick="CityChart('@Url.Action("LinkOtherDetails")', '@Model.linkDetails.code', '7d')">7d</div>
+            <div class="badge badge-info" onclick="CityChart('@Url.Action("LinkOtherDetails")', '@Model.linkDetails.code', '24h')">24h</div>
         </div>
     </div>
 
@@ -107,11 +116,11 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
     window.addEventListener("load", async () => {
-        await VisitsChart('@Url.Action("LinkVisitDetails")', "0raz2muF", "30d");
-        await BrowserChart('@Url.Action("LinkOtherDetails")', "0raz2muF", "30d");
-        await OSChart('@Url.Action("LinkOtherDetails")', "0raz2muF", "30d");
-        await CountryChart('@Url.Action("LinkOtherDetails")', "0raz2muF", "30d");
-        await CityChart('@Url.Action("LinkOtherDetails")', "0raz2muF", "30d");
-        await DeviceChart('@Url.Action("LinkOtherDetails")', "0raz2muF", "30d");
+        await VisitsChart('@Url.Action("LinkVisitDetails")', "@Model.linkDetails.code", "30d");
+        await BrowserChart('@Url.Action("LinkOtherDetails")', "@Model.linkDetails.code", "30d");
+        await OSChart('@Url.Action("LinkOtherDetails")', "@Model.linkDetails.code", "30d");
+        await CountryChart('@Url.Action("LinkOtherDetails")', "@Model.linkDetails.code", "30d");
+        await CityChart('@Url.Action("LinkOtherDetails")', "@Model.linkDetails.code", "30d");
+        await DeviceChart('@Url.Action("LinkOtherDetails")', "@Model.linkDetails.code", "30d");
     })
 </script>

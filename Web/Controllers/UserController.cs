@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using Web.ApplicationDbContext;
 using Web.Models.Account;
 using Web.Models.Link;
@@ -62,23 +63,43 @@ public class UserController(UserDbContext context) : Controller
         return View();
     }
 
-    public IActionResult Details()
+    public async Task<IActionResult> Details(string? code)
     {
-        byte[]? bytes = HttpContext.Session.Get("UserData");
-        if (bytes == null)
+        try
         {
-            HttpContext.Session.Clear();
-            return RedirectToAction("Login", "Home");
-        }
+            
+            if(code == null) RedirectToAction("Dashboard");
+            
 
-        AccountModel account = AccountModel.Deserialize(bytes);
-        return View(new _HeaderView()
+            byte[]? bytes = HttpContext.Session.Get("UserData");
+            if (bytes == null)
+            {
+                HttpContext.Session.Clear();
+                return RedirectToAction("Login", "Home");
+            }
+
+            AccountModel account = AccountModel.Deserialize(bytes);
+
+            var linkDetails =
+                await context.Link.FirstOrDefaultAsync(link => link.code == code && link.AccountId == account.id);
+
+            if (linkDetails == null) return RedirectToAction("Dashboard");
+            
+            return View(new LinkDetails() {
+                    header = new _HeaderView() { 
+                        isAdmin = account.isAdmin, 
+                        name = account.name, 
+                        picPath = account.PicPath, 
+                        plan = account.Plan 
+                        },
+                    linkDetails =  linkDetails
+            });
+        }
+        catch (Exception ex)
         {
-            isAdmin = account.isAdmin,
-            name = account.name,
-            picPath = account.PicPath,
-            plan = account.Plan
-        });
+            Console.WriteLine(ex);
+            return View("500");
+        }
     }
 
 
@@ -166,7 +187,7 @@ public class UserController(UserDbContext context) : Controller
     {
         try
         {
-            if (link.LinkName == String.Empty && link.LinkURL == String.Empty)
+            if (link.LinkName.IsNullOrEmpty() && link.LinkURL.IsNullOrEmpty())
                 return StatusCode(400, new
                 {
                     error = "Required at least one of the field."
@@ -268,7 +289,9 @@ public class UserController(UserDbContext context) : Controller
 
             AccountModel account = AccountModel.Deserialize(bytes);
 
-            if (!(await context.Link.AnyAsync(link => link.AccountId == account.id && link.code == code)))
+            
+            var link = await context.Link.FirstOrDefaultAsync(link => link.AccountId == account.id && link.code == code);
+            if (link == null)
             {
                 return StatusCode(400, new
                 {
@@ -300,7 +323,7 @@ public class UserController(UserDbContext context) : Controller
             }
 
 
-            IQueryable<AnalyticsModel> baseQuery = context.Analytics.Where(a => a.visitedAt >= dataSince);
+            IQueryable<AnalyticsModel> baseQuery = context.Analytics.Where(a => a.visitedAt >= dataSince && a.LinkModelCode == code);
             IQueryable<LinkDetailsResponse> query;
             switch (detailType)
             {
@@ -330,10 +353,10 @@ public class UserController(UserDbContext context) : Controller
                         error = "Unknown Analytics Type. Allowed Types are browser, os, country, city and device"
                     });
             }
-            
+
              
             
-            return Ok(await query.Take(10).ToListAsync());
+            return Ok(await query.OrderByDescending(res => res.data).Take(10).ToListAsync());
         }
         catch (Exception ex)
         {
@@ -370,8 +393,8 @@ public class UserController(UserDbContext context) : Controller
 
             AccountModel account = AccountModel.Deserialize(bytes);
             
-            
-            if (!(await context.Link.AnyAsync(link => link.AccountId == account.id && link.code == code)))
+            var link = await context.Link.FirstOrDefaultAsync(link => link.AccountId == account.id && link.code == code);
+            if (link == null)
             {
                 return StatusCode(400, new
                 {
@@ -403,13 +426,13 @@ public class UserController(UserDbContext context) : Controller
             }
             if (timeFrame == "24h")
             {
-                return Ok(await context.Analytics.Where(a => a.visitedAt >= dataSince)
+                return Ok(await context.Analytics.Where(a => a.visitedAt >= dataSince && a.LinkModelCode == code)
                     .GroupBy(a => a.visitedAt.Hour)
                     .Select(g => new { duration = g.Key, count = g.Count() })
                     .OrderBy(res => res.duration).ToListAsync());
             }
 
-            return Ok(await context.Analytics.Where(a => a.visitedAt >= dataSince)
+            return Ok(await context.Analytics.Where(a => a.visitedAt >= dataSince && a.LinkModelCode == code)
                 .GroupBy(a => a.visitedAt.Date)
                 .Select(g => new LinkDetailsResponse(){ label = g.Key.ToString(), data = g.Count() })
                 .OrderBy(res => res.label).ToListAsync());
