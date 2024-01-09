@@ -25,6 +25,20 @@ async function VisitsChart(actionUrl, code, timeFrame){
                 borderColor: "rgb(180, 190, 254)"
             }]
         },
+        options: {
+            scales: {
+                x :{
+                    grid : {
+                        color : "rgb(88, 91, 112)"
+                    }
+                },
+                y: {
+                    grid : {
+                        color : "rgb(88, 91, 112)"
+                    }
+                }
+            }
+        }
     });
 }
 async function BrowserChart(actionUrl, code, timeFrame) {
@@ -42,12 +56,26 @@ async function BrowserChart(actionUrl, code, timeFrame) {
         data: {
             labels: data.map(d => d.label),
             datasets: [{
-                label: 'Browser Users',
+                label: 'Visitor\'s Browser',
                 data: data.map(d => d.data),
                 borderWidth: 1,
                 backgroundColor : ["rgba(166, 227, 161, 0.7)", "rgba(243, 139, 168, 0.7)", "rgba(245, 194, 231, 0.7)", "rgba(116, 199, 236, 0.7)"],
                 borderColor: ["rgb(166, 227, 161)", "rgb(243, 139, 168)", "rgb(245, 194, 231)", "rgb(116, 199, 236)"]
             }]
+        },
+        options: {
+            scales: {
+                x :{
+                    grid : {
+                        color : "rgb(88, 91, 112)"
+                    }
+                },
+                y: {
+                    grid : {
+                        color : "rgb(88, 91, 112)"
+                    }
+                }
+            }
         }
     });
 }
@@ -70,6 +98,20 @@ async function OSChart(actionUrl, code, timeFrame){
                 data: data.map(d => d.data),
             }]
         },
+        options: {
+            scales: {
+                x :{
+                    grid : {
+                        color : "rgb(88, 91, 112)"
+                    }
+                },
+                y: {
+                    grid : {
+                        color : "rgb(88, 91, 112)"
+                    }
+                }
+            }
+        }
     });
 }
 async function DeviceChart(actionUrl, code, timeFrame){
@@ -91,21 +133,35 @@ async function DeviceChart(actionUrl, code, timeFrame){
                 data: data.map(d => d.data),
             }]
         },
+        options: {
+            scales: {
+                x :{
+                    grid : {
+                        color : "rgb(88, 91, 112)"
+                    }
+                },
+                y: {
+                    grid : {
+                        color : "rgb(88, 91, 112)"
+                    }
+                }
+            }
+        }
     });
 }
 async function CountryChart(actionUrl, code, timeFrame){
     const data= await GetData(actionUrl,"country", code, timeFrame);
-    //const tbl = document.querySelector("#CountryTable")
+    const tbl = document.querySelector("#CountryTable")
 
     if(countryChart !== undefined){
         countryChart.data.labels = data.map(d => d.label)
         countryChart.data.datasets[0].data = data.map(d => d.data)
         countryChart.update();
         
-        // tbl.innerHTML = "";
-        // for(let i =0; i< data.length; i++){
-        //     tbl.innerHTML += `<tr><th>${i}</th><th>${data[i].label}</th><th>${data[i].data}</th></tr>`;
-        // }
+        tbl.innerHTML = "";
+        for(let i =0; i< data.length; i++){
+            tbl.innerHTML += `<tr><th>${i}</th><th>${data[i].label}</th><th>${data[i].data}</th></tr>`;
+        }
         return;
     }
     
@@ -114,17 +170,31 @@ async function CountryChart(actionUrl, code, timeFrame){
         data: {
             labels: data.map(d => d.label),
             datasets: [{
-                label: 'Visitors',
+                label: 'Visitor\'s Countries',
                 data: data.map(d => d.data),
                 borderWidth: 1
             }]
+        },
+        options: {
+            scales: {
+                x :{
+                    grid : {
+                        color : "rgb(88, 91, 112)"
+                    }
+                },
+                y: {
+                    grid : {
+                        color : "rgb(88, 91, 112)"
+                    }
+                }
+            }
         }
     });
 
-    //tbl.innerHTML = "";
-    // for(let i =0; i< data.length; i++){
-    //     tbl.innerHTML += `<tr><th>${i}</th><th>${data[i].label}</th><th>${data[i].data}</th></tr>`;
-    // }
+    tbl.innerHTML = "";
+    for(let i =0; i< data.length; i++){
+        tbl.innerHTML += `<tr><th>${i}</th><th>${data[i].label}</th><th>${data[i].data}</th></tr>`;
+    }
 }
 async function CityChart(actionUrl, code, timeFrame){
     const data= await GetData(actionUrl,"city", code, timeFrame);
@@ -147,11 +217,25 @@ async function CityChart(actionUrl, code, timeFrame){
         data: {
             labels: data.map(d => d.label),
             datasets: [{
-                label: 'Browser Users',
+                label: 'Visitor\'s Country',
                 data: data.map(d => d.data),
                 borderWidth: 1,
                 backgroundColor: "rgb(255, 99, 132)"
             }]
+        },
+        options: {
+            scales: {
+                x :{
+                    grid : {
+                        color : "rgb(88, 91, 112)"
+                    }
+                },
+                y: {
+                    grid : {
+                        color : "rgb(88, 91, 112)"
+                    }
+                }
+            }
         }
     });
     
