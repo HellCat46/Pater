@@ -485,3 +485,6 @@ $RECYCLE.BIN/
 
 # User's Profile Pictures
 UserPics
+
+# Dev Credentials
+appsettings.Development.json

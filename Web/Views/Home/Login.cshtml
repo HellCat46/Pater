@@ -40,7 +40,7 @@
                     </label>
                     <input type="password" placeholder="password" class="input input-bordered" asp-for="password" required/>
                     <label class="label">
-                        <a href="#" class="label-text-alt link link-hover">Forgot password?</a>
+                        <a onclick="resetPassDialog.showModal()" class="label-text-alt link link-hover">Forgot password?</a>
                     </label>
                 </div>
                 <div class="form-control mt-6">
@@ -51,8 +51,37 @@
     </div>
 </div>
 
+
+<dialog id="resetPassDialog" class="modal modal-bottom sm:modal-middle">
+    <div class="modal-box card">
+        <form class="card-body" id="resetPassword">
+            <h2 class="card-title justify-center">Reset Password</h2>
+            <p class="mb-6">Enter your email to receive Password Reset Link.</p>
+            <div class="form-control mt-2">
+                <input type="email" id="resetPassEmail" placeholder="Your Email" class="input input-bordered" required/>
+            </div>
+            <div class="form-control mt-6">
+                <button class="btn btn-primary">Request Password Reset</button>
+            </div>
+            <div class="mt-3">
+            <div role="alert" id="resetPasswordAlert" class="hidden">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                <span id="resetPasswordAlertMessage"></span>
+            </div>
+            </div>
+        </form>
+
+        <div class="modal-action">
+            <form method="dialog">
+                <button class="btn">Close</button>
+            </form>
+        </div>
+    </div>
+</dialog>
+
+
+<script src="~/js/Home/Login.js"></script>
 <script>
-        setTimeout(() => { 
-            document.querySelector("#errorAlert").remove();
-        }, 10000)
+    const resetPasswordForm = document.querySelector("#resetPassword");
+    resetPasswordForm.addEventListener("submit", async (e) => {await resetPassword('@Url.Action("ResetPasswordRequest")', e)})
 </script>

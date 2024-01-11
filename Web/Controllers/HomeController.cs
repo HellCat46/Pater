@@ -7,10 +7,10 @@ using Web.Models.View;
 
 namespace Web.Controllers;
 
-public class HomeController(UserDbContext context) : Controller
+public class HomeController(IConfiguration config, UserDbContext context) : Controller
 {
     public IActionResult Index()
-    {
+    { 
         return View();
     }
     
@@ -83,6 +83,56 @@ public class HomeController(UserDbContext context) : Controller
         
         return View();
     }
+    
+    [Route("/ResetPassword")]
+    public IActionResult ResetPassword(string code)
+    {
+        
+        DateTime dateTime = DateTime.Now.Subtract(TimeSpan.FromHours(1));
+        if (context.AuthAction.Any(au => au.code == code && au.createAt >= dateTime)) return View();
+        
+        return RedirectToAction("Index");
+    }
+
+    [HttpPost]
+    [Route("/ResetPassword")]
+    public IActionResult SetPassword(string code, [FromBody] ResetPassword info)
+    {
+        try
+        {
+            DateTime dateTime = DateTime.Now.Subtract(TimeSpan.FromHours(1));
+            var action = context.AuthAction.FirstOrDefault(au => au.code == code && au.createAt >= dateTime);
+            if (action == null)
+            {
+                return StatusCode(404, new
+                {
+                    error = "Link is either Expired or Invalid."
+                });
+            }
+
+            var account = context.Account.FirstOrDefault(acc => acc.id == action.Userid);
+            if (account == null)
+            {
+                return StatusCode(404, new
+                {
+                    error = "Account No Longer Exists."
+                });
+            }
+
+            account.password = info.password;
+            context.SaveChanges();
+            
+            return Ok();
+        }
+        catch (Exception ex)
+        {
+            Console.Write(ex);
+            return StatusCode(500, new
+            {
+                error = "Unexpected Error while processing the request"
+            });
+        }
+    }
 
     [HttpPost]
     public async Task<IActionResult> Signup(SignupView data)
@@ -126,4 +176,70 @@ public class HomeController(UserDbContext context) : Controller
     }
     
     
+    // Non-Action Methods
+    [HttpPost]
+    public IActionResult ResetPasswordRequest(ResetPasswordReq info)
+    {
+        try
+        {
+            MailServer? mailConfig = config.GetSection("MailServer").Get<MailServer>();
+            if (mailConfig == null)
+            {
+                return StatusCode(500, new { error = "Server Error. Please contact support through email." });
+            }
+            
+            var acc = context.Account.Where(acc => acc.email == info.email).Select(acc => new {Accountid = acc.id, AccountName = acc.name}).ToList();
+            if (acc.Count() == 0)
+            {
+                return NotFound(new
+                {
+                    error = "No Account Associated with this email."
+                });
+            }
+
+            DateTime dateTime = DateTime.Now.Subtract(TimeSpan.FromHours(1));
+            if (context.AuthAction.Any(au =>
+                    au.Userid == acc[0].Accountid && au.createAt >=dateTime ))
+            {
+                return StatusCode(409, new
+                {
+                    error = "Link has already been sent to your email."
+                });
+            }
+            
+            String code= UserController.GenerateRandom(50);
+            context.AuthAction.Add(new AuthActionModel()
+            {
+                action = AuthActionModel.ActionType.ResetPassword,
+                code = code,
+                createAt = DateTime.Now,
+                Userid = acc[0].Accountid
+            });
+            context.SaveChanges();
+
+            string link = HttpContext.Request.Headers.Origin + Url.Action("ResetPassword") + "?code=" + code;
+            MailingSystem.SendPasswordReset(mailConfig, acc[0].AccountName, info.email, link);
+            
+            return Ok();
+        }
+        catch (Exception ex)
+        {
+            Console.Write(ex);
+            return StatusCode(500, new
+            {
+                error = "Unexpected Error while processing the request"
+            });
+        }
+    }
+    
+}
+
+public class ResetPasswordReq
+{
+    public string email {get; set; }
+}
+
+public class ResetPassword
+{
+    public string password { get; set; }
 }

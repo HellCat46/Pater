@@ -639,7 +639,7 @@ public class UserController(UserDbContext context) : Controller
     }
 
     // Non-Action Functions
-    private string GenerateRandom(int len)
+    public static string GenerateRandom(int len)
     {
         const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
         Random random = new Random();

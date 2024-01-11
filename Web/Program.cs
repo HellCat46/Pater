@@ -54,12 +54,11 @@ app.MapGet("/{code}", async (HttpContext context, string code, UserDbContext db)
         var linkObj  = db.Link.Find(code);
         if (linkObj == null) throw new Exception();
         redirectUrl = linkObj.url;
-        
+
         
         Uri url = new Uri("http://ip-api.com/json/"+context.Connection.RemoteIpAddress+"?fields=status,country,city");
         var info = await new HttpClient().GetFromJsonAsync<VisitorGeoLoc>(url);
         var (browser, device, os) = AnalyticsModel.ParseUserAgent(context.Request.Headers.UserAgent);
-        
         
         if (info is {status: "success"})
         {

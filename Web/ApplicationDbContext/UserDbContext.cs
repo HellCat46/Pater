@@ -17,4 +17,6 @@ public class UserDbContext : DbContext
     public DbSet<ExternalAuthModel> ExternalAuth { get; set; }
     public DbSet<ActivityLogModel> ActivityLogs { get; set; }
     public DbSet<AnalyticsModel> Analytics { get; set; }
+    
+    public DbSet<AuthActionModel> AuthAction { get; set; }
 }
