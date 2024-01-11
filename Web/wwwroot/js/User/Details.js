@@ -347,9 +347,9 @@ async function GetVisitsData(actionUrl, code, timeFrame) {
 
 
 
-function copyCode(baseUrl, code){
+function copyCode(code){
     // This wouldn't work on unsecure connection
-    navigator.clipboard.writeText("https://"+baseUrl+"/"+code).then(() => {
+    navigator.clipboard.writeText(window.location.origin+"/"+code).then(() => {
         toastAlert.className = "toast toast-center";
         toastAlertType.className = "alert alert-success"
         toastAlertText.innerText = "Successfully Copied Code to Clipboard";
