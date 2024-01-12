@@ -87,100 +87,7 @@ public class HomeController(IConfiguration config, UserDbContext context) : Cont
 
         return View();
     }
-
-    [Route("/ResetPassword")]
-    public IActionResult ResetPassword(string code)
-    {
-        try
-        {
-            DateTime dateTime = DateTime.Now.Subtract(TimeSpan.FromHours(1));
-            if (context.AuthAction.Any(au =>
-                    au.code == code && au.action == AuthActionModel.ActionType.ResetPassword &&
-                    au.createAt >= dateTime))
-                return View();
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine(ex);
-        }
-
-        return RedirectToAction("Index");
-    }
-
-    [Route("/VerifyMail")]
-    public IActionResult VerifyMail(string code)
-    {
-        try
-        {
-            DateTime dateTime = DateTime.Now.Subtract(TimeSpan.FromHours(1));
-            var action = context.AuthAction.FirstOrDefault(au =>
-                au.code == code && au.action == AuthActionModel.ActionType.VerifyEmail && au.createAt >= dateTime);
-            if (action == null) return RedirectToAction("Index");
-
-            var acc = context.Account.FirstOrDefault(acc => acc.id == action.Userid);
-            if (acc == null)
-            {
-                return RedirectToAction("Index");
-            }
-
-            acc.isVerified = true;
-            context.AuthAction.Remove(action);
-            context.SaveChanges();
-
-            if (HttpContext.Session.Get("UserData") != null)
-                HttpContext.Session.Set("UserData", AccountModel.Serialize(acc));
-
-            return View("VerifyEmail");
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine(ex);
-            return RedirectToAction("Index");
-        }
-    }
-
-    [HttpPost]
-    [Route("/ResetPassword")]
-    public IActionResult SetPassword(string code, [FromBody] ResetPassword info)
-    {
-        try
-        {
-            DateTime dateTime = DateTime.Now.Subtract(TimeSpan.FromHours(1));
-            var action = context.AuthAction.FirstOrDefault(au =>
-                au.code == code && au.action == AuthActionModel.ActionType.ResetPassword && au.createAt >= dateTime);
-            if (action == null)
-            {
-                return StatusCode(404, new
-                {
-                    error = "Link is either Expired or Invalid."
-                });
-            }
-
-            var account = context.Account.FirstOrDefault(acc => acc.id == action.Userid);
-            if (account == null)
-            {
-                return StatusCode(404, new
-                {
-                    error = "Account No Longer Exists."
-                });
-            }
-
-            account.password = info.password;
-            context.AuthAction.Remove(action);
-            context.SaveChanges();
-
-            return Ok();
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine(ex);
-            return StatusCode(500, new
-            {
-                error = "Unexpected Error while processing the request"
-            });
-        }
-    }
-
+    
     [HttpPost]
     public async Task<IActionResult> Signup(SignupView data)
     {
@@ -232,6 +139,103 @@ public class HomeController(IConfiguration config, UserDbContext context) : Cont
         }
     }
 
+
+    [Route("/ResetPassword")]
+    public IActionResult ResetPassword(string code)
+    {
+        try
+        {
+            DateTime dateTime = DateTime.Now.Subtract(TimeSpan.FromHours(1));
+            if (context.AuthAction.Any(au =>
+                    au.code == code && au.action == AuthActionModel.ActionType.ResetPassword &&
+                    au.createAt >= dateTime))
+                return View();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex);
+        }
+
+        return RedirectToAction("Index");
+    }
+
+    
+    [HttpPost]
+    [Route("/ResetPassword")]
+    public IActionResult SetPassword(string code, [FromBody] ResetPassword info)
+    {
+        try
+        {
+            DateTime dateTime = DateTime.Now.Subtract(TimeSpan.FromHours(1));
+            var action = context.AuthAction.FirstOrDefault(au =>
+                au.code == code && au.action == AuthActionModel.ActionType.ResetPassword && au.createAt >= dateTime);
+            if (action == null)
+            {
+                return StatusCode(404, new
+                {
+                    error = "Link is either Expired or Invalid."
+                });
+            }
+
+            var account = context.Account.FirstOrDefault(acc => acc.id == action.Userid);
+            if (account == null)
+            {
+                return StatusCode(404, new
+                {
+                    error = "Account No Longer Exists."
+                });
+            }
+
+            account.password = info.password;
+            context.AuthAction.Remove(action);
+            context.SaveChanges();
+
+            return Ok();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex);
+            return StatusCode(500, new
+            {
+                error = "Unexpected Error while processing the request"
+            });
+        }
+    }
+    
+    [Route("/VerifyMail")]
+    public IActionResult VerifyMail(string code)
+    {
+        try
+        {
+            DateTime dateTime = DateTime.Now.Subtract(TimeSpan.FromHours(1));
+            var action = context.AuthAction.FirstOrDefault(au =>
+                au.code == code && au.action == AuthActionModel.ActionType.VerifyEmail && au.createAt >= dateTime);
+            if (action == null) return RedirectToAction("Index");
+
+            var acc = context.Account.FirstOrDefault(acc => acc.id == action.Userid);
+            if (acc == null)
+            {
+                return RedirectToAction("Index");
+            }
+
+            acc.isVerified = true;
+            context.AuthAction.Remove(action);
+            context.SaveChanges();
+
+            if (HttpContext.Session.Get("UserData") != null)
+            {
+                HttpContext.Session.Set("UserData", AccountModel.Serialize(acc));
+            }
+
+            return View("VerifyEmail");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex);
+            return RedirectToAction("Index");
+        }
+    }
+    
 
     // Non-Action Methods
     [HttpPost]

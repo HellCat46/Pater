@@ -154,7 +154,12 @@ public class UserController(IConfiguration config, UserDbContext context) : Cont
             });
             context.SaveChanges();
 
-            string link = HttpContext.Request.Headers.Origin + Url.Action("VerifyMail", "Home") + "?code=" + code;
+
+            string url = HttpContext.Request.Headers.Origin.IsNullOrEmpty()
+                ? HttpContext.Request.Headers.Host.ToString()
+                : HttpContext.Request.Headers.Origin.ToString();
+            
+            string link = url + Url.Action("VerifyMail", "Home") + "?code=" + code;
             MailingSystem.SendEmailVerification(mailConfig, acc.name, acc.email, link);
             return View();
         }

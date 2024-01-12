@@ -2,10 +2,19 @@ setTimeout(() => {
     document.querySelector("#errorAlert").remove();
 }, 10000)
 
-
+function OpenResetDialog(){
+    document.querySelector("#resetPassEmail").value = document.querySelector("#userEmail").value;
+    document.querySelector("#resetPassDialog").showModal();
+}
 
 async function resetPassword(EndpointUrl, element) {
     element.preventDefault();
+
+    const submitButton = document.querySelector("#resetPassSubmit");
+    const loading = document.querySelector("#resetPassLoading");
+    
+    submitButton.style.display = "none";
+    loading.style.display = "flex";
     
     const email = document.querySelector("#resetPassEmail");
     
@@ -35,4 +44,6 @@ async function resetPassword(EndpointUrl, element) {
         alert.className = "alert alert-error";
         alertMessage.innerText = "Unable to communicate with server."
     }
+    submitButton.style.display = "inline-flex";
+    loading.style.display = "none";
 }
