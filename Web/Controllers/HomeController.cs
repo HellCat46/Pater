@@ -189,7 +189,8 @@ public class HomeController(IConfiguration config, UserDbContext context) : Cont
             account.password = info.password;
             context.AuthAction.Remove(action);
             context.SaveChanges();
-
+            
+            ActivityLogModel.WriteLogs(context, ActivityLogModel.Event.ResetPassword, account, HttpContext.Connection.RemoteIpAddress?.ToString()?? "Unknown");
             return Ok();
         }
         catch (Exception ex)
@@ -226,7 +227,7 @@ public class HomeController(IConfiguration config, UserDbContext context) : Cont
             {
                 HttpContext.Session.Set("UserData", AccountModel.Serialize(acc));
             }
-
+            ActivityLogModel.WriteLogs(context, ActivityLogModel.Event.VerifyEmail, acc, HttpContext.Connection.RemoteIpAddress?.ToString()?? "Unknown");
             return View("VerifyEmail");
         }
         catch (Exception ex)

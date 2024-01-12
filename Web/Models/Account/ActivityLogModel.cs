@@ -39,7 +39,11 @@ public class ActivityLogModel
                 break;
             case Event.LoggedOut: log.Action +=  " Logged Out.";
                 break;
+            case Event.VerifyEmail: log.Action += " Verified their Email.";
+                break;
             case Event.ChangedAvatar: log.Action +=  " Changed their Profile Picture.";
+                break;
+            case Event.ResetPassword : log.Action += " Resets their Password.";
                 break;
             case Event.ChangedPassword: log.Action +=  " Changed their Password.";
                 break;
@@ -71,7 +75,9 @@ public class ActivityLogModel
         EmailLoggedIn,
         EmailSignedIn,
         LoggedOut,
+        VerifyEmail,
         ChangedAvatar,
+        ResetPassword,
         ChangedPassword,
         ChangedEmail,
         ChangedName, 
