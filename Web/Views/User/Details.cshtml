@@ -8,6 +8,15 @@
 @Html.Partial("_Header", Model.header)
 
 <div class="flex flex-col h-auto w-auto py-2 my-10 mx-5 gap-4 lg:mx-40">
+    @if (ViewData["UnVerified"] != null)
+    {
+        <div role="alert" class="alert alert-warning">
+            <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+            </svg>
+            <span>It seems you haven't verified your email. Click <a asp-action="VerificationRequest" class="link link-info">here</a> to receive Verification Mail.</span>
+        </div>
+    }
     @* Main Info Card *@
     <div class="flex flex-col bg-base-300 px-5 rounded-lg">
         <div class="flex flex-col lg:flex-row gap-4 py-5 items-center">

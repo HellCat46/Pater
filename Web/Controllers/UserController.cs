@@ -8,7 +8,7 @@ using Web.Models.View.User;
 
 namespace Web.Controllers;
 
-public class UserController(UserDbContext context) : Controller
+public class UserController(IConfiguration config, UserDbContext context) : Controller
 {
     public async Task<IActionResult> Dashboard()
     {
@@ -20,6 +20,10 @@ public class UserController(UserDbContext context) : Controller
         }
 
         AccountModel account = AccountModel.Deserialize(bytes);
+
+        if (!account.isVerified && account.createdAt <= DateTime.Now.Subtract(TimeSpan.FromDays(7)))
+            return View("UnVerified");
+        if (!account.isVerified) ViewData["UnVerified"] = 1;
 
         return View(new DashboardView()
         {
@@ -44,6 +48,11 @@ public class UserController(UserDbContext context) : Controller
         }
 
         AccountModel account = AccountModel.Deserialize(bytes);
+
+        if (!account.isVerified && account.createdAt <= DateTime.Now.Subtract(TimeSpan.FromDays(7)))
+            return View("UnVerified");
+        if (!account.isVerified) ViewData["UnVerified"] = 1;
+
         return View(new ProfileView()
         {
             header = new _HeaderView()
@@ -67,9 +76,8 @@ public class UserController(UserDbContext context) : Controller
     {
         try
         {
-            
-            if(code == null) RedirectToAction("Dashboard");
-            
+            if (code == null) RedirectToAction("Dashboard");
+
 
             byte[]? bytes = HttpContext.Session.Get("UserData");
             if (bytes == null)
@@ -79,29 +87,83 @@ public class UserController(UserDbContext context) : Controller
             }
 
             AccountModel account = AccountModel.Deserialize(bytes);
+            
+            if (!account.isVerified && account.createdAt <= DateTime.Now.Subtract(TimeSpan.FromDays(7)))
+                return View("UnVerified");
+            if (!account.isVerified) ViewData["UnVerified"] = 1;
 
             var linkDetails =
                 await context.Link.FirstOrDefaultAsync(link => link.code == code && link.AccountId == account.id);
 
             if (linkDetails == null) return RedirectToAction("Dashboard");
-            
-            return View(new LinkDetails() {
-                    header = new _HeaderView() { 
-                        isAdmin = account.isAdmin, 
-                        name = account.name, 
-                        picPath = account.PicPath, 
-                        plan = account.Plan 
-                        },
-                    linkDetails =  linkDetails
+
+            return View(new LinkDetails()
+            {
+                header = new _HeaderView()
+                {
+                    isAdmin = account.isAdmin,
+                    name = account.name,
+                    picPath = account.PicPath,
+                    plan = account.Plan
+                },
+                linkDetails = linkDetails
             });
         }
         catch (Exception ex)
         {
             Console.WriteLine(ex);
-            return View("500");
+            return RedirectToAction("Dashboard");
         }
     }
 
+    public IActionResult VerificationRequest()
+    {
+        try
+        {
+            MailServer? mailConfig = config.GetSection("MailServer").Get<MailServer>();
+            if (mailConfig == null)
+            {
+                return StatusCode(500, new { error = "Server Error. Please contact support through email." });
+            }
+
+            byte[]? bytes = HttpContext.Session.Get("UserData");
+            if (bytes == null)
+            {
+                HttpContext.Session.Clear();
+                return RedirectToAction("Login", "Home");
+            }
+
+            AccountModel acc = AccountModel.Deserialize(bytes);
+            if (acc.isVerified) return RedirectToAction("Dashboard");
+
+            DateTime dateTime = DateTime.Now.Subtract(TimeSpan.FromHours(1));
+            if (context.AuthAction.Any(au =>
+                    au.Userid == acc.id && au.action == AuthActionModel.ActionType.VerifyEmail &&
+                    au.createAt >= dateTime))
+            {
+                return View();
+            }
+
+            string code = GenerateRandom(50);
+            context.AuthAction.Add(new AuthActionModel()
+            {
+                action = AuthActionModel.ActionType.VerifyEmail,
+                code = code,
+                createAt = DateTime.Now,
+                Userid = acc.id
+            });
+            context.SaveChanges();
+
+            string link = HttpContext.Request.Headers.Origin + Url.Action("VerifyMail", "Home") + "?code=" + code;
+            MailingSystem.SendEmailVerification(mailConfig, acc.name, acc.email, link);
+            return View();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex);
+            return RedirectToAction("Dashboard");
+        }
+    }
 
     // Non-Page Actions
     public async Task<IActionResult> GetLinks()
@@ -177,7 +239,7 @@ public class UserController(UserDbContext context) : Controller
         }
         catch (Exception ex)
         {
-            Console.Write(ex);
+            Console.WriteLine(ex);
             return StatusCode(500, new { error = "Unexpected Error while trying to Create Link." });
         }
     }
@@ -263,7 +325,7 @@ public class UserController(UserDbContext context) : Controller
             });
         }
     }
-    
+
     [HttpGet]
     public async Task<IActionResult> LinkOtherDetails(string? detailType, string? code, string? timeFrame)
     {
@@ -289,8 +351,9 @@ public class UserController(UserDbContext context) : Controller
 
             AccountModel account = AccountModel.Deserialize(bytes);
 
-            
-            var link = await context.Link.FirstOrDefaultAsync(link => link.AccountId == account.id && link.code == code);
+
+            var link = await context.Link.FirstOrDefaultAsync(link =>
+                link.AccountId == account.id && link.code == code);
             if (link == null)
             {
                 return StatusCode(400, new
@@ -298,7 +361,7 @@ public class UserController(UserDbContext context) : Controller
                     error = "This Link is either Invalid or You don't have access to check it's details."
                 });
             }
-            
+
             if (account.Plan == AccountModel.Plans.Free)
             {
                 return StatusCode(403, new
@@ -310,42 +373,47 @@ public class UserController(UserDbContext context) : Controller
             DateTime dataSince;
             switch (timeFrame)
             {
-                case "24h" : dataSince = DateTime.Now.Subtract(TimeSpan.FromHours(24));
+                case "24h":
+                    dataSince = DateTime.Now.Subtract(TimeSpan.FromHours(24));
                     break;
-                case "7d" : dataSince = DateTime.Now.Subtract(TimeSpan.FromDays(7));
+                case "7d":
+                    dataSince = DateTime.Now.Subtract(TimeSpan.FromDays(7));
                     break;
-                case "30d" : dataSince = DateTime.Now.Subtract(TimeSpan.FromDays(30));
+                case "30d":
+                    dataSince = DateTime.Now.Subtract(TimeSpan.FromDays(30));
                     break;
-                default: return StatusCode(404, new
-                {
-                    error = "Unknown Time Frame. Allowed Time Frames are 24h, 7d and 30d."
-                });
+                default:
+                    return StatusCode(404, new
+                    {
+                        error = "Unknown Time Frame. Allowed Time Frames are 24h, 7d and 30d."
+                    });
             }
 
 
-            IQueryable<AnalyticsModel> baseQuery = context.Analytics.Where(a => a.visitedAt >= dataSince && a.LinkModelCode == code);
+            IQueryable<AnalyticsModel> baseQuery =
+                context.Analytics.Where(a => a.visitedAt >= dataSince && a.LinkModelCode == code);
             IQueryable<LinkDetailsResponse> query;
             switch (detailType)
             {
-                case "browser" :
+                case "browser":
                     query = baseQuery.GroupBy(ana => ana.browser)
-                        .Select(g => new  LinkDetailsResponse() { label= g.Key.ToString(), data = g.Count() });
+                        .Select(g => new LinkDetailsResponse() { label = g.Key.ToString(), data = g.Count() });
                     break;
-                case "os" : 
+                case "os":
                     query = baseQuery.GroupBy(ana => ana.os)
-                        .Select(g => new  LinkDetailsResponse() { label= g.Key.ToString(), data = g.Count() });
+                        .Select(g => new LinkDetailsResponse() { label = g.Key.ToString(), data = g.Count() });
                     break;
-                case "country" : 
+                case "country":
                     query = baseQuery.GroupBy(ana => ana.country)
-                        .Select(g => new  LinkDetailsResponse() { label= g.Key.ToString(), data = g.Count() });
+                        .Select(g => new LinkDetailsResponse() { label = g.Key.ToString(), data = g.Count() });
                     break;
-                case "city" : 
+                case "city":
                     query = baseQuery.GroupBy(ana => ana.city)
-                        .Select(g => new  LinkDetailsResponse() { label= g.Key.ToString(), data = g.Count() });
+                        .Select(g => new LinkDetailsResponse() { label = g.Key.ToString(), data = g.Count() });
                     break;
-                case "device" : 
+                case "device":
                     query = baseQuery.GroupBy(ana => ana.device)
-                        .Select(g => new  LinkDetailsResponse() { label= g.Key.ToString(), data = g.Count() });
+                        .Select(g => new LinkDetailsResponse() { label = g.Key.ToString(), data = g.Count() });
                     break;
                 default:
                     return StatusCode(404, new
@@ -354,8 +422,7 @@ public class UserController(UserDbContext context) : Controller
                     });
             }
 
-             
-            
+
             return Ok(await query.OrderByDescending(res => res.data).Take(10).ToListAsync());
         }
         catch (Exception ex)
@@ -367,7 +434,7 @@ public class UserController(UserDbContext context) : Controller
             });
         }
     }
-    
+
     [HttpGet]
     public async Task<IActionResult> LinkVisitDetails(string? code, string? timeFrame)
     {
@@ -392,8 +459,9 @@ public class UserController(UserDbContext context) : Controller
             }
 
             AccountModel account = AccountModel.Deserialize(bytes);
-            
-            var link = await context.Link.FirstOrDefaultAsync(link => link.AccountId == account.id && link.code == code);
+
+            var link = await context.Link.FirstOrDefaultAsync(link =>
+                link.AccountId == account.id && link.code == code);
             if (link == null)
             {
                 return StatusCode(400, new
@@ -401,7 +469,7 @@ public class UserController(UserDbContext context) : Controller
                     error = "This Link is either Invalid or You don't have access to check it's details."
                 });
             }
-            
+
             if (account.Plan == AccountModel.Plans.Free)
             {
                 return StatusCode(403, new
@@ -413,17 +481,22 @@ public class UserController(UserDbContext context) : Controller
             DateTime dataSince;
             switch (timeFrame)
             {
-                case "24h" : dataSince = DateTime.Now.Subtract(TimeSpan.FromHours(24));
+                case "24h":
+                    dataSince = DateTime.Now.Subtract(TimeSpan.FromHours(24));
                     break;
-                case "7d" : dataSince = DateTime.Now.Subtract(TimeSpan.FromDays(7));
+                case "7d":
+                    dataSince = DateTime.Now.Subtract(TimeSpan.FromDays(7));
                     break;
-                case "30d" : dataSince = DateTime.Now.Subtract(TimeSpan.FromDays(30));
+                case "30d":
+                    dataSince = DateTime.Now.Subtract(TimeSpan.FromDays(30));
                     break;
-                default: return StatusCode(404, new
-                {
-                    error = "Unknown Time Frame. Allowed Time Frames are 24h, 7d and 30d."
-                });
+                default:
+                    return StatusCode(404, new
+                    {
+                        error = "Unknown Time Frame. Allowed Time Frames are 24h, 7d and 30d."
+                    });
             }
+
             if (timeFrame == "24h")
             {
                 return Ok(await context.Analytics.Where(a => a.visitedAt >= dataSince && a.LinkModelCode == code)
@@ -434,7 +507,7 @@ public class UserController(UserDbContext context) : Controller
 
             return Ok(await context.Analytics.Where(a => a.visitedAt >= dataSince && a.LinkModelCode == code)
                 .GroupBy(a => a.visitedAt.Date)
-                .Select(g => new LinkDetailsResponse(){ label = g.Key.ToString(), data = g.Count() })
+                .Select(g => new LinkDetailsResponse() { label = g.Key.ToString(), data = g.Count() })
                 .OrderBy(res => res.label).ToListAsync());
         }
         catch (Exception ex)
@@ -576,7 +649,7 @@ public class UserController(UserDbContext context) : Controller
         }
         catch (Exception ex)
         {
-            Console.Write(ex);
+            Console.WriteLine(ex);
             return StatusCode(500, new { error = "Unexpected Error while trying to Update Avatar!" });
         }
     }
@@ -633,7 +706,7 @@ public class UserController(UserDbContext context) : Controller
         }
         catch (Exception ex)
         {
-            Console.Write(ex);
+            Console.WriteLine(ex);
             return RedirectToAction("Profile");
         }
     }

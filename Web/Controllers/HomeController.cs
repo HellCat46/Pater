@@ -10,10 +10,10 @@ namespace Web.Controllers;
 public class HomeController(IConfiguration config, UserDbContext context) : Controller
 {
     public IActionResult Index()
-    { 
+    {
         return View();
     }
-    
+
     public IActionResult Privacy()
     {
         return View();
@@ -38,12 +38,12 @@ public class HomeController(IConfiguration config, UserDbContext context) : Cont
     {
         return View();
     }
-    
+
     public IActionResult Login()
     {
         if (HttpContext.Session.Get("UserData") != null)
             return RedirectToAction("Dashboard", "User");
-        
+
         return View();
     }
 
@@ -52,17 +52,21 @@ public class HomeController(IConfiguration config, UserDbContext context) : Cont
     {
         try
         {
-            AccountModel? account = await context.Account.FirstOrDefaultAsync(acc => acc.email == data.email && acc.password == data.password);
+            AccountModel? account =
+                await context.Account.FirstOrDefaultAsync(acc =>
+                    acc.email == data.email && acc.password == data.password);
             if (account == null)
             {
                 ViewBag.ErrorMessage = "Invalid Credentials";
                 return View();
             }
+
             if (account.password != data.password)
             {
                 ViewBag.ErrorMessage = ".";
                 return View();
             }
+
             HttpContext.Session.Set("UserData", AccountModel.Serialize(account));
             ActivityLogModel.WriteLogs(context, ActivityLogModel.Event.EmailLoggedIn, account,
                 HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown");
@@ -80,18 +84,59 @@ public class HomeController(IConfiguration config, UserDbContext context) : Cont
     {
         if (HttpContext.Session.Get("UserData") != null)
             return RedirectToAction("Dashboard", "User");
-        
+
         return View();
     }
-    
+
     [Route("/ResetPassword")]
     public IActionResult ResetPassword(string code)
     {
-        
-        DateTime dateTime = DateTime.Now.Subtract(TimeSpan.FromHours(1));
-        if (context.AuthAction.Any(au => au.code == code && au.createAt >= dateTime)) return View();
-        
+        try
+        {
+            DateTime dateTime = DateTime.Now.Subtract(TimeSpan.FromHours(1));
+            if (context.AuthAction.Any(au =>
+                    au.code == code && au.action == AuthActionModel.ActionType.ResetPassword &&
+                    au.createAt >= dateTime))
+                return View();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex);
+        }
+
         return RedirectToAction("Index");
+    }
+
+    [Route("/VerifyMail")]
+    public IActionResult VerifyMail(string code)
+    {
+        try
+        {
+            DateTime dateTime = DateTime.Now.Subtract(TimeSpan.FromHours(1));
+            var action = context.AuthAction.FirstOrDefault(au =>
+                au.code == code && au.action == AuthActionModel.ActionType.VerifyEmail && au.createAt >= dateTime);
+            if (action == null) return RedirectToAction("Index");
+
+            var acc = context.Account.FirstOrDefault(acc => acc.id == action.Userid);
+            if (acc == null)
+            {
+                return RedirectToAction("Index");
+            }
+
+            acc.isVerified = true;
+            context.AuthAction.Remove(action);
+            context.SaveChanges();
+
+            if (HttpContext.Session.Get("UserData") != null)
+                HttpContext.Session.Set("UserData", AccountModel.Serialize(acc));
+
+            return View("VerifyEmail");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex);
+            return RedirectToAction("Index");
+        }
     }
 
     [HttpPost]
@@ -101,7 +146,8 @@ public class HomeController(IConfiguration config, UserDbContext context) : Cont
         try
         {
             DateTime dateTime = DateTime.Now.Subtract(TimeSpan.FromHours(1));
-            var action = context.AuthAction.FirstOrDefault(au => au.code == code && au.createAt >= dateTime);
+            var action = context.AuthAction.FirstOrDefault(au =>
+                au.code == code && au.action == AuthActionModel.ActionType.ResetPassword && au.createAt >= dateTime);
             if (action == null)
             {
                 return StatusCode(404, new
@@ -120,13 +166,14 @@ public class HomeController(IConfiguration config, UserDbContext context) : Cont
             }
 
             account.password = info.password;
+            context.AuthAction.Remove(action);
             context.SaveChanges();
-            
+
             return Ok();
         }
         catch (Exception ex)
         {
-            Console.Write(ex);
+            Console.WriteLine(ex);
             return StatusCode(500, new
             {
                 error = "Unexpected Error while processing the request"
@@ -139,6 +186,12 @@ public class HomeController(IConfiguration config, UserDbContext context) : Cont
     {
         try
         {
+            MailServer? mailConfig = config.GetSection("MailServer").Get<MailServer>();
+            if (mailConfig == null)
+            {
+                return StatusCode(500, new { error = "Server Error. Please contact support through email." });
+            }
+
             AccountModel? account = await context.Account.FirstOrDefaultAsync(acc => acc.email == data.email);
             if (account != null)
             {
@@ -154,17 +207,21 @@ public class HomeController(IConfiguration config, UserDbContext context) : Cont
                 name = data.name
             });
             await context.SaveChangesAsync();
-            
-            account = await context.Account.FirstOrDefaultAsync(acc => acc.email == data.email && acc.password == data.password);
+
+            account = await context.Account.FirstOrDefaultAsync(acc =>
+                acc.email == data.email && acc.password == data.password);
             if (account == null)
             {
                 ViewBag.ErrorMessage = "Failed to create the Account. Please try again later.";
                 return View();
             }
-            
+
             HttpContext.Session.Set("UserData", AccountModel.Serialize(account));
-            ActivityLogModel.WriteLogs(context, ActivityLogModel.Event.EmailSignedIn, account, HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown");
-            
+            ActivityLogModel.WriteLogs(context, ActivityLogModel.Event.EmailSignedIn, account,
+                HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown");
+
+            MailingSystem.SendWelcomeMail(mailConfig, account.name, account.email);
+
             return RedirectToAction("Dashboard", "User");
         }
         catch (Exception ex)
@@ -174,8 +231,8 @@ public class HomeController(IConfiguration config, UserDbContext context) : Cont
             return View();
         }
     }
-    
-    
+
+
     // Non-Action Methods
     [HttpPost]
     public IActionResult ResetPasswordRequest(ResetPasswordReq info)
@@ -187,8 +244,9 @@ public class HomeController(IConfiguration config, UserDbContext context) : Cont
             {
                 return StatusCode(500, new { error = "Server Error. Please contact support through email." });
             }
-            
-            var acc = context.Account.Where(acc => acc.email == info.email).Select(acc => new {Accountid = acc.id, AccountName = acc.name}).ToList();
+
+            var acc = context.Account.Where(acc => acc.email == info.email)
+                .Select(acc => new { Accountid = acc.id, AccountName = acc.name }).ToList();
             if (acc.Count() == 0)
             {
                 return NotFound(new
@@ -199,15 +257,16 @@ public class HomeController(IConfiguration config, UserDbContext context) : Cont
 
             DateTime dateTime = DateTime.Now.Subtract(TimeSpan.FromHours(1));
             if (context.AuthAction.Any(au =>
-                    au.Userid == acc[0].Accountid && au.createAt >=dateTime ))
+                    au.Userid == acc[0].Accountid && au.action == AuthActionModel.ActionType.ResetPassword &&
+                    au.createAt >= dateTime))
             {
                 return StatusCode(409, new
                 {
                     error = "Link has already been sent to your email."
                 });
             }
-            
-            String code= UserController.GenerateRandom(50);
+
+            String code = UserController.GenerateRandom(50);
             context.AuthAction.Add(new AuthActionModel()
             {
                 action = AuthActionModel.ActionType.ResetPassword,
@@ -219,24 +278,23 @@ public class HomeController(IConfiguration config, UserDbContext context) : Cont
 
             string link = HttpContext.Request.Headers.Origin + Url.Action("ResetPassword") + "?code=" + code;
             MailingSystem.SendPasswordReset(mailConfig, acc[0].AccountName, info.email, link);
-            
+
             return Ok();
         }
         catch (Exception ex)
         {
-            Console.Write(ex);
+            Console.WriteLine(ex);
             return StatusCode(500, new
             {
                 error = "Unexpected Error while processing the request"
             });
         }
     }
-    
 }
 
 public class ResetPasswordReq
 {
-    public string email {get; set; }
+    public string email { get; set; }
 }
 
 public class ResetPassword
