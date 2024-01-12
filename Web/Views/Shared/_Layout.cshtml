@@ -6,8 +6,8 @@
     <title>@ViewData["Title"]</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="~/styles.css" rel="stylesheet" type="text/css"/>
-    <script src="https://apis.google.com/js/platform.js" async defer></script>
-    <meta name="google-signin-client_id" content="216743520280-718vf35vnsp4i9r7pvd1v154kaljmmip.apps.googleusercontent.com">
+    @* <script src="https://apis.google.com/js/platform.js" async defer></script> *@
+    @* <meta name="google-signin-client_id" content="216743520280-718vf35vnsp4i9r7pvd1v154kaljmmip.apps.googleusercontent.com"> *@
     <link href="https://cdn.jsdelivr.net/npm/daisyui@4.4.18/dist/full.min.css" rel="stylesheet" type="text/css" />
 </head>
 <body data-theme="mocha">
@@ -64,7 +64,5 @@
     <p>Copyright © 2023 - All right reserved by Harshit Mittal</p>
   </aside>
 </footer>
-
-@await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>
