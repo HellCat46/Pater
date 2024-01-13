@@ -87,7 +87,7 @@ public class UserController(IConfiguration config, UserDbContext context) : Cont
                 HttpContext.Session.Clear();
                 return RedirectToAction("Login", "Home");
             }
-            
+
             if (!account.isVerified && account.createdAt <= DateTime.Now.Subtract(TimeSpan.FromDays(7)))
                 return View("UnVerified");
             if (!account.isVerified) ViewData["UnVerified"] = 1;
@@ -135,7 +135,7 @@ public class UserController(IConfiguration config, UserDbContext context) : Cont
                 HttpContext.Session.Clear();
                 return RedirectToAction("Login", "Home");
             }
-            
+
             if (acc.isVerified) return RedirectToAction("Dashboard");
 
             DateTime dateTime = DateTime.Now.Subtract(TimeSpan.FromHours(1));
@@ -160,7 +160,7 @@ public class UserController(IConfiguration config, UserDbContext context) : Cont
             string url = HttpContext.Request.Headers.Origin.IsNullOrEmpty()
                 ? HttpContext.Request.Headers.Host.ToString()
                 : HttpContext.Request.Headers.Origin.ToString();
-            
+
             string link = url + Url.Action("VerifyMail", "Home") + "?code=" + code;
             MailingSystem.SendEmailVerification(mailConfig, acc.name, acc.email, link);
             return View();
@@ -189,6 +189,7 @@ public class UserController(IConfiguration config, UserDbContext context) : Cont
             {
                 return StatusCode(403, new { error = "Session Expired. Please Login in Again" });
             }
+
             AccountModel? account = AccountModel.Deserialize(bytes);
             if (account == null)
             {
@@ -223,14 +224,25 @@ public class UserController(IConfiguration config, UserDbContext context) : Cont
                     error = "Session Expired. Please Login Again!"
                 });
             }
+
             AccountModel? account = AccountModel.Deserialize(bytes);
             if (account == null)
             {
                 HttpContext.Session.Clear();
                 return StatusCode(403, new { error = "Session Expired. Please Login in Again" });
             }
-            
-            
+
+            DateTime dateTime = DateTime.Now.Subtract(TimeSpan.FromDays(DateTime.Now.Day));
+            if ((!link.LinkCode.IsNullOrEmpty()) &&
+                (await context.Link.Where(l => l.isPaid == true && l.AccountId == account.id && l.CreatedAt >= dateTime)
+                    .CountAsync()) >= account.linkLimit)
+            {
+                return StatusCode(402, new
+                {
+                    error = "You have reached the custom Code limit that your plan allows."
+                });
+            }
+
             if (await context.Link.AnyAsync(l => l.code == link.LinkCode))
                 return StatusCode(409, new
                 {
@@ -240,9 +252,10 @@ public class UserController(IConfiguration config, UserDbContext context) : Cont
             await context.Link.AddAsync(new LinkModel()
             {
                 AccountId = account.id,
-                code = (link.LinkCode != String.Empty ? link.LinkCode : GenerateRandom(8)),
+                isPaid = (!link.LinkCode.IsNullOrEmpty()),
+                code = (!link.LinkCode.IsNullOrEmpty() ? link.LinkCode : GenerateRandom(8)),
                 CreatedAt = DateTime.Now,
-                name = (link.LinkName != String.Empty
+                name = (!link.LinkName.IsNullOrEmpty()
                     ? link.LinkName
                     : DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToLongTimeString()),
                 url = link.LinkURL
@@ -278,6 +291,7 @@ public class UserController(IConfiguration config, UserDbContext context) : Cont
                     error = "Session Expired. Please Login Again!"
                 });
             }
+
             AccountModel? account = AccountModel.Deserialize(bytes);
             if (account == null)
             {
@@ -291,8 +305,8 @@ public class UserController(IConfiguration config, UserDbContext context) : Cont
             if (linkRow.AccountId != account.id)
                 return StatusCode(403, new { error = "You don't have permission to edit this link" });
 
-            if (link.LinkName != String.Empty) linkRow.name = link.LinkName;
-            if (link.LinkURL != String.Empty) linkRow.url = link.LinkURL;
+            if (link.LinkName.IsNullOrEmpty()) linkRow.name = link.LinkName;
+            if (link.LinkURL.IsNullOrEmpty()) linkRow.url = link.LinkURL;
 
             await context.SaveChangesAsync();
             return Ok();
@@ -320,13 +334,14 @@ public class UserController(IConfiguration config, UserDbContext context) : Cont
                     error = "Session Expired. Please Login Again!"
                 });
             }
+
             AccountModel? account = AccountModel.Deserialize(bytes);
             if (account == null)
             {
                 HttpContext.Session.Clear();
                 return StatusCode(403, new { error = "Session Expired. Please Login in Again" });
             }
-            
+
             LinkModel? linkRow = await context.Link.FirstOrDefaultAsync(link => link.code == code);
             if (linkRow == null) return StatusCode(404, new { error = "Link Doesn't exist" });
 
@@ -368,13 +383,14 @@ public class UserController(IConfiguration config, UserDbContext context) : Cont
                     error = "Session Expired. Please Login Again!"
                 });
             }
+
             AccountModel? account = AccountModel.Deserialize(bytes);
             if (account == null)
             {
                 HttpContext.Session.Clear();
                 return StatusCode(403, new { error = "Session Expired. Please Login in Again" });
             }
-            
+
             if (!(AccountModel.UserAnalyticsDurations(account.plan).Any(dur => dur == timeFrame)))
             {
                 return StatusCode(403, new
@@ -392,8 +408,8 @@ public class UserController(IConfiguration config, UserDbContext context) : Cont
                     error = "This Link is either Invalid or You don't have access to check it's details."
                 });
             }
-            
-            
+
+
             DateTime dataSince;
             switch (timeFrame)
             {
@@ -480,6 +496,7 @@ public class UserController(IConfiguration config, UserDbContext context) : Cont
                     error = "Session Expired. Please Login Again!"
                 });
             }
+
             AccountModel? account = AccountModel.Deserialize(bytes);
             if (account == null)
             {
@@ -505,7 +522,7 @@ public class UserController(IConfiguration config, UserDbContext context) : Cont
                     error = "This Link is either Invalid or You don't have access to check it's details."
                 });
             }
-            
+
 
             DateTime dataSince;
             switch (timeFrame)
@@ -567,6 +584,7 @@ public class UserController(IConfiguration config, UserDbContext context) : Cont
                     error = "Session Expired. Please Login Again!"
                 });
             }
+
             AccountModel? account = AccountModel.Deserialize(bytes);
             if (account == null)
             {
@@ -620,6 +638,7 @@ public class UserController(IConfiguration config, UserDbContext context) : Cont
                     error = "Session Expired. Please Login Again!"
                 });
             }
+
             AccountModel? account = AccountModel.Deserialize(bytes);
             if (account == null)
             {
@@ -634,10 +653,10 @@ public class UserController(IConfiguration config, UserDbContext context) : Cont
             await context.SaveChangesAsync();
             HttpContext.Session.Set("UserData", AccountModel.Serialize(account));
 
-            if (newName != String.Empty)
+            if (newName.IsNullOrEmpty())
                 ActivityLogModel.WriteLogs(context, ActivityLogModel.Event.ChangedName, account,
                     HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown");
-            if (newEmail != String.Empty)
+            if (newEmail.IsNullOrEmpty())
                 ActivityLogModel.WriteLogs(context, ActivityLogModel.Event.ChangedEmail, account,
                     HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown");
             return Ok();
@@ -663,6 +682,7 @@ public class UserController(IConfiguration config, UserDbContext context) : Cont
                     error = "Session Expired. Please Login Again!"
                 });
             }
+
             AccountModel? account = AccountModel.Deserialize(bytes);
             if (account == null)
             {
@@ -701,6 +721,7 @@ public class UserController(IConfiguration config, UserDbContext context) : Cont
         {
             return RedirectToAction("Login", "Home");
         }
+
         AccountModel? account = AccountModel.Deserialize(bytes);
         if (account == null)
         {
@@ -721,13 +742,14 @@ public class UserController(IConfiguration config, UserDbContext context) : Cont
         {
             return RedirectToAction("Login", "Home");
         }
+
         AccountModel? account = AccountModel.Deserialize(bytes);
         if (account == null)
         {
             HttpContext.Session.Clear();
             return StatusCode(403, new { error = "Session Expired. Please Login in Again" });
         }
-        
+
         try
         {
             AccountModel? userAcc = await context.Account.SingleOrDefaultAsync(acc => acc.id == account.id);

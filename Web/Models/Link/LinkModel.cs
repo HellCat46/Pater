@@ -17,6 +17,9 @@ public class LinkModel
     [Required]
     public DateTime CreatedAt { get; set; }
     
+    [Required]
+    public bool isPaid { get; set; }
+    
     public int AccountId { get; set; }
     public AccountModel Account { get; set; }
 }
