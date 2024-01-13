@@ -13,13 +13,13 @@ public class UserController(IConfiguration config, UserDbContext context) : Cont
     public async Task<IActionResult> Dashboard()
     {
         byte[]? bytes = HttpContext.Session.Get("UserData");
-        if (bytes == null)
+        if (bytes == null) return RedirectToAction("Login", "Home");
+        AccountModel? account = AccountModel.Deserialize(bytes);
+        if (account == null)
         {
             HttpContext.Session.Clear();
             return RedirectToAction("Login", "Home");
         }
-
-        AccountModel account = AccountModel.Deserialize(bytes);
 
         if (!account.isVerified && account.createdAt <= DateTime.Now.Subtract(TimeSpan.FromDays(7)))
             return View("UnVerified");
@@ -41,13 +41,13 @@ public class UserController(IConfiguration config, UserDbContext context) : Cont
     public IActionResult Profile()
     {
         byte[]? bytes = HttpContext.Session.Get("UserData");
-        if (bytes == null)
+        if (bytes == null) return RedirectToAction("Login", "Home");
+        AccountModel? account = AccountModel.Deserialize(bytes);
+        if (account == null)
         {
             HttpContext.Session.Clear();
             return RedirectToAction("Login", "Home");
         }
-
-        AccountModel account = AccountModel.Deserialize(bytes);
 
         if (!account.isVerified && account.createdAt <= DateTime.Now.Subtract(TimeSpan.FromDays(7)))
             return View("UnVerified");
@@ -80,13 +80,13 @@ public class UserController(IConfiguration config, UserDbContext context) : Cont
 
 
             byte[]? bytes = HttpContext.Session.Get("UserData");
-            if (bytes == null)
+            if (bytes == null) return RedirectToAction("Login", "Home");
+            AccountModel? account = AccountModel.Deserialize(bytes);
+            if (account == null)
             {
                 HttpContext.Session.Clear();
                 return RedirectToAction("Login", "Home");
             }
-
-            AccountModel account = AccountModel.Deserialize(bytes);
             
             if (!account.isVerified && account.createdAt <= DateTime.Now.Subtract(TimeSpan.FromDays(7)))
                 return View("UnVerified");
@@ -127,13 +127,14 @@ public class UserController(IConfiguration config, UserDbContext context) : Cont
             }
 
             byte[]? bytes = HttpContext.Session.Get("UserData");
-            if (bytes == null)
+            if (bytes == null) return RedirectToAction("Login", "Home");
+            AccountModel? acc = AccountModel.Deserialize(bytes);
+            if (acc == null)
             {
                 HttpContext.Session.Clear();
                 return RedirectToAction("Login", "Home");
             }
-
-            AccountModel acc = AccountModel.Deserialize(bytes);
+            
             if (acc.isVerified) return RedirectToAction("Dashboard");
 
             DateTime dateTime = DateTime.Now.Subtract(TimeSpan.FromHours(1));
@@ -185,11 +186,14 @@ public class UserController(IConfiguration config, UserDbContext context) : Cont
             byte[]? bytes = HttpContext.Session.Get("UserData");
             if (bytes == null)
             {
+                return StatusCode(403, new { error = "Session Expired. Please Login in Again" });
+            }
+            AccountModel? account = AccountModel.Deserialize(bytes);
+            if (account == null)
+            {
                 HttpContext.Session.Clear();
                 return StatusCode(403, new { error = "Session Expired. Please Login in Again" });
             }
-
-            AccountModel account = AccountModel.Deserialize(bytes);
 
             return PartialView("_LinkRows", new _LinkRows()
             {
@@ -213,20 +217,25 @@ public class UserController(IConfiguration config, UserDbContext context) : Cont
             byte[]? bytes = HttpContext.Session.Get("UserData");
             if (bytes == null)
             {
-                HttpContext.Session.Clear();
                 return StatusCode(403, new
                 {
                     error = "Session Expired. Please Login Again!"
                 });
             }
-
+            AccountModel? account = AccountModel.Deserialize(bytes);
+            if (account == null)
+            {
+                HttpContext.Session.Clear();
+                return StatusCode(403, new { error = "Session Expired. Please Login in Again" });
+            }
+            
+            
             if (await context.Link.AnyAsync(l => l.code == link.LinkCode))
                 return StatusCode(409, new
                 {
                     error = "Code Already Being used. Try another code."
                 });
 
-            AccountModel account = AccountModel.Deserialize(bytes);
             await context.Link.AddAsync(new LinkModel()
             {
                 AccountId = account.id,
@@ -263,14 +272,17 @@ public class UserController(IConfiguration config, UserDbContext context) : Cont
             byte[]? bytes = HttpContext.Session.Get("UserData");
             if (bytes == null)
             {
-                HttpContext.Session.Clear();
                 return StatusCode(403, new
                 {
                     error = "Session Expired. Please Login Again!"
                 });
             }
-
-            AccountModel account = AccountModel.Deserialize(bytes);
+            AccountModel? account = AccountModel.Deserialize(bytes);
+            if (account == null)
+            {
+                HttpContext.Session.Clear();
+                return StatusCode(403, new { error = "Session Expired. Please Login in Again" });
+            }
 
             LinkModel? linkRow = await context.Link.FirstOrDefaultAsync(l => l.code == link.LinkCode);
             if (linkRow == null) return StatusCode(404, new { error = "Link Doesn't exist" });
@@ -302,15 +314,18 @@ public class UserController(IConfiguration config, UserDbContext context) : Cont
             byte[]? bytes = HttpContext.Session.Get("UserData");
             if (bytes == null)
             {
-                HttpContext.Session.Clear();
                 return StatusCode(403, new
                 {
                     error = "Session Expired. Please Login Again!"
                 });
             }
-
-            AccountModel account = AccountModel.Deserialize(bytes);
-
+            AccountModel? account = AccountModel.Deserialize(bytes);
+            if (account == null)
+            {
+                HttpContext.Session.Clear();
+                return StatusCode(403, new { error = "Session Expired. Please Login in Again" });
+            }
+            
             LinkModel? linkRow = await context.Link.FirstOrDefaultAsync(link => link.code == code);
             if (linkRow == null) return StatusCode(404, new { error = "Link Doesn't exist" });
 
@@ -347,15 +362,17 @@ public class UserController(IConfiguration config, UserDbContext context) : Cont
             byte[]? bytes = HttpContext.Session.Get("UserData");
             if (bytes == null)
             {
-                HttpContext.Session.Clear();
                 return StatusCode(403, new
                 {
                     error = "Session Expired. Please Login Again!"
                 });
             }
-
-            AccountModel account = AccountModel.Deserialize(bytes);
-
+            AccountModel? account = AccountModel.Deserialize(bytes);
+            if (account == null)
+            {
+                HttpContext.Session.Clear();
+                return StatusCode(403, new { error = "Session Expired. Please Login in Again" });
+            }
 
             var link = await context.Link.FirstOrDefaultAsync(link =>
                 link.AccountId == account.id && link.code == code);
@@ -456,14 +473,17 @@ public class UserController(IConfiguration config, UserDbContext context) : Cont
             byte[]? bytes = HttpContext.Session.Get("UserData");
             if (bytes == null)
             {
-                HttpContext.Session.Clear();
                 return StatusCode(403, new
                 {
                     error = "Session Expired. Please Login Again!"
                 });
             }
-
-            AccountModel account = AccountModel.Deserialize(bytes);
+            AccountModel? account = AccountModel.Deserialize(bytes);
+            if (account == null)
+            {
+                HttpContext.Session.Clear();
+                return StatusCode(403, new { error = "Session Expired. Please Login in Again" });
+            }
 
             var link = await context.Link.FirstOrDefaultAsync(link =>
                 link.AccountId == account.id && link.code == code);
@@ -538,14 +558,17 @@ public class UserController(IConfiguration config, UserDbContext context) : Cont
             byte[]? bytes = HttpContext.Session.Get("UserData");
             if (bytes == null)
             {
-                HttpContext.Session.Clear();
                 return StatusCode(403, new
                 {
                     error = "Session Expired. Please Login Again!"
                 });
             }
-
-            AccountModel account = AccountModel.Deserialize(bytes);
+            AccountModel? account = AccountModel.Deserialize(bytes);
+            if (account == null)
+            {
+                HttpContext.Session.Clear();
+                return StatusCode(403, new { error = "Session Expired. Please Login in Again" });
+            }
 
             if (System.IO.File.Exists("wwwroot/UserPics/" + account.PicPath))
             {
@@ -588,14 +611,17 @@ public class UserController(IConfiguration config, UserDbContext context) : Cont
             byte[]? bytes = HttpContext.Session.Get("UserData");
             if (bytes == null)
             {
-                HttpContext.Session.Clear();
                 return StatusCode(403, new
                 {
                     error = "Session Expired. Please Login Again!"
                 });
             }
-
-            AccountModel account = AccountModel.Deserialize(bytes);
+            AccountModel? account = AccountModel.Deserialize(bytes);
+            if (account == null)
+            {
+                HttpContext.Session.Clear();
+                return StatusCode(403, new { error = "Session Expired. Please Login in Again" });
+            }
 
             if (newName != null) account.name = newName;
             if (newEmail != null) account.email = newEmail;
@@ -628,14 +654,17 @@ public class UserController(IConfiguration config, UserDbContext context) : Cont
 
             if (bytes == null)
             {
-                HttpContext.Session.Clear();
                 return StatusCode(403, new
                 {
                     error = "Session Expired. Please Login Again!"
                 });
             }
-
-            AccountModel account = AccountModel.Deserialize(bytes);
+            AccountModel? account = AccountModel.Deserialize(bytes);
+            if (account == null)
+            {
+                HttpContext.Session.Clear();
+                return StatusCode(403, new { error = "Session Expired. Please Login in Again" });
+            }
 
             if (account.password != oldPassword)
                 return StatusCode(400, new
@@ -666,11 +695,16 @@ public class UserController(IConfiguration config, UserDbContext context) : Cont
 
         if (bytes == null)
         {
-            HttpContext.Session.Clear();
             return RedirectToAction("Login", "Home");
         }
+        AccountModel? account = AccountModel.Deserialize(bytes);
+        if (account == null)
+        {
+            HttpContext.Session.Clear();
+            return StatusCode(403, new { error = "Session Expired. Please Login in Again" });
+        }
 
-        ActivityLogModel.WriteLogs(context, ActivityLogModel.Event.LoggedOut, AccountModel.Deserialize(bytes),
+        ActivityLogModel.WriteLogs(context, ActivityLogModel.Event.LoggedOut, account,
             HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown");
 
         return RedirectToAction("Index", "Home");
@@ -681,11 +715,15 @@ public class UserController(IConfiguration config, UserDbContext context) : Cont
         byte[]? bytes = HttpContext.Session.Get("UserData");
         if (bytes == null)
         {
-            HttpContext.Session.Clear();
             return RedirectToAction("Login", "Home");
         }
-
-        AccountModel account = AccountModel.Deserialize(bytes);
+        AccountModel? account = AccountModel.Deserialize(bytes);
+        if (account == null)
+        {
+            HttpContext.Session.Clear();
+            return StatusCode(403, new { error = "Session Expired. Please Login in Again" });
+        }
+        
         try
         {
             AccountModel? userAcc = await context.Account.SingleOrDefaultAsync(acc => acc.id == account.id);

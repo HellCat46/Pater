@@ -67,7 +67,7 @@ public class AccountModel
     {
         return JsonSerializer.SerializeToUtf8Bytes(account);
     }
-    public static AccountModel Deserialize(byte[] bytes)
+    public static AccountModel? Deserialize(byte[] bytes)
     {
         return JsonSerializer.Deserialize<AccountModel>(bytes);
     }

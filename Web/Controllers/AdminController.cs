@@ -14,13 +14,13 @@ public class AdminController(UserDbContext context) : Controller
         try
         {
             byte[]? bytes = HttpContext.Session.Get("UserData");
-            if (bytes == null)
+            if (bytes == null) return RedirectToAction("Login", "Home");
+            AccountModel? adminAccount = AccountModel.Deserialize(bytes);
+            if (adminAccount == null)
             {
                 HttpContext.Session.Clear();
                 return RedirectToAction("Login", "Home");
             }
-
-            AccountModel adminAccount = AccountModel.Deserialize(bytes);
             if (adminAccount.isAdmin != true) return RedirectToAction("Dashboard", "User");
 
             return View(new AdminDashboardView()
@@ -48,13 +48,14 @@ public class AdminController(UserDbContext context) : Controller
         try
         {
             byte[]? bytes = HttpContext.Session.Get("UserData");
-            if (bytes == null)
+            if (bytes == null) return RedirectToAction("Login", "Home");
+            AccountModel? adminAccount = AccountModel.Deserialize(bytes);
+            if (adminAccount == null)
             {
                 HttpContext.Session.Clear();
                 return RedirectToAction("Login", "Home");
             }
-
-            AccountModel adminAccount = AccountModel.Deserialize(bytes);
+            
             if (adminAccount.isAdmin != true) return RedirectToAction("Dashboard", "User");
 
             AccountModel? userAccount;
@@ -103,13 +104,14 @@ public class AdminController(UserDbContext context) : Controller
                 });
 
             byte[]? bytes = HttpContext.Session.Get("UserData");
-            if (bytes == null)
+            if (bytes == null) return StatusCode(403, new { error = "Session Expired. Please Login in Again" });
+            AccountModel? adminAccount = AccountModel.Deserialize(bytes);
+            if (adminAccount == null)
             {
                 HttpContext.Session.Clear();
-                return StatusCode(403, new { error = "Session Expired. Please Login in Again" });
+                return RedirectToAction("Login", "Home");
             }
-
-            AccountModel adminAccount = AccountModel.Deserialize(bytes);
+            
             if (adminAccount.isAdmin != true)
                 return StatusCode(403, new { error = "This action requires Admin Access" });
 
