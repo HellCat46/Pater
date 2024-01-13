@@ -31,8 +31,8 @@ public class UserController(IConfiguration config, UserDbContext context) : Cont
             {
                 isAdmin = account.isAdmin,
                 name = account.name,
-                picPath = account.PicPath,
-                plan = account.Plan
+                picPath = account.picPath,
+                plan = account.plan
             },
             hasLinks = await context.Link.AnyAsync(link => link.AccountId == account.id)
         });
@@ -59,8 +59,8 @@ public class UserController(IConfiguration config, UserDbContext context) : Cont
             {
                 isAdmin = account.isAdmin,
                 name = account.name,
-                picPath = account.PicPath,
-                plan = account.Plan
+                picPath = account.picPath,
+                plan = account.plan
             },
             UserName = account.name,
             UserEmail = account.email,
@@ -97,16 +97,17 @@ public class UserController(IConfiguration config, UserDbContext context) : Cont
 
             if (linkDetails == null) return RedirectToAction("Dashboard");
 
-            return View(new LinkDetails()
+            return View(new DetailsView()
             {
                 header = new _HeaderView()
                 {
                     isAdmin = account.isAdmin,
                     name = account.name,
-                    picPath = account.PicPath,
-                    plan = account.Plan
+                    picPath = account.picPath,
+                    plan = account.plan
                 },
-                linkDetails = linkDetails
+                linkDetails = linkDetails,
+                userPlan = account.plan
             });
         }
         catch (Exception ex)
@@ -373,6 +374,14 @@ public class UserController(IConfiguration config, UserDbContext context) : Cont
                 HttpContext.Session.Clear();
                 return StatusCode(403, new { error = "Session Expired. Please Login in Again" });
             }
+            
+            if (!(AccountModel.UserAnalyticsDurations(account.plan).Any(dur => dur == timeFrame)))
+            {
+                return StatusCode(403, new
+                {
+                    error = "Upgrade your Plan to Get this duration Information."
+                });
+            }
 
             var link = await context.Link.FirstOrDefaultAsync(link =>
                 link.AccountId == account.id && link.code == code);
@@ -383,15 +392,8 @@ public class UserController(IConfiguration config, UserDbContext context) : Cont
                     error = "This Link is either Invalid or You don't have access to check it's details."
                 });
             }
-
-            if (account.Plan == AccountModel.Plans.Free)
-            {
-                return StatusCode(403, new
-                {
-                    error = "This is a premium Only Feature."
-                });
-            }
-
+            
+            
             DateTime dataSince;
             switch (timeFrame)
             {
@@ -485,6 +487,15 @@ public class UserController(IConfiguration config, UserDbContext context) : Cont
                 return StatusCode(403, new { error = "Session Expired. Please Login in Again" });
             }
 
+            Console.WriteLine(AccountModel.UserAnalyticsDurations(account.plan).Any(dur => dur == timeFrame));
+            if (!(AccountModel.UserAnalyticsDurations(account.plan).Any(dur => dur == timeFrame)))
+            {
+                return StatusCode(403, new
+                {
+                    error = "Upgrade your Plan to Get this duration Information."
+                });
+            }
+
             var link = await context.Link.FirstOrDefaultAsync(link =>
                 link.AccountId == account.id && link.code == code);
             if (link == null)
@@ -494,14 +505,7 @@ public class UserController(IConfiguration config, UserDbContext context) : Cont
                     error = "This Link is either Invalid or You don't have access to check it's details."
                 });
             }
-
-            if (account.Plan == AccountModel.Plans.Free)
-            {
-                return StatusCode(403, new
-                {
-                    error = "Premium Only Feature."
-                });
-            }
+            
 
             DateTime dataSince;
             switch (timeFrame)
@@ -570,13 +574,13 @@ public class UserController(IConfiguration config, UserDbContext context) : Cont
                 return StatusCode(403, new { error = "Session Expired. Please Login in Again" });
             }
 
-            if (System.IO.File.Exists("wwwroot/UserPics/" + account.PicPath))
+            if (System.IO.File.Exists("wwwroot/UserPics/" + account.picPath))
             {
-                System.IO.File.Delete("wwwroot/UserPics/" + account.PicPath);
+                System.IO.File.Delete("wwwroot/UserPics/" + account.picPath);
             }
 
-            account.PicPath = account.id + "." + newAvatar.FileName.Split(".").Last();
-            await using (var fileStream = System.IO.File.Create("wwwroot/UserPics/" + account.PicPath))
+            account.picPath = account.id + "." + newAvatar.FileName.Split(".").Last();
+            await using (var fileStream = System.IO.File.Create("wwwroot/UserPics/" + account.picPath))
             {
                 await newAvatar.CopyToAsync(fileStream);
                 fileStream.Close();
@@ -588,7 +592,7 @@ public class UserController(IConfiguration config, UserDbContext context) : Cont
             HttpContext.Session.Set("UserData", AccountModel.Serialize(account));
             ActivityLogModel.WriteLogs(context, ActivityLogModel.Event.ChangedAvatar, account,
                 HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown");
-            return Ok("/UserPics/" + account.PicPath);
+            return Ok("/UserPics/" + account.picPath);
         }
         catch (Exception ex)
         {

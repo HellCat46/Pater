@@ -111,7 +111,8 @@ public class HomeController(IConfiguration config, UserDbContext context) : Cont
                 email = data.email,
                 password = data.password,
                 createdAt = DateTime.Now,
-                name = data.name
+                name = data.name,
+                linkLimit = 5
             });
             await context.SaveChangesAsync();
 

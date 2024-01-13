@@ -1,4 +1,5 @@
-@model Web.Models.View.User.LinkDetails
+@using Web.Models.Account
+@model Web.Models.View.User.DetailsView
 
 @{
     ViewData["Title"] = "Details | Pater";
@@ -173,12 +174,30 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
     window.addEventListener("load", async () => {
-        await VisitsChart('@Url.Action("LinkVisitDetails")', "@Model.linkDetails.code", "30d");
-        await BrowserChart('@Url.Action("LinkOtherDetails")', "@Model.linkDetails.code", "30d");
-        await OSChart('@Url.Action("LinkOtherDetails")', "@Model.linkDetails.code", "30d");
-        await CountryChart('@Url.Action("LinkOtherDetails")', "@Model.linkDetails.code", "30d");
-        await CityChart('@Url.Action("LinkOtherDetails")', "@Model.linkDetails.code", "30d");
-        await DeviceChart('@Url.Action("LinkOtherDetails")', "@Model.linkDetails.code", "30d");
+        let duration;
+        @if (Model.userPlan == AccountModel.Plan.Free)
+        {
+            <text>
+                duration = "24h";
+            </text>
+        }else if (Model.userPlan == AccountModel.Plan.Premium)
+        {
+            <text>
+                duration = "7d";
+            </text>
+        }
+        else
+        {
+            <text>
+                duration = "30d";
+            </text>
+        }
+        await VisitsChart('@Url.Action("LinkVisitDetails")', "@Model.linkDetails.code", duration);
+        await BrowserChart('@Url.Action("LinkOtherDetails")', "@Model.linkDetails.code", duration);
+        await OSChart('@Url.Action("LinkOtherDetails")', "@Model.linkDetails.code", duration);
+        await CountryChart('@Url.Action("LinkOtherDetails")', "@Model.linkDetails.code", duration);
+        await CityChart('@Url.Action("LinkOtherDetails")', "@Model.linkDetails.code", duration);
+        await DeviceChart('@Url.Action("LinkOtherDetails")', "@Model.linkDetails.code", duration);
     })
     
     

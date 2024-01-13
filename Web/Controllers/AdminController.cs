@@ -29,8 +29,8 @@ public class AdminController(UserDbContext context) : Controller
                 {
                     isAdmin = adminAccount.isAdmin,
                     name = adminAccount.name,
-                    picPath = adminAccount.PicPath,
-                    plan = adminAccount.Plan
+                    picPath = adminAccount.picPath,
+                    plan = adminAccount.plan
                 },
             });
         }
@@ -71,16 +71,16 @@ public class AdminController(UserDbContext context) : Controller
                 {
                     isAdmin = adminAccount.isAdmin,
                     name = adminAccount.name,
-                    picPath = adminAccount.PicPath,
-                    plan = adminAccount.Plan
+                    picPath = adminAccount.picPath,
+                    plan = adminAccount.plan
                 },
                 links = context.Link.Where(link => link.AccountId == userAccount.id).ToList(),
                 logs = context.ActivityLogs.Where(log => log.Userid == userAccount.id).ToList(),
                 UserAccountCreated = userAccount.createdAt,
                 UserEmail = userAccount.email,
                 UserName = userAccount.name,
-                UserPlan = userAccount.Plan,
-                UserPicPath = userAccount.PicPath
+                UserPlan = userAccount.plan,
+                UserPicPath = userAccount.picPath
             });
         }
         catch (Exception ex)

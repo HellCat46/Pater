@@ -30,8 +30,12 @@ public class AccountModel
     public bool isVerified { get; set; }
     
     [Required]
-    [DefaultValue(Plans.Free)]
-    public Plans Plan { get; set; }
+    [DefaultValue(Plan.Free)]
+    public Plan plan { get; set; }
+    
+    [Required]
+    [DefaultValue(5)]
+    public int linkLimit { get; set; }
     
     [Required]
     public DateTime createdAt { get; set; }
@@ -48,7 +52,7 @@ public class AccountModel
     
     [Column(Order = 4)]
     [StringLength(41)]
-    public string? PicPath { get; set; }
+    public string? picPath { get; set; }
     
     public ExternalAuthModel ExternalAuth { get; set; }
     
@@ -56,7 +60,7 @@ public class AccountModel
     
     public ICollection<ActivityLogModel> Logs { get; set; }
 
-    public enum Plans
+    public enum Plan
     {
         Free,
         Premium,
@@ -70,5 +74,16 @@ public class AccountModel
     public static AccountModel? Deserialize(byte[] bytes)
     {
         return JsonSerializer.Deserialize<AccountModel>(bytes);
+    }
+
+    public static IEnumerable<string> UserAnalyticsDurations(Plan plan)
+    {
+        switch (plan)
+        {
+            case Plan.Business : 
+            case Plan.Custom: return ["24h", "7d", "30d"];
+            case Plan.Premium: return ["24h", "7d"];
+            default: return ["24h"];
+        }
     }
 }

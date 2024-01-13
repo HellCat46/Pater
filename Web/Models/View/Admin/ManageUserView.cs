@@ -15,7 +15,7 @@ public class ManageUserView
     public string UserName { get; set; }
     public string UserEmail { get; set; }
     public DateTime UserAccountCreated { get; set; }
-    public AccountModel.Plans UserPlan { get; set; }
+    public AccountModel.Plan UserPlan { get; set; }
     
     // Manage User
     public string UserNewName { get; set; }

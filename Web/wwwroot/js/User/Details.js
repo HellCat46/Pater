@@ -12,7 +12,9 @@ const toastAlertText = document.querySelector("#toastAlertText");
 
 async function VisitsChart(actionUrl, code, timeFrame){
     const data= await GetVisitsData(actionUrl, code,timeFrame);
-    
+    if(data instanceof Error) return;
+        
+        
     if(visitorChart !== undefined){
         visitorChart.data.labels = data.map(d => d.label)
         visitorChart.data.datasets[0].data = data.map(d => d.data)
@@ -57,6 +59,7 @@ async function VisitsChart(actionUrl, code, timeFrame){
 }
 async function BrowserChart(actionUrl, code, timeFrame) {
     const data= await GetData(actionUrl,"browser", code, timeFrame);
+    if(data instanceof Error) return;
 
     if(browserChart !== undefined){
         browserChart.data.labels = data.map(d => d.label)
@@ -104,6 +107,7 @@ async function BrowserChart(actionUrl, code, timeFrame) {
 }
 async function OSChart(actionUrl, code, timeFrame){
     const data= await GetData(actionUrl,"os", code, timeFrame);
+    if(data instanceof Error) return;
 
     if(osChart !== undefined){
         osChart.data.labels = data.map(d => d.label)
@@ -148,6 +152,7 @@ async function OSChart(actionUrl, code, timeFrame){
 }
 async function DeviceChart(actionUrl, code, timeFrame){
     const data= await GetData(actionUrl,"device", code, timeFrame);
+    if(data instanceof Error) return;
 
     if(deviceChart !== undefined){
         deviceChart.data.labels = data.map(d => d.label)
@@ -192,8 +197,9 @@ async function DeviceChart(actionUrl, code, timeFrame){
 }
 async function CountryChart(actionUrl, code, timeFrame){
     const data= await GetData(actionUrl,"country", code, timeFrame);
-    const tbl = document.querySelector("#CountryTable")
+    if(data instanceof Error) return;
 
+    const tbl = document.querySelector("#CountryTable")
     if(countryChart !== undefined){
         countryChart.data.labels = data.map(d => d.label)
         countryChart.data.datasets[0].data = data.map(d => d.data)
@@ -248,8 +254,9 @@ async function CountryChart(actionUrl, code, timeFrame){
 }
 async function CityChart(actionUrl, code, timeFrame){
     const data= await GetData(actionUrl,"city", code, timeFrame);
-    const tbl = document.querySelector("#CityTable")
+    if(data instanceof Error) return;
 
+    const tbl = document.querySelector("#CityTable")
     if(cityChart !== undefined){
         cityChart.data.labels = data.map(d => d.label)
         cityChart.data.datasets[0].data = data.map(d => d.data)
@@ -311,38 +318,46 @@ async function GetData(actionUrl, detailType, code, timeFrame) {
         const res = await fetch(`${actionUrl}?detailType=${detailType}&code=${code}&timeFrame=${timeFrame}`, {
             credentials: "include"
         })
-
-        return (await res.json());
+        if(res.status === 200) return (await res.json());         
+        
+        const json = await  res.json();
+        toastAlert.className = "toast toast-center";
+        toastAlertType.className = "alert alert-error"
+        toastAlertText.innerText = json.error;
     }catch (e){
         toastAlert.className = "toast toast-center";
         toastAlertType.className = "alert alert-error"
         toastAlertText.innerText = "Failed to Fetch Chart for "+timeFrame;
-        setTimeout(() => {
-            toastAlert.className = "hidden"
-            toastAlertType.className = "";
-            toastAlertText.innerText = "";
-        }, 2000);
-        throw e;
     }
+    setTimeout(() => {
+        toastAlert.className = "hidden"
+        toastAlertType.className = "";
+        toastAlertText.innerText = "";
+    }, 2000);
+    return new Error();
 }
 async function GetVisitsData(actionUrl, code, timeFrame) {
     try {
         const res = await fetch(`${actionUrl}?code=${code}&timeFrame=${timeFrame}`, {
             credentials: "include"
         })
-
-        return (await res.json());
+        if(res.status === 200) return (await res.json());
+        
+        const json = await  res.json();
+        toastAlert.className = "toast toast-center";
+        toastAlertType.className = "alert alert-error"
+        toastAlertText.innerText = json.error;
     }catch (e) {
         toastAlert.className = "toast toast-center";
         toastAlertType.className = "alert alert-error"
         toastAlertText.innerText = "Failed to Fetch Chart for "+timeFrame;
-        setTimeout(() => {
-            toastAlert.className = "hidden"
-            toastAlertType.className = "";
-            toastAlertText.innerText = "";
-        }, 2000);
-        throw e;
     }
+    setTimeout(() => {
+        toastAlert.className = "hidden"
+        toastAlertType.className = "";
+        toastAlertText.innerText = "";
+    }, 2000);
+    return new Error();
 }
 
 
