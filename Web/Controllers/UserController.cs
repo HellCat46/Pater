@@ -282,7 +282,9 @@ public class UserController(IConfiguration config, UserDbContext context) : Cont
                 {
                     error = "Required at least one of the field."
                 });
-
+            
+            Console.WriteLine(link.LinkCode+" "+link.LinkURL+" "+link.LinkName);
+            
             byte[]? bytes = HttpContext.Session.Get("UserData");
             if (bytes == null)
             {
@@ -305,8 +307,8 @@ public class UserController(IConfiguration config, UserDbContext context) : Cont
             if (linkRow.AccountId != account.id)
                 return StatusCode(403, new { error = "You don't have permission to edit this link" });
 
-            if (link.LinkName.IsNullOrEmpty()) linkRow.name = link.LinkName;
-            if (link.LinkURL.IsNullOrEmpty()) linkRow.url = link.LinkURL;
+            if (!link.LinkName.IsNullOrEmpty()) linkRow.name = link.LinkName;
+            if (!link.LinkURL.IsNullOrEmpty()) linkRow.url = link.LinkURL;
 
             await context.SaveChangesAsync();
             return Ok();
@@ -657,10 +659,10 @@ public class UserController(IConfiguration config, UserDbContext context) : Cont
             await context.SaveChangesAsync();
             HttpContext.Session.Set("UserData", AccountModel.Serialize(account));
 
-            if (newName.IsNullOrEmpty())
+            if (!newName.IsNullOrEmpty())
                 ActivityLogModel.WriteLogs(context, ActivityLogModel.Event.ChangedName, account,
                     HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown");
-            if (newEmail.IsNullOrEmpty())
+            if (!newEmail.IsNullOrEmpty())
                 ActivityLogModel.WriteLogs(context, ActivityLogModel.Event.ChangedEmail, account,
                     HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown");
             return Ok();

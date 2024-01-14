@@ -24,7 +24,7 @@
         <td>
             <div class="hidden lg:flex h-14 gap-2">
                 <img class="btn btn-ghost" src="~/assets/svg/copy-icon.svg" alt="Copy" onclick="copyCode('@link.code')"/>
-                <img class="btn btn-ghost" src="~/assets/svg/edit-icon.svg" alt="Edit" onclick="editLink('@link.code')"/>
+                <img class="btn btn-ghost" src="~/assets/svg/edit-icon.svg" alt="Edit" onclick="openEditLink('@link.code')"/>
                 <img class="btn btn-ghost" src="~/assets/svg/delete-icon.svg" alt="Delete" onclick="deleteLink('@link.code')"/>
             </div>
             <div class="dropdown dropdown-end lg:hidden w-12 h-12">
@@ -38,7 +38,7 @@
                         <button onclick="copyCode('@link.code')">Copy Link</button>
                     </li>
                     <li>
-                        <button onclick="editLink('@link.code')">Edit</button>
+                        <button onclick="openEditLink('@link.code')">Edit</button>
                     </li>
                     <li>
                         <button onclick="deleteLink('@link.code')">Delete</button>
