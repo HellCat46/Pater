@@ -1,4 +1,3 @@
-@using Web.Models.View.User
 @model Web.Models.View.User.ProfileView
 @{
     ViewData["Title"] = "Profile | Pater";
@@ -30,13 +29,13 @@
                 </div>
                 <label class="cursor-pointer mt-6">
                     <span class="mt-2 text-base leading-normal px-4 py-2 bg-blue-500 text-white text-sm rounded-full">Change Avatar</span>
-                    <input type="file" id="newAvatar" class="hidden" accept="image/*" />
+                    <input type="file" id="newAvatar" oninput="UpdateAvatar('@Url.Action("ChangeAvatar")')" class="hidden" accept="image/*" />
                 </label>
             </div>
         </div>
     </div>
 
-    <form class="flex flex-col" method="post" id="newInfo">
+    <form class="flex flex-col" id="newInfo">
         <div class="flex w-auto flex-col lg:flex-row items-center py-6">
             <div class="grow my-2">
                 <div class="form-control items-center">
@@ -110,138 +109,16 @@
     </div>
 </dialog>
 
+<script src="~/js/User/Profile.js"></script>
+
 <script>
-    const alert = document.querySelector("#alert");
-    const alertMessage = document.querySelector("#alertMessage");
-    
-    const newAvatar = document.querySelector("#newAvatar");
-    newAvatar.addEventListener("input", async () => {
-        const newAvatar = document.querySelector("#newAvatar");
-    
-        const formData = new FormData();
-        formData.append("newAvatar", newAvatar.files[0]);
-        
-        await  fetch("@Url.Action("ChangeAvatar")", {
-            method : "PATCH",
-            body : formData
-        }).then(async res => {
-            if(res.status === 200) {
-               alert.className = "alert alert-success";
-               alertMessage.innerText = "Successfully Updated the Avatar!"
-               
-               
-               // Don't Simplify!!! This forces browser to not use cached image
-               const userAvatar = document.querySelector("#userAvatar");
-               const newSrc = userAvatar.src.split("/UserPics/")[0] + await res.text();
-               userAvatar.src = '';
-               userAvatar.src = newSrc + "?time=" + new Date().getTime();
-            }else {
-                alert.className = "alert alert-error";
-                const json = await res.json();
-                alertMessage.innerText = json.error;              
-            }
-        }).catch(err => { 
-            alert.className = "alert alert-error";
-            alertMessage.innerText = "Request Failed. Please try again!";
-            console.log(err);
-        });
-        setTimeout(()=> {
-            alert.className= "alert hidden";
-            alertMessage.innerHTML = "";
-            }, 5000);
-    });
-    
     const newInfo = document.querySelector("#newInfo");
     newInfo.addEventListener("submit", async (e) => {
-        e.preventDefault();
-        
-        const newName = document.querySelector("#newName");
-        const newEmail = document.querySelector("#newEmail");
-        
-        const formData = new FormData();
-        formData.append("newName", newName.value);
-        formData.append("newEmail", newEmail.value);
-        await fetch("@Url.Action("UpdateNameMail")", {
-            method : "PATCH",
-            body: formData
-        }).then(async (res) => {
-            if (res.status === 200){
-                alert.className = "alert alert-success";
-                alertMessage.innerText = "Successfully Updated the Info!"
-                
-                if(newName.value !== '' && newName.value != null){
-                    newName.placeholder = newName.value;
-                    newName.value = '';
-                }
-                if(newEmail.value !== '' && newEmail.value != null) {
-                    newEmail.placeholder = newEmail.value;
-                    newEmail.value = '';
-                }
-            }else {
-                alert.className = "alert alert-error";
-                const json = await res.json();
-                alertMessage.innerText = json.error;
-            }
-        }).catch(err => {
-            alert.className = "alert alert-error";
-            alertMessage.innerText = "Request Failed. Please try again!";
-            console.log(err);
-        });
-        setTimeout(()=> {
-            alert.className= "alert hidden";
-            alertMessage.innerHTML = "";
-            }, 5000);
+        await UpdateNameEmail("@Url.Action("UpdateNameMail")", e);
     });
     
     const newPassword = document.querySelector("#newPassword");
     newPassword.addEventListener("submit", async (e) => {
-        document.querySelector("#change_pass").close();
-        e.preventDefault();
-        
-        const oldPass = document.querySelector("#oldPass");
-        const newPass = document.querySelector("#newPass");
-        
-        const formData = new FormData();
-        formData.append("oldPassword", oldPass.value);
-        formData.append("newPassword", newPass.value);
-        
-        await fetch("@Url.Action("ChangePassword")", {
-            method : "PATCH",
-            body : formData
-        }).then(async res => {
-            if (res.status === 200){
-                alert.className = "alert alert-success";
-                alertMessage.innerText = "Successfully Updated the Info!"
-            }else {
-                alert.className = "alert alert-error";
-                const json = await res.json();
-                alertMessage.innerText = json.error;
-            }
-        }).catch(err => {
-            alert.className = "alert alert-error";
-            alertMessage.innerText = "Request Failed. Please try again!";
-            console.log(err);
-        })
-        
-        oldPass.value = "";
-        newPass.value = "";
-        
-        setTimeout(()=> {
-            alert.className= "alert hidden";
-            alertMessage.innerHTML = "";
-            }, 5000);
+        await ChangePassword("@Url.Action("ChangePassword")", e);
     })
-    
-    function CheckPass(){
-        const newPass = document.querySelector(`#newPass`);
-        
-        if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{8,50}$/.test(newPass.value)){
-            document.querySelector("#passError").style.display = "block";
-            document.querySelector("#submitPass").disabled = true;
-        }else {
-            document.querySelector("#passError").style.display = "none";
-            document.querySelector("#submitPass").disabled = false;
-        }
-    }
-    
 </script>

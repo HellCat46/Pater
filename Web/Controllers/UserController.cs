@@ -647,7 +647,11 @@ public class UserController(IConfiguration config, UserDbContext context) : Cont
             }
 
             if (newName != null) account.name = newName;
-            if (newEmail != null) account.email = newEmail;
+            if (newEmail != null)
+            {
+                account.email = newEmail;
+                account.isVerified = false;
+            }
 
             context.Account.Update(account);
             await context.SaveChangesAsync();
