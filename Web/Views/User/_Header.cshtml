@@ -11,35 +11,37 @@
             <div class="dropdown dropdown-end">
                 <div tabindex="0" role="button" class="btn btn-ghost btn-circle avatar">
                     <div class="w-10 rounded-full">
-                        <img alt="User Avatar" src="~/UserPics/@(Model.picPath.IsNullOrEmpty() ? "default-avatar.svg" : Model.picPath)" />
+                        <img alt="User Avatar" src="~/UserPics/@(Model.picPath.IsNullOrEmpty() ? "default-avatar.svg" : Model.picPath)"/>
                     </div>
                 </div>
                 <ul tabindex="0" class="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52">
-                    <li>
-                        <a asp-action="Profile" asp-controller="User">
-                            Profile
-                        </a>
-                    </li>
-                    
+
                     @if (Model.isAdmin)
                     {
                         <li>
                             <a asp-action="Dashboard" asp-controller="Admin">Admin</a>
                         </li>
                     }
-                    
+
+                    <li>
+                        <a asp-action="Profile" asp-controller="User">
+                            Profile
+                        </a>
+                    </li>
+
                     @if (Model.plan == AccountModel.Plan.Free)
                     {
                         <li>
-                            <a>Upgrade to Premium</a>
+                            <a asp-action="Checkout">Upgrade to Premium</a>
                         </li>
-                    }else
+                    }
+                    else
                     {
                         <li>
                             <a>Billing</a>
                         </li>
                     }
-                    
+
                     <li>
                         <a asp-action="Logout">Logout</a>
                     </li>

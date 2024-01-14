@@ -4,7 +4,7 @@
     Layout = "_UserLayout";
 }
 
-@Html.Partial("~/Views/User/_Header.cshtml", Model.Header)
+@await Html.PartialAsync("_Header.cshtml", Model.Header)
 
 <div class="my-10 flex flex-col ">
         <div class="my-6 mx-10">
@@ -28,9 +28,9 @@
                             <p class="text-4xl text-base-content flex items-center">Activity Logs</p>
                             <div class="grow"></div>
                             <div class="join">
-                                <button class="join-item btn" id="pageBack">«</button>
+                                <button class="join-item btn" onclick="prevPage()">«</button>
                                 <button class="join-item btn btn-disabled" id="pageNo"></button>
-                                <button class="join-item btn" id="pageForward">»</button>
+                                <button class="join-item btn" onclick="nextPage()">»</button>
                             </div>
                         </div>
                     </th>
@@ -50,49 +50,8 @@
     </div>
 </div>
 
+<script src="~/js/Admin/Dashboard.js"></script>
+
 <script>
-    const alertError = document.querySelector("#errorAlert");
-    const alertMessage = document.querySelector("#alertMessage");
-    
-    let pageNo = 1;
-    const pageNoBtn = document.querySelector("#pageNo");
-    const logsBody = document.querySelector("#logsBody");
-    
-    
-    const pageBack = document.querySelector("#pageBack");
-    pageBack.addEventListener("click", async () => {
-        if (pageNo === 1) return;
-        pageNo--;
-        await GetLogs();
-    })
-    
-    const pageForward = document.querySelector("#pageForward");
-    pageForward.addEventListener("click", async () => {
-        pageNo++;
-        await GetLogs();
-    })
-    
-    
-    async function GetLogs() {
-      await fetch(`@Url.Action("GetLogs")?pageno=${pageNo}`, {
-      }).then(async (res) => {
-          if (res.status === 200){
-              logsBody.innerHTML = await res.text();
-              pageNoBtn.innerHTML = `Page ${pageNo}`;
-          }else {
-              alertError.className = "alert alert-error";
-              const json = await res.json();
-              alertMessage.innerText = json.error;
-          }
-      }).catch(err => {
-          console.log(err);
-          alertError.className = "alert alert-error";
-          alertMessage.innerText = "Unable to fetch Logs.";
-      });
-      setTimeout(()=> {
-          alertError.className= "alert hidden";
-          alertMessage.innerText = "";
-          }, 5000);
-    }
-    GetLogs();
+    FetchFirstPage("@Url.Action("GetLogs")");
 </script>

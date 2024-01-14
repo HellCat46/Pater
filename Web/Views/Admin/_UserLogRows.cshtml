@@ -1,0 +1,10 @@
+@using Web.Models.View.Admin
+@model List<UserLog>
+
+@foreach (UserLog log in Model)
+{
+    <tr>
+        <td>@log.date</td>
+        <td>@log.action</td>
+    </tr>
+}

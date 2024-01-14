@@ -1,7 +1,7 @@
 @using Web.Models.Account
-@model Web.Models.View.Admin._LogsRows
+@model List<ActivityLogModel>
 
-@foreach (ActivityLogModel log in Model.logs)
+@foreach (ActivityLogModel log in Model)
 {
     <tr>
         <th>@log.id</th>

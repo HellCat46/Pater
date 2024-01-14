@@ -1,0 +1,36 @@
+@using Web.Models.Account
+@using Microsoft.IdentityModel.Tokens
+@model Web.Models.View.User._HeaderView
+
+<header>
+    <div class="navbar bg-base-100">
+        <div class="flex-1">
+            <a class="btn btn-ghost text-xl" asp-action="Dashboard">Pater</a>
+        </div>
+        <div class="flex-none">
+            <div class="dropdown dropdown-end">
+                <div tabindex="0" role="button" class="btn btn-ghost btn-circle avatar">
+                    <div class="w-10 rounded-full">
+                        <img alt="User Avatar" src="~/UserPics/@(Model.picPath.IsNullOrEmpty() ? "default-avatar.svg" : Model.picPath)" />
+                    </div>
+                </div>
+                <ul tabindex="0" class="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52">
+                    <li>
+                        <a asp-action="Dashboard" asp-controller="User">
+                            User Dashboard
+                        </a>
+                    </li>
+                    <li>
+                        <a>Mailing</a>
+                    </li>
+                    <li>
+                        <a>Danger Zone</a>
+                    </li>
+                    <li>
+                        <a asp-action="Logout" asp-controller="User">Logout</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</header>

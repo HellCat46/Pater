@@ -74,8 +74,7 @@ public class AdminController(UserDbContext context) : Controller
                     picPath = adminAccount.picPath,
                     plan = adminAccount.plan
                 },
-                links = context.Link.Where(link => link.AccountId == userAccount.id).ToList(),
-                logs = context.ActivityLogs.Where(log => log.Userid == userAccount.id).ToList(),
+                UserId = userAccount.id,
                 UserAccountCreated = userAccount.createdAt,
                 UserEmail = userAccount.email,
                 UserName = userAccount.name,
@@ -92,11 +91,10 @@ public class AdminController(UserDbContext context) : Controller
     }
 
     // API Endpoint
-    public async Task<IActionResult> GetLogs()
+    public async Task<IActionResult> GetUserLogs(int pageno, int userId)
     {
         try
         {
-            int pageno = Convert.ToInt32(HttpContext.Request.Query["pageno"]);
             if (pageno < 1)
                 return StatusCode(400, new
                 {
@@ -115,10 +113,39 @@ public class AdminController(UserDbContext context) : Controller
             if (adminAccount.isAdmin != true)
                 return StatusCode(403, new { error = "This action requires Admin Access" });
 
-            return PartialView("_LogRows", new _LogsRows()
+            return PartialView("_UserLogRows", await context.ActivityLogs.Where(log => log.Userid == userId)
+                .Select(log => new UserLog() { date = log.date, action = log.Action })
+                .OrderByDescending(log => log.date).Skip((pageno - 1) * 5).Take(5).ToListAsync());            
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex);
+            return StatusCode(500, new { error = "Unexpected Error while processing the request" });
+        }
+    }
+    public async Task<IActionResult> GetLogs(int pageno)
+    {
+        try
+        {
+            if (pageno < 1)
+                return StatusCode(400, new
+                {
+                    error = "Page Number is too low."
+                });
+
+            byte[]? bytes = HttpContext.Session.Get("UserData");
+            if (bytes == null) return StatusCode(403, new { error = "Session Expired. Please Login in Again" });
+            AccountModel? adminAccount = AccountModel.Deserialize(bytes);
+            if (adminAccount == null)
             {
-                logs = await context.ActivityLogs.OrderByDescending(log => log.date).Skip((pageno - 1) * 10).Take(10).ToListAsync()
-            });
+                HttpContext.Session.Clear();
+                return RedirectToAction("Login", "Home");
+            }
+            
+            if (adminAccount.isAdmin != true)
+                return StatusCode(403, new { error = "This action requires Admin Access" });
+
+            return PartialView("_LogRows", await context.ActivityLogs.OrderByDescending(log => log.date).Skip((pageno - 1) * 10).Take(10).ToListAsync());
         }
         catch (Exception ex)
         {
