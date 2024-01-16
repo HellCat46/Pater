@@ -2,8 +2,10 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Web.ApplicationDbContext;
 using Web.Models.Account;
-using Web.Models.View;
-
+using Web.Models.View.Home;
+using Google.Apis.Auth;
+using Microsoft.IdentityModel.Tokens;
+using Web.Models;
 
 namespace Web.Controllers;
 
@@ -80,6 +82,118 @@ public class HomeController(IConfiguration config, UserDbContext context) : Cont
         }
     }
 
+    [Route("/GoogleAuthRedirect")]
+    public IActionResult GoogleAuthRedirect()
+    {
+        GoogleOAuth? auth = config.GetSection("GoogleOAuth").Get<GoogleOAuth>();
+        if (auth == null)
+        {
+            return StatusCode(500, new { error = "Server Error. Please contact support through email." });
+        }
+
+        string url = String.Format(
+            "https://accounts.google.com/o/oauth2/v2/auth?scope=openid https%3A//www.googleapis.com/auth/userinfo.email https%3A//www.googleapis.com/auth/userinfo.profile&access_type=online&include_granted_scopes=true&response_type=code&state=state_parameter_passthrough_value&redirect_uri={0}&client_id={1}",
+            Url.ActionLink("GoogleAuth"), auth.ClientId);
+        
+        return Redirect(url);
+    }
+
+    [Route("/GoogleAuth")]
+    public IActionResult GoogleAuth(string code)
+    {
+        if (code.IsNullOrEmpty())
+        {
+            return StatusCode(400, new { error = "Required Parameters are missing" });
+        }
+
+        GoogleOAuth? auth = config.GetSection("GoogleOAuth").Get<GoogleOAuth>();
+        if (auth == null)
+        {
+            return StatusCode(500, new { error = "Server Error. Please contact support through email." });
+        }
+
+
+        try
+        {
+            GoogleJsonWebSignature.Payload? payload;
+            using (HttpClient client = new HttpClient())
+            {
+                Uri url = new Uri(String.Format(
+                    "https://oauth2.googleapis.com/token?code={0}&client_id={1}&client_secret={2}&redirect_uri={3}&grant_type=authorization_code",
+                    code, auth.ClientId, auth.ClientSecret, "http://localhost:3000/GoogleAuth"));
+                Console.WriteLine(url.ToString());
+                var res = client.PostAsync(url, null).Result; //<TokenResponse>(url).Result;
+                var tokenRes = res.Content.ReadFromJsonAsync<TokenResponse>().Result;
+                if (tokenRes == null)
+                    return StatusCode(500, new { error = "Errors while trying to validate the code" });
+
+                GoogleJsonWebSignature.ValidationSettings settings = new GoogleJsonWebSignature.ValidationSettings()
+                {
+                    Audience = new[] { auth.ClientId }
+                };
+                payload = GoogleJsonWebSignature.ValidateAsync(tokenRes.id_token, settings).Result;
+            }
+
+            if (payload == null)
+                return StatusCode(500, new { error = "Unable to get user info from Google. Please try again" });
+
+            var exAuth = context.ExternalAuth.FirstOrDefault(ea => ea.UserID == payload.Subject);
+            if (exAuth != null)
+            {
+                var acc = context.Account.FirstOrDefault(acc => acc.id == exAuth.AccountId);
+                if (acc == null)
+                {
+                    context.ExternalAuth.Remove(exAuth);
+                    context.SaveChanges();
+                    return RedirectToAction("Signup");
+                }
+
+                acc.ExternalAuth = null;
+                HttpContext.Session.Set("UserData", AccountModel.Serialize(acc));
+                return RedirectToAction("Dashboard", "User");
+            }
+
+            var exAuthEntityEntry = context.ExternalAuth.Add(new ExternalAuthModel()
+            {
+                Account = new AccountModel()
+                {
+                    createdAt = DateTime.Now,
+                    email = payload.Email,
+                    isAdmin = false,
+                    isVerified = true,
+                    linkLimit = 5,
+                    name = payload.Name,
+                    plan = AccountModel.Plan.Free
+                },
+                Provider = ExternalAuthModel.AuthProvider.Google,
+                UserID = payload.Subject
+            });
+            context.SaveChanges();
+            
+            var account = context.Account.FirstOrDefault(acc => acc.id == exAuthEntityEntry.Entity.AccountId);
+            if (account == null)
+            {
+                context.ExternalAuth.Remove(exAuthEntityEntry.Entity);
+                context.SaveChanges();
+                return RedirectToAction("Signup");
+            }
+
+            
+            account.ExternalAuth = null;
+            HttpContext.Session.Set("UserData", AccountModel.Serialize(account));
+            return RedirectToAction("Dashboard", "User");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex);
+            return StatusCode(500, new
+            {
+                error = "Unexpected Error while processing the request."
+            });
+        }
+    }
+
+
     public IActionResult Signup()
     {
         if (HttpContext.Session.Get("UserData") != null)
@@ -87,7 +201,7 @@ public class HomeController(IConfiguration config, UserDbContext context) : Cont
 
         return View();
     }
-    
+
     [HttpPost]
     public async Task<IActionResult> Signup(SignupView data)
     {
@@ -160,7 +274,7 @@ public class HomeController(IConfiguration config, UserDbContext context) : Cont
         return RedirectToAction("Index");
     }
 
-    
+
     [HttpPost]
     [Route("/ResetPassword")]
     public IActionResult SetPassword(string code, [FromBody] ResetPassword info)
@@ -190,8 +304,9 @@ public class HomeController(IConfiguration config, UserDbContext context) : Cont
             account.password = info.password;
             context.AuthAction.Remove(action);
             context.SaveChanges();
-            
-            ActivityLogModel.WriteLogs(context, ActivityLogModel.Event.ResetPassword, account, HttpContext.Connection.RemoteIpAddress?.ToString()?? "Unknown");
+
+            ActivityLogModel.WriteLogs(context, ActivityLogModel.Event.ResetPassword, account,
+                HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown");
             return Ok();
         }
         catch (Exception ex)
@@ -203,7 +318,7 @@ public class HomeController(IConfiguration config, UserDbContext context) : Cont
             });
         }
     }
-    
+
     [Route("/VerifyMail")]
     public IActionResult VerifyMail(string code)
     {
@@ -228,7 +343,9 @@ public class HomeController(IConfiguration config, UserDbContext context) : Cont
             {
                 HttpContext.Session.Set("UserData", AccountModel.Serialize(acc));
             }
-            ActivityLogModel.WriteLogs(context, ActivityLogModel.Event.VerifyEmail, acc, HttpContext.Connection.RemoteIpAddress?.ToString()?? "Unknown");
+
+            ActivityLogModel.WriteLogs(context, ActivityLogModel.Event.VerifyEmail, acc,
+                HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown");
             return View("VerifyEmail");
         }
         catch (Exception ex)
@@ -237,7 +354,7 @@ public class HomeController(IConfiguration config, UserDbContext context) : Cont
             return RedirectToAction("Index");
         }
     }
-    
+
 
     // Non-Action Methods
     [HttpPost]
@@ -282,7 +399,7 @@ public class HomeController(IConfiguration config, UserDbContext context) : Cont
             });
             context.SaveChanges();
 
-            string link = HttpContext.Request.Headers.Origin + Url.Action("ResetPassword") + "?code=" + code;
+            string link = Url.ActionLink("ResetPassword") + "?code=" + code;
             MailingSystem.SendPasswordReset(mailConfig, acc[0].AccountName, info.email, link);
 
             return Ok();

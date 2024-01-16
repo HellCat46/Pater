@@ -1,4 +1,4 @@
-namespace Web.Models.View;
+namespace Web.Models.View.Home;
 
 public class LoginView
 {
