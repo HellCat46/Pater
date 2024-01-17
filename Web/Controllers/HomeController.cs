@@ -85,29 +85,40 @@ public class HomeController(IConfiguration config, UserDbContext context) : Cont
     [Route("/GoogleAuthRedirect")]
     public IActionResult GoogleAuthRedirect()
     {
+        string state = UserController.GenerateRandom(10);
+        HttpContext.Session.SetString("GoogleState", state);
+            
         GoogleOAuth? auth = config.GetSection("GoogleOAuth").Get<GoogleOAuth>();
         if (auth == null)
-        {
             return StatusCode(500, new { error = "Server Error. Please contact support through email." });
-        }
 
         string url = String.Format(
-            "https://accounts.google.com/o/oauth2/v2/auth?scope=openid https%3A//www.googleapis.com/auth/userinfo.email https%3A//www.googleapis.com/auth/userinfo.profile&access_type=online&include_granted_scopes=true&response_type=code&state=state_parameter_passthrough_value&redirect_uri={0}&client_id={1}",
-            Url.ActionLink("GoogleAuth"), auth.ClientId);
+            "https://accounts.google.com/o/oauth2/v2/auth?scope=openid https%3A//www.googleapis.com/auth/userinfo.email https%3A//www.googleapis.com/auth/userinfo.profile&access_type=online&include_granted_scopes=true&response_type=code&state={0}&redirect_uri={1}&client_id={2}", 
+            state, Url.ActionLink("GoogleAuth"), auth.ClientId);
         
         return Redirect(url);
     }
 
     [Route("/GoogleAuth")]
-    public IActionResult GoogleAuth(string code)
+    public IActionResult GoogleAuth(string state, string code)
     {
-        if (code.IsNullOrEmpty())
+        if (code.IsNullOrEmpty() || state.IsNullOrEmpty())
         {
             return StatusCode(400, new { error = "Required Parameters are missing" });
         }
-
+        
+        
+        string? stateId = HttpContext.Session.GetString("GoogleState");
+        if (stateId == null)
+            return StatusCode(400, new { error = "Invalid State." });
+        if (state != stateId)
+            return StatusCode(403, new { error = "Suspicious Request." });
+        HttpContext.Session.Remove("GoogleState");
+        
+        
+        MailServer? mailConfig = config.GetSection("MailServer").Get<MailServer>();
         GoogleOAuth? auth = config.GetSection("GoogleOAuth").Get<GoogleOAuth>();
-        if (auth == null)
+        if (auth == null || mailConfig == null)
         {
             return StatusCode(500, new { error = "Server Error. Please contact support through email." });
         }
@@ -121,7 +132,6 @@ public class HomeController(IConfiguration config, UserDbContext context) : Cont
                 Uri url = new Uri(String.Format(
                     "https://oauth2.googleapis.com/token?code={0}&client_id={1}&client_secret={2}&redirect_uri={3}&grant_type=authorization_code",
                     code, auth.ClientId, auth.ClientSecret, "http://localhost:3000/GoogleAuth"));
-                Console.WriteLine(url.ToString());
                 var res = client.PostAsync(url, null).Result; //<TokenResponse>(url).Result;
                 var tokenRes = res.Content.ReadFromJsonAsync<TokenResponse>().Result;
                 if (tokenRes == null)
@@ -133,23 +143,30 @@ public class HomeController(IConfiguration config, UserDbContext context) : Cont
                 };
                 payload = GoogleJsonWebSignature.ValidateAsync(tokenRes.id_token, settings).Result;
             }
-
             if (payload == null)
                 return StatusCode(500, new { error = "Unable to get user info from Google. Please try again" });
-
-            var exAuth = context.ExternalAuth.FirstOrDefault(ea => ea.UserID == payload.Subject);
+            Console.Write(payload.Picture);
+            
+            var exAuth = context.ExternalAuth.Include(ea => ea.Account).FirstOrDefault(ea => ea.UserID == payload.Subject);
             if (exAuth != null)
             {
-                var acc = context.Account.FirstOrDefault(acc => acc.id == exAuth.AccountId);
-                if (acc == null)
+                var acc = exAuth.Account;
+                HttpContext.Session.Set("UserData", AccountModel.Serialize(new AccountModel()
                 {
-                    context.ExternalAuth.Remove(exAuth);
-                    context.SaveChanges();
-                    return RedirectToAction("Signup");
-                }
-
-                acc.ExternalAuth = null;
-                HttpContext.Session.Set("UserData", AccountModel.Serialize(acc));
+                    id = acc.id,
+                    email = acc.email,
+                    isAdmin = acc.isAdmin,
+                    isVerified = acc.isVerified,
+                    plan = acc.plan,
+                    linkLimit = acc.linkLimit,
+                    createdAt = acc.createdAt,
+                    name = acc.name,
+                    password = acc.password,
+                    picPath = acc.picPath
+                }));
+                ActivityLogModel.WriteLogs(context, ActivityLogModel.Event.GoogleLoggedIn, acc,
+                    HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown");
+                
                 return RedirectToAction("Dashboard", "User");
             }
 
@@ -169,18 +186,29 @@ public class HomeController(IConfiguration config, UserDbContext context) : Cont
                 UserID = payload.Subject
             });
             context.SaveChanges();
-            
-            var account = context.Account.FirstOrDefault(acc => acc.id == exAuthEntityEntry.Entity.AccountId);
-            if (account == null)
-            {
-                context.ExternalAuth.Remove(exAuthEntityEntry.Entity);
-                context.SaveChanges();
-                return RedirectToAction("Signup");
-            }
+
+            var account = exAuthEntityEntry.Entity.Account;
 
             
-            account.ExternalAuth = null;
-            HttpContext.Session.Set("UserData", AccountModel.Serialize(account));
+            HttpContext.Session.Set("UserData", AccountModel.Serialize(new AccountModel()
+            {
+                id = account.id,
+                email = account.email,
+                isAdmin = account.isAdmin,
+                isVerified = account.isVerified,
+                plan = account.plan,
+                linkLimit = account.linkLimit,
+                createdAt = account.createdAt,
+                name = account.name,
+                password = account.password,
+                picPath = account.picPath
+            }));
+            
+            ActivityLogModel.WriteLogs(context, ActivityLogModel.Event.GoogleSignedUp, account,
+                HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown");
+
+            MailingSystem.SendWelcomeMail(mailConfig, account.name, account.email);
+            
             return RedirectToAction("Dashboard", "User");
         }
         catch (Exception ex)
@@ -239,7 +267,7 @@ public class HomeController(IConfiguration config, UserDbContext context) : Cont
             }
 
             HttpContext.Session.Set("UserData", AccountModel.Serialize(account));
-            ActivityLogModel.WriteLogs(context, ActivityLogModel.Event.EmailSignedIn, account,
+            ActivityLogModel.WriteLogs(context, ActivityLogModel.Event.EmailSignedUp, account,
                 HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown");
 
             MailingSystem.SendWelcomeMail(mailConfig, account.name, account.email);
@@ -370,14 +398,13 @@ public class HomeController(IConfiguration config, UserDbContext context) : Cont
 
             var acc = context.Account.Where(acc => acc.email == info.email)
                 .Select(acc => new { Accountid = acc.id, AccountName = acc.name }).ToList();
-            if (acc.Count() == 0)
-            {
-                return NotFound(new
-                {
+            if (acc.Count() == 0) 
+                return NotFound(new {
                     error = "No Account Associated with this email."
                 });
-            }
-
+            if(context.ExternalAuth.Any(ea => ea.AccountId == acc[0].Accountid))
+                return StatusCode(403, new {error = "Google Users aren't allowed to perform this action."});
+            
             DateTime dateTime = DateTime.Now.Subtract(TimeSpan.FromHours(1));
             if (context.AuthAction.Any(au =>
                     au.Userid == acc[0].Accountid && au.action == AuthActionModel.ActionType.ResetPassword &&

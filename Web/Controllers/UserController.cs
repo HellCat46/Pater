@@ -223,12 +223,10 @@ public class UserController(IConfiguration config, UserDbContext context) : Cont
                 return StatusCode(403, new { error = "Session Expired. Please Login in Again" });
             }
 
-            return PartialView("_LinkRows", new _LinkRows()
-            {
-                links = await context.Link.Where(link => link.AccountId == account.id)
-                    .OrderByDescending(log => log.CreatedAt)
-                    .Skip((pageno - 1) * 10).Take(10).ToListAsync()
-            });
+            return PartialView("_LinkRows",  await context.Link.Where(link => link.AccountId == account.id)
+                .OrderByDescending(log => log.CreatedAt)
+                .Skip((pageno - 1) * 10).Take(10).ToListAsync()
+            );
         }
         catch (Exception ex)
         {
@@ -337,6 +335,8 @@ public class UserController(IConfiguration config, UserDbContext context) : Cont
             if (!link.LinkURL.IsNullOrEmpty()) linkRow.url = link.LinkURL;
 
             await context.SaveChangesAsync();
+            ActivityLogModel.WriteLogs(context, ActivityLogModel.Event.EditLink, account, HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown");
+            
             return Ok();
         }
         catch (Exception ex)
@@ -378,6 +378,8 @@ public class UserController(IConfiguration config, UserDbContext context) : Cont
 
             context.Link.Remove(linkRow);
             await context.SaveChangesAsync();
+            ActivityLogModel.WriteLogs(context, ActivityLogModel.Event.DeleteLink, account, HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown");
+            
             return Ok();
         }
         catch (Exception ex)
@@ -722,6 +724,9 @@ public class UserController(IConfiguration config, UserDbContext context) : Cont
                 return StatusCode(403, new { error = "Session Expired. Please Login in Again" });
             }
 
+            if(context.ExternalAuth.Any(ea => ea.AccountId == account.id))
+                return StatusCode(403, new {error = "Google Users aren't allowed to perform this action."});
+            
             if (account.password != oldPassword)
                 return StatusCode(400, new
                 {

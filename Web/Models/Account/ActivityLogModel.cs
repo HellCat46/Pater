@@ -33,9 +33,13 @@ public class ActivityLogModel
 
         switch (ev)
         {
-            case Event.EmailSignedIn: log.Action +=  " Signed up with Email.";
+            case Event.EmailSignedUp: log.Action +=  " Signed up with Email.";
                 break;
             case Event.EmailLoggedIn: log.Action +=  " Logged in with Email.";
+                break;
+            case Event.GoogleSignedUp: log.Action += " Signed up with Google.";
+                break;
+            case Event.GoogleLoggedIn: log.Action += " Logged in with Google.";
                 break;
             case Event.LoggedOut: log.Action +=  " Logged Out.";
                 break;
@@ -55,7 +59,7 @@ public class ActivityLogModel
                 break;
             case Event.EditLink: log.Action +=  " Edited Link Details.";
                 break;
-            case Event.DeleteLink: log.Action += " Delete link.";
+            case Event.DeleteLink: log.Action += " Deleted a link.";
                 break;
             default: return;
         }
@@ -73,7 +77,9 @@ public class ActivityLogModel
     public enum Event
     {
         EmailLoggedIn,
-        EmailSignedIn,
+        GoogleLoggedIn,
+        EmailSignedUp,
+        GoogleSignedUp,
         LoggedOut,
         VerifyEmail,
         ChangedAvatar,

@@ -1,6 +1,6 @@
 @using Web.Models.Link
-@model Web.Models.View.User._LinkRows;
-@foreach (LinkModel link in Model.links)
+@model List<LinkModel>;
+@foreach (LinkModel link in Model)
 {
     <tr>
         <th>

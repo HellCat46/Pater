@@ -15,6 +15,8 @@ const editLinkModal = document.querySelector("#editLink");
 
 async function GetLinks(endpointUrl){
     getLinksURL = endpointUrl;
+    if (linkLists == null) return;
+        
     await fetch(`${endpointUrl}?pageno=${pageNo}`).then(async (res) => {
         if (res.status === 200){
             linkLists.innerHTML = await res.text();
