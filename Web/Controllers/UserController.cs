@@ -69,7 +69,33 @@ public class UserController(IConfiguration config, UserDbContext context) : Cont
 
     public IActionResult Checkout()
     {
-        return View();
+        try
+        {
+            byte[]? bytes = HttpContext.Session.Get("UserData");
+            if (bytes == null) return RedirectToAction("Login", "Home");
+            AccountModel? account = AccountModel.Deserialize(bytes);
+            if (account == null)
+            {
+                HttpContext.Session.Clear();
+                return RedirectToAction("Login", "Home");
+            }
+            
+            return View(new CheckoutView()
+            {
+                header = new _HeaderView()
+                {
+                    isAdmin = account.isAdmin,
+                    name = account.name,
+                    picPath = account.picPath,
+                    plan = account.plan
+                }
+            });
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex);
+            return RedirectToAction("Dashboard");
+        }
     }
 
     public async Task<IActionResult> Details(string? code)
@@ -161,7 +187,7 @@ public class UserController(IConfiguration config, UserDbContext context) : Cont
                 ? HttpContext.Request.Headers.Host.ToString()
                 : HttpContext.Request.Headers.Origin.ToString();
 
-            string link = url + Url.Action("VerifyMail", "Home") + "?code=" + code;
+            string link = Url.ActionLink("VerifyMail", "Home") + "?code=" + code;
             MailingSystem.SendEmailVerification(mailConfig, acc.name, acc.email, link);
             return View();
         }

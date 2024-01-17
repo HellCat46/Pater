@@ -1,4 +1,81 @@
+@model Web.Models.View.User.CheckoutView;
 @{
     ViewData["Title"] = "Checkout | Pater";
     Layout = "_UserLayout";
 }
+@await Html.PartialAsync("_Header", Model.header)
+
+<div class="w-auto h-[75vh] grid lg:grid-rows-4 lg:grid-flow-col gap-4 m-5 ">
+    <div class="lg:row-span-3 bg-base-300 rounded-lg lg:col-span-2 flex flex-col">
+        <div class="basis-2/12 border-b-4 border-info flex flex-col items-center justify-center">
+            <span class="text-2xl font-bold">Plan Information</span>
+            <span class="flex p-5">
+                <select class="select w-full max-w-xs bg-base-200">
+                    <option selected>Premium</option>
+                    <option>Business</option>
+                    <option>Custom</option>
+                </select>
+            </span>
+        </div>
+        <div class="basis-10/12"></div>
+    </div>
+    <div class="lg:row-span-1 bg-base-300 rounded-lg lg:col-span-2 flex flex-col">
+        <div class="basis-2/6 border-b-4 border-info flex items-center justify-center">
+            <span class="text-2xl font-bold">Custom Link Limit</span>
+        </div>
+        <div class="basis-4/6 p-5">
+            <input type="range" min="0" max="100" value="25" class="range" step="25"/>
+            <div class="w-full flex justify-between text-xs px-2">
+                <div class="flex flex-col items-center">
+                    <span>|</span>
+                    <span>400</span>
+                </div>
+                <div class="flex flex-col items-center">
+                    <span>|</span>
+                    <span>500</span>
+                </div>
+
+                <div class="flex flex-col items-center">
+                    <span>|</span>
+                    <span>600</span>
+                </div>
+                <div class="flex flex-col items-center">
+                    <span>|</span>
+                    <span>700</span>
+                </div>
+                <div class="flex flex-col items-center">
+                    <span>|</span>
+                    <span>800</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="lg:row-span-2 bg-base-300 rounded-lg flex flex-col">
+        <div class="basis-2/6 border-b-4 border-info flex items-center justify-center">
+            <span class="text-2xl font-bold">Select Payment Option</span>
+        </div>
+        <div class="basis-4/6 flex flex-col  mx-5 my-10">
+            <div class="basis-1/2 flex items-center">
+                <input type="radio" name="paymentMethod" value="0" class="radio radio-info"/>
+                <div class="flex flex-col pl-2">
+                    <span class="text-2xl font-bold">Debit/Credit Card & Paypal</span>
+                    <span>Powered by Stripe</span>
+                </div>
+            </div>
+            <div class="basis-1/2 flex items-center">
+                <input type="radio" name="paymentMethod" value="1" class="radio radio-info"/>
+                <div class="flex flex-col pl-2">
+                    <span class="text-2xl font-bold">Debit/Credit Card & UPI</span>
+                    <span>Powered by Stripe</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="lg:row-span-2 bg-base-300 rounded-lg flex flex-col">
+        <div class="basis-2/6 border-b-4 border-info flex items-center justify-center">
+            <span class="text-2xl font-bold">Bill Summary</span>
+        </div>
+        <div class="basis-4/6"></div>
+
+    </div>
+</div>
