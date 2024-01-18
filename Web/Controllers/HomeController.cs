@@ -145,7 +145,6 @@ public class HomeController(IConfiguration config, UserDbContext context) : Cont
             }
             if (payload == null)
                 return StatusCode(500, new { error = "Unable to get user info from Google. Please try again" });
-            Console.Write(payload.Picture);
             
             var exAuth = context.ExternalAuth.Include(ea => ea.Account).FirstOrDefault(ea => ea.UserID == payload.Subject);
             if (exAuth != null)
@@ -188,7 +187,28 @@ public class HomeController(IConfiguration config, UserDbContext context) : Cont
             context.SaveChanges();
 
             var account = exAuthEntityEntry.Entity.Account;
+            
+            try
+            {
+                using (var client = new HttpClient())
+                {
+                    var res = client.GetAsync(payload.Picture).Result;
+                    string fileName = account.id +"."+res.Content.Headers.GetValues("Content-Disposition").ToList()[0].Split(";").Last().Split("=").Last().Trim('"').Split(".").Last();
+                    using (var fileStream = System.IO.File.Create("wwwroot/UserPics/"+fileName))
+                    {
+                        var bytes = res.Content.ReadAsByteArrayAsync().Result;
+                        fileStream.Write(bytes, 0, bytes.Length);
+                        fileStream.Close();
+                    }
 
+                    account.picPath = fileName;
+                    context.SaveChanges();
+                } 
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex);
+            }
             
             HttpContext.Session.Set("UserData", AccountModel.Serialize(new AccountModel()
             {
@@ -207,6 +227,7 @@ public class HomeController(IConfiguration config, UserDbContext context) : Cont
             ActivityLogModel.WriteLogs(context, ActivityLogModel.Event.GoogleSignedUp, account,
                 HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown");
 
+            
             MailingSystem.SendWelcomeMail(mailConfig, account.name, account.email);
             
             return RedirectToAction("Dashboard", "User");
