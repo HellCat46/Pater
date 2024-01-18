@@ -680,7 +680,8 @@ public class UserController(IConfiguration config, UserDbContext context) : Cont
             if (newEmail != null)
             {
                 account.email = newEmail;
-                account.isVerified = false;
+                if(!context.ExternalAuth.Any(ea => ea.AccountId == account.id))  // Yes, It's in the game
+                    account.isVerified = false;
             }
 
             context.Account.Update(account);
