@@ -215,12 +215,11 @@ public class UserController(IConfiguration config, UserDbContext context) : Cont
     }
 
     // Non-Page Actions
-    public async Task<IActionResult> GetLinks()
+    public async Task<IActionResult> GetLinks(int pageNo)
     {
         try
         {
-            int pageno = Convert.ToInt32(HttpContext.Request.Query["pageno"]);
-            if (pageno < 1)
+            if (pageNo < 1)
                 return StatusCode(400, new
                 {
                     error = "Page Number is too low."
@@ -241,7 +240,7 @@ public class UserController(IConfiguration config, UserDbContext context) : Cont
 
             return PartialView("_LinkRows",  await context.Link.Where(link => link.AccountId == account.id)
                 .OrderByDescending(log => log.CreatedAt)
-                .Skip((pageno - 1) * 10).Take(10).ToListAsync()
+                .Skip((pageNo - 1) * 10).Take(10).ToListAsync()
             );
         }
         catch (Exception ex)
@@ -366,6 +365,56 @@ public class UserController(IConfiguration config, UserDbContext context) : Cont
     }
 
     [HttpDelete]
+    public async Task<IActionResult> DeleteMultipleLink(string[] codes)
+    {
+        if(codes.IsNullOrEmpty()) 
+            return StatusCode(400, new
+            {
+                error = "Required Parameters are missing."
+            });
+        
+        
+        try
+        {
+            byte[]? bytes = HttpContext.Session.Get("UserData");
+            if (bytes == null)
+            {
+                return StatusCode(403, new
+                {
+                    error = "Session Expired. Please Login Again!"
+                });
+            }
+
+            AccountModel? account = AccountModel.Deserialize(bytes);
+            if (account == null)
+            {
+                HttpContext.Session.Clear();
+                return StatusCode(403, new { error = "Session Expired. Please Login in Again" });
+            }
+            
+            
+            foreach (var code in codes)
+            {
+                var link = await context.Link.FirstOrDefaultAsync(link =>
+                    link.code == code && link.AccountId == account.id);
+                if (link != null) context.Link.Remove(link);
+            }
+            
+            await context.SaveChangesAsync();
+            return Ok();
+        }
+        catch (Exception ex)
+        {
+            
+            Console.WriteLine(ex);
+            return StatusCode(500, new
+            {
+                error = "Unexpected Error while trying to process the request"
+            });
+        }
+    }
+
+    [HttpDelete]
     public async Task<IActionResult> DeleteLink(string code)
     {
         try
@@ -411,13 +460,12 @@ public class UserController(IConfiguration config, UserDbContext context) : Cont
     [HttpGet]
     public async Task<IActionResult> LinkOtherDetails(string? detailType, string? code, string? timeFrame)
     {
-        if (code == null || timeFrame == null || detailType == null)
-        {
+        if (code == null || timeFrame == null || detailType == null) 
             return StatusCode(400, new
             {
                 error = "Required Parameters are missing."
             });
-        }
+        
 
         try
         {

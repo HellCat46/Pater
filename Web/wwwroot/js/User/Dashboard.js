@@ -12,12 +12,108 @@ const toastAlertText = document.querySelector("#toastAlertText");
 const createLinkModal = document.querySelector("#create");
 const editLinkModal = document.querySelector("#editLink");
 
+const selectAllLinks = document.querySelector("#selectAllLinks");
+
+
+selectAllLinks.addEventListener("change", () => {
+
+    const checkboxes = document.querySelectorAll(".links");
+    for(let idx =0; idx< checkboxes.length; idx++){
+        checkboxes[idx].checked = selectAllLinks.checked;
+    }
+    if(selectAllLinks.checked) showLinkSelToast(true);
+    else showLinkSelToast(false)
+});
+
+function clickCheckbox(){
+    let anyChecked = false;
+
+
+    const checkboxes = document.querySelectorAll(".links");
+    for(let idx = 0 ; idx < checkboxes.length; idx++){
+        if(checkboxes[idx].checked) anyChecked = true;
+    }
+
+    if(anyChecked) showLinkSelToast(true);
+    else {
+        showLinkSelToast(false);
+        selectAllLinks.checked = false;
+    }
+}
+
+function showLinkSelToast(state){
+    const toast = document.querySelector("#linkSelToast");
+    if(state === true) toast.className = "toast toast-center toast-bottom";
+    else toast.className = "hidden";
+}
+
+async function deleteSelectedLinks(endpointUrl){
+    showLinkSelToast(false);
+    const checkboxes = document.querySelectorAll(".links");
+    
+    let anyChecked = false;
+    for(let idx = 0 ; idx < checkboxes.length; idx++){
+        if(checkboxes[idx].checked) anyChecked = true;
+    }
+    
+    if(!anyChecked) { // For Some Edge Case I can't find
+        toastAlert.className = "toast toast-center";
+        toastAlertType.className = "alert alert-error"
+        toastAlertType.innerText = "No Selected Links";
+        setTimeout(()=> {
+            toastAlert.className = "hidden"
+            toastAlertType.className = "hidden";
+            toastAlertText.innerHTML = "";
+        }, 5000);
+        return;
+    }
+    
+    
+    if (checkboxes[0].checked)
+        endpointUrl += "?codes="+checkboxes[0].value+"&";
+    else 
+        endpointUrl += "?"
+    
+    for(let idx = 1; idx < checkboxes.length; idx++){
+        if(checkboxes[idx].checked)
+            endpointUrl += "codes="+checkboxes[idx].value+"&";
+    }
+    endpointUrl = endpointUrl.slice(0, endpointUrl.length-1);
+    
+    try {
+        const res = await fetch(endpointUrl, {
+            method : "DELETE",
+            credentials : "include"
+        });
+        if(res.status === 200){
+            toastAlert.className = "toast toast-center";
+            toastAlertType.className = "alert alert-success"
+            toastAlertType.innerText = "Successfully deleted all the selected link";
+            await GetLinks(getLinksURL);
+        }else {
+            const json = await res.json();
+            toastAlert.className = "toast toast-center";
+            toastAlertType.className = "alert alert-error"
+            toastAlertType.innerText = json.error;
+        }
+    }catch (ex){
+        console.error(ex);
+        toastAlert.className = "toast toast-center";
+        toastAlertType.className = "alert alert-error"
+        toastAlertType.innerText = "Unable to Delete Links. Please try again.";
+    }
+    setTimeout(()=> {
+        toastAlert.className = "hidden"
+        toastAlertType.className = "hidden";
+        toastAlertText.innerHTML = "";
+    }, 5000);
+}
 
 async function GetLinks(endpointUrl){
     getLinksURL = endpointUrl;
     if (linkLists == null) return;
         
-    await fetch(`${endpointUrl}?pageno=${pageNo}`).then(async (res) => {
+    await fetch(`${endpointUrl}?pageNo=${pageNo}`).then(async (res) => {
         if (res.status === 200){
             linkLists.innerHTML = await res.text();
         }else {
