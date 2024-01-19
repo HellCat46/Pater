@@ -10,7 +10,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllersWithViews();
 builder.Services.AddControllers();
 builder.Services.AddDbContext<UserDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("prod")));
+    options.UseSqlServer(builder.Configuration["DB:ConnectionString"]));
 
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession(options =>
