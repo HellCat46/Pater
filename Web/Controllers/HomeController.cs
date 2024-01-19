@@ -62,13 +62,6 @@ public class HomeController(IConfiguration config, UserDbContext context) : Cont
                 ViewBag.ErrorMessage = "Invalid Credentials";
                 return View();
             }
-
-            if (account.password != data.password)
-            {
-                ViewBag.ErrorMessage = ".";
-                return View();
-            }
-
             HttpContext.Session.Set("UserData", AccountModel.Serialize(account));
             ActivityLogModel.WriteLogs(context, ActivityLogModel.Event.EmailLoggedIn, account,
                 HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown");
@@ -90,7 +83,12 @@ public class HomeController(IConfiguration config, UserDbContext context) : Cont
             
         GoogleOAuth? auth = config.GetSection("GoogleOAuth").Get<GoogleOAuth>();
         if (auth == null)
-            return StatusCode(500, new { error = "Server Error. Please contact support through email." });
+            return View("ErrorPage", new ErrorView()
+            {
+                errorCode = 500,
+                errorTitle = "Server Error",
+                errorMessage = "Please contact support through email."
+            });
 
         string url = String.Format(
             "https://accounts.google.com/o/oauth2/v2/auth?scope=openid https%3A//www.googleapis.com/auth/userinfo.email https%3A//www.googleapis.com/auth/userinfo.profile&access_type=online&include_granted_scopes=true&response_type=code&state={0}&redirect_uri={1}&client_id={2}", 
@@ -103,25 +101,41 @@ public class HomeController(IConfiguration config, UserDbContext context) : Cont
     public IActionResult GoogleAuth(string state, string code)
     {
         if (code.IsNullOrEmpty() || state.IsNullOrEmpty())
-        {
-            return StatusCode(400, new { error = "Required Parameters are missing" });
-        }
+            return View("ErrorPage", new ErrorView()
+            {
+                errorCode = 400,
+                errorTitle = "Bad Request",
+                errorMessage = "Required Parameters are missing."
+            });
         
         
         string? stateId = HttpContext.Session.GetString("GoogleState");
         if (stateId == null)
-            return StatusCode(400, new { error = "Invalid State." });
+            return View("ErrorPage", new ErrorView()
+            {
+                errorCode = 400,
+                errorTitle = "Bad Request",
+                errorMessage = "No State was found. Please Try Again."
+            });
         if (state != stateId)
-            return StatusCode(403, new { error = "Suspicious Request." });
+            return View("ErrorPage", new ErrorView()
+            {
+                errorCode = 403,
+                errorTitle = "Forbidden",
+                errorMessage = "The Request looks Suspicious."
+            });
         HttpContext.Session.Remove("GoogleState");
         
         
         MailServer? mailConfig = config.GetSection("MailServer").Get<MailServer>();
         GoogleOAuth? auth = config.GetSection("GoogleOAuth").Get<GoogleOAuth>();
         if (auth == null || mailConfig == null)
-        {
-            return StatusCode(500, new { error = "Server Error. Please contact support through email." });
-        }
+            return View("ErrorPage", new ErrorView()
+            {
+                errorCode = 500,
+                errorTitle = "Server Error",
+                errorMessage = "Please contact support through Email."
+            });
 
 
         try
@@ -135,7 +149,12 @@ public class HomeController(IConfiguration config, UserDbContext context) : Cont
                 var res = client.PostAsync(url, null).Result; //<TokenResponse>(url).Result;
                 var tokenRes = res.Content.ReadFromJsonAsync<TokenResponse>().Result;
                 if (tokenRes == null)
-                    return StatusCode(500, new { error = "Errors while trying to validate the code" });
+                    return View("ErrorPage", new ErrorView()
+                    {
+                        errorCode = 500,
+                        errorTitle = "Server Error",
+                        errorMessage = "Errors while trying to validate the code from Google."
+                    });
 
                 GoogleJsonWebSignature.ValidationSettings settings = new GoogleJsonWebSignature.ValidationSettings()
                 {
@@ -144,7 +163,12 @@ public class HomeController(IConfiguration config, UserDbContext context) : Cont
                 payload = GoogleJsonWebSignature.ValidateAsync(tokenRes.id_token, settings).Result;
             }
             if (payload == null)
-                return StatusCode(500, new { error = "Unable to get user info from Google. Please try again" });
+                return View("ErrorPage", new ErrorView()
+                {
+                    errorCode = 500,
+                    errorTitle = "Server Error",
+                    errorMessage = "Unable to get user info from Google. Please try again"
+                });
             
             var exAuth = context.ExternalAuth.Include(ea => ea.Account).FirstOrDefault(ea => ea.UserID == payload.Subject);
             if (exAuth != null)
@@ -227,17 +251,25 @@ public class HomeController(IConfiguration config, UserDbContext context) : Cont
             ActivityLogModel.WriteLogs(context, ActivityLogModel.Event.GoogleSignedUp, account,
                 HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown");
 
-            
-            MailingSystem.SendWelcomeMail(mailConfig, account.name, account.email);
-            
+            try
+            {
+                MailingSystem.SendWelcomeMail(mailConfig, account.name, account.email);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex);
+            }
+
             return RedirectToAction("Dashboard", "User");
         }
         catch (Exception ex)
         {
             Console.WriteLine(ex);
-            return StatusCode(500, new
+            return View("ErrorPage", new ErrorView()
             {
-                error = "Unexpected Error while processing the request."
+                errorCode = 500,
+                errorTitle = "Server Error",
+                errorMessage = "Unexpected Error while processing the request."
             });
         }
     }
@@ -258,9 +290,12 @@ public class HomeController(IConfiguration config, UserDbContext context) : Cont
         {
             MailServer? mailConfig = config.GetSection("MailServer").Get<MailServer>();
             if (mailConfig == null)
-            {
-                return StatusCode(500, new { error = "Server Error. Please contact support through email." });
-            }
+                return View("ErrorPage", new ErrorView()
+                {
+                    errorCode = 500,
+                    errorTitle = "Server Error",
+                    errorMessage = "Please contact support through email."
+                });
 
             AccountModel? account = await context.Account.FirstOrDefaultAsync(acc => acc.email == data.email);
             if (account != null)
@@ -291,14 +326,21 @@ public class HomeController(IConfiguration config, UserDbContext context) : Cont
             ActivityLogModel.WriteLogs(context, ActivityLogModel.Event.EmailSignedUp, account,
                 HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown");
 
-            MailingSystem.SendWelcomeMail(mailConfig, account.name, account.email);
-
+            try
+            {
+                MailingSystem.SendWelcomeMail(mailConfig, account.name, account.email);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex);
+            }
+            
             return RedirectToAction("Dashboard", "User");
         }
         catch (Exception ex)
         {
             Console.WriteLine(ex);
-            ViewBag.ErrorMessage = "Unexpected Error while processing the request";
+            ViewBag.ErrorMessage = "Unexpected Error while processing the request.";
             return View();
         }
     }
@@ -318,55 +360,17 @@ public class HomeController(IConfiguration config, UserDbContext context) : Cont
         catch (Exception ex)
         {
             Console.WriteLine(ex);
+            return View("ErrorPage", new ErrorView()
+            {
+                errorCode = 500,
+                errorTitle = "Server Error",
+                errorMessage = "Unexpected Error while processing the request."
+            });
         }
 
         return RedirectToAction("Index");
     }
-
-
-    [HttpPost]
-    [Route("/ResetPassword")]
-    public IActionResult SetPassword(string code, [FromBody] ResetPassword info)
-    {
-        try
-        {
-            DateTime dateTime = DateTime.Now.Subtract(TimeSpan.FromHours(1));
-            var action = context.AuthAction.FirstOrDefault(au =>
-                au.code == code && au.action == AuthActionModel.ActionType.ResetPassword && au.createAt >= dateTime);
-            if (action == null)
-            {
-                return StatusCode(404, new
-                {
-                    error = "Link is either Expired or Invalid."
-                });
-            }
-
-            var account = context.Account.FirstOrDefault(acc => acc.id == action.Userid);
-            if (account == null)
-            {
-                return StatusCode(404, new
-                {
-                    error = "Account No Longer Exists."
-                });
-            }
-
-            account.password = info.password;
-            context.AuthAction.Remove(action);
-            context.SaveChanges();
-
-            ActivityLogModel.WriteLogs(context, ActivityLogModel.Event.ResetPassword, account,
-                HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown");
-            return Ok();
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine(ex);
-            return StatusCode(500, new
-            {
-                error = "Unexpected Error while processing the request"
-            });
-        }
-    }
+    
 
     [Route("/VerifyMail")]
     public IActionResult VerifyMail(string code)
@@ -374,33 +378,32 @@ public class HomeController(IConfiguration config, UserDbContext context) : Cont
         try
         {
             DateTime dateTime = DateTime.Now.Subtract(TimeSpan.FromHours(1));
-            var action = context.AuthAction.FirstOrDefault(au =>
+            var action = context.AuthAction.Include(au =>au.User).FirstOrDefault(au =>
                 au.code == code && au.action == AuthActionModel.ActionType.VerifyEmail && au.createAt >= dateTime);
             if (action == null) return RedirectToAction("Index");
-
-            var acc = context.Account.FirstOrDefault(acc => acc.id == action.Userid);
-            if (acc == null)
-            {
-                return RedirectToAction("Index");
-            }
-
-            acc.isVerified = true;
+            
+            action.User.isVerified = true;
             context.AuthAction.Remove(action);
             context.SaveChanges();
 
             if (HttpContext.Session.Get("UserData") != null)
             {
-                HttpContext.Session.Set("UserData", AccountModel.Serialize(acc));
+                HttpContext.Session.Set("UserData", AccountModel.Serialize(action.User));
             }
 
-            ActivityLogModel.WriteLogs(context, ActivityLogModel.Event.VerifyEmail, acc,
+            ActivityLogModel.WriteLogs(context, ActivityLogModel.Event.VerifyEmail, action.User,
                 HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown");
             return View("VerifyEmail");
         }
         catch (Exception ex)
         {
             Console.WriteLine(ex);
-            return RedirectToAction("Index");
+            return View("ErrorPage", new ErrorView()
+            {
+                errorCode = 500,
+                errorTitle = "Server Error",
+                errorMessage = "Unexpected Error while processing the request."
+            });
         }
     }
 
@@ -450,6 +453,50 @@ public class HomeController(IConfiguration config, UserDbContext context) : Cont
             string link = Url.ActionLink("ResetPassword") + "?code=" + code;
             MailingSystem.SendPasswordReset(mailConfig, acc[0].AccountName, info.email, link);
 
+            return Ok();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex);
+            return StatusCode(500, new
+            {
+                error = "Unexpected Error while processing the request"
+            });
+        }
+    }
+    
+    [HttpPost]
+    [Route("/ResetPassword")]
+    public IActionResult SetPassword(string code, [FromBody] ResetPassword info)
+    {
+        try
+        {
+            DateTime dateTime = DateTime.Now.Subtract(TimeSpan.FromHours(1));
+            var action = context.AuthAction.FirstOrDefault(au =>
+                au.code == code && au.action == AuthActionModel.ActionType.ResetPassword && au.createAt >= dateTime);
+            if (action == null)
+            {
+                return StatusCode(404, new
+                {
+                    error = "Link is either Expired or Invalid."
+                });
+            }
+
+            var account = context.Account.FirstOrDefault(acc => acc.id == action.Userid);
+            if (account == null)
+            {
+                return StatusCode(404, new
+                {
+                    error = "Account No Longer Exists."
+                });
+            }
+
+            account.password = info.password;
+            context.AuthAction.Remove(action);
+            context.SaveChanges();
+
+            ActivityLogModel.WriteLogs(context, ActivityLogModel.Event.ResetPassword, account,
+                HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown");
             return Ok();
         }
         catch (Exception ex)

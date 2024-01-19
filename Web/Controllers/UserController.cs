@@ -1,7 +1,9 @@
+using System.Globalization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Web.ApplicationDbContext;
+using Web.Models;
 using Web.Models.Account;
 using Web.Models.Link;
 using Web.Models.View.User;
@@ -94,7 +96,12 @@ public class UserController(IConfiguration config, UserDbContext context) : Cont
         catch (Exception ex)
         {
             Console.WriteLine(ex);
-            return RedirectToAction("Dashboard");
+            return View("ErrorPage", new ErrorView()
+            {
+                errorCode = 500,
+                errorTitle = "Server Error",
+                errorMessage = "Unexpected Error while processing the request."
+            });
         }
     }
 
@@ -139,7 +146,12 @@ public class UserController(IConfiguration config, UserDbContext context) : Cont
         catch (Exception ex)
         {
             Console.WriteLine(ex);
-            return RedirectToAction("Dashboard");
+            return View("ErrorPage", new ErrorView()
+            {
+                errorCode = 500,
+                errorTitle = "Server Error",
+                errorMessage = "Unexpected Error while processing the request."
+            });
         }
     }
 
@@ -149,9 +161,12 @@ public class UserController(IConfiguration config, UserDbContext context) : Cont
         {
             MailServer? mailConfig = config.GetSection("MailServer").Get<MailServer>();
             if (mailConfig == null)
-            {
-                return StatusCode(500, new { error = "Server Error. Please contact support through email." });
-            }
+                return View("ErrorPage", new ErrorView()
+                {
+                    errorCode = 500,
+                    errorTitle = "Server Error",
+                    errorMessage = "Please contact support through email."
+                });
 
             byte[]? bytes = HttpContext.Session.Get("UserData");
             if (bytes == null) return RedirectToAction("Login", "Home");
@@ -181,11 +196,7 @@ public class UserController(IConfiguration config, UserDbContext context) : Cont
                 Userid = acc.id
             });
             context.SaveChanges();
-
-
-            string url = HttpContext.Request.Headers.Origin.IsNullOrEmpty()
-                ? HttpContext.Request.Headers.Host.ToString()
-                : HttpContext.Request.Headers.Origin.ToString();
+            
 
             string link = Url.ActionLink("VerifyMail", "Home") + "?code=" + code;
             MailingSystem.SendEmailVerification(mailConfig, acc.name, acc.email, link);
@@ -194,7 +205,12 @@ public class UserController(IConfiguration config, UserDbContext context) : Cont
         catch (Exception ex)
         {
             Console.WriteLine(ex);
-            return RedirectToAction("Dashboard");
+            return View("ErrorPage", new ErrorView()
+            {
+                errorCode = 500,
+                errorTitle = "Server Error",
+                errorMessage = "Unexpected Error while processing the request."
+            });
         }
     }
 
@@ -583,7 +599,7 @@ public class UserController(IConfiguration config, UserDbContext context) : Cont
 
             return Ok(await context.Analytics.Where(a => a.visitedAt >= dataSince && a.LinkModelCode == code)
                 .GroupBy(a => a.visitedAt.Date)
-                .Select(g => new LinkDetailsResponse() { label = g.Key.ToString(), data = g.Count() })
+                .Select(g => new LinkDetailsResponse() { label = g.Key.ToString(CultureInfo.InvariantCulture), data = g.Count() })
                 .OrderBy(res => res.label).ToListAsync());
         }
         catch (Exception ex)
@@ -675,14 +691,17 @@ public class UserController(IConfiguration config, UserDbContext context) : Cont
                 HttpContext.Session.Clear();
                 return StatusCode(403, new { error = "Session Expired. Please Login in Again" });
             }
-
-            if (newName != null) account.name = newName;
+            
             if (newEmail != null)
             {
+                if (context.Account.Any(acc => acc.email == newEmail))
+                    return StatusCode(403, new {error = "This email address can't be linked with your account."});
+                        
                 account.email = newEmail;
                 if(!context.ExternalAuth.Any(ea => ea.AccountId == account.id))  // Yes, It's in the game
                     account.isVerified = false;
             }
+            if (newName != null) account.name = newName;
 
             context.Account.Update(account);
             await context.SaveChangesAsync();

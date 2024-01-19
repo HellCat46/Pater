@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Web.ApplicationDbContext;
+using Web.Models;
 using Web.Models.Account;
 using Web.Models.View.User;
 using Web.Models.View.Admin;
@@ -37,7 +38,12 @@ public class AdminController(UserDbContext context) : Controller
         catch (Exception ex)
         {
             Console.WriteLine(ex);
-            return RedirectToAction("Dashboard", "User");
+            return View("ErrorPage", new ErrorView()
+            {
+                errorCode = 500,
+                errorTitle = "Server Error",
+                errorMessage = "Unexpected Error while processing the request."
+            });
         }
     }
 
@@ -85,12 +91,16 @@ public class AdminController(UserDbContext context) : Controller
         catch (Exception ex)
         {
             Console.WriteLine(ex);
+            return View("ErrorPage", new ErrorView()
+            {
+                errorCode = 500,
+                errorTitle = "Server Error",
+                errorMessage = "Unexpected Error while processing the request."
+            });
         }
-
-        return View();
     }
 
-    // API Endpoint
+    // Non-Action Endpoints
     public async Task<IActionResult> GetUserLogs(int pageno, int userId)
     {
         try
