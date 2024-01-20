@@ -78,12 +78,12 @@ public class AccountModel
 
     public static IEnumerable<string> UserAnalyticsDurations(Plan plan)
     {
-        switch (plan)
+        return plan switch
         {
-            case Plan.Business : 
-            case Plan.Custom: return ["24h", "7d", "30d"];
-            case Plan.Premium: return ["24h", "7d"];
-            default: return ["24h"];
-        }
+            Plan.Custom => ["24h", "7d", "30d", "lifetime"],
+            Plan.Business => ["24h", "7d", "30d"],
+            Plan.Premium => ["24h", "7d"],
+            _ => ["24h"]
+        };
     }
 }

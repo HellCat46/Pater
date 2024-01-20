@@ -16,6 +16,9 @@ async function VisitsChart(actionUrl, code, timeFrame){
         
         
     if(visitorChart !== undefined){
+        if(NoDataCanvas(data))
+            return;
+        
         visitorChart.data.labels = data.map(d => d.label)
         visitorChart.data.datasets[0].data = data.map(d => d.data)
         visitorChart.update();
@@ -56,12 +59,17 @@ async function VisitsChart(actionUrl, code, timeFrame){
             }
         }
     });
+
+    NoDataCanvas(data);
 }
 async function BrowserChart(actionUrl, code, timeFrame) {
     const data= await GetData(actionUrl,"browser", code, timeFrame);
     if(data instanceof Error) return;
 
     if(browserChart !== undefined){
+        if(NoDataCanvas(data))
+            return;
+        
         browserChart.data.labels = data.map(d => d.label)
         browserChart.data.datasets[0].data = data.map(d => d.data)
         browserChart.update();
@@ -104,12 +112,17 @@ async function BrowserChart(actionUrl, code, timeFrame) {
             }
         }
     });
+
+    NoDataCanvas(data)
 }
 async function OSChart(actionUrl, code, timeFrame){
     const data= await GetData(actionUrl,"os", code, timeFrame);
     if(data instanceof Error) return;
 
     if(osChart !== undefined){
+        if(NoDataCanvas(data))
+            return;
+        
         osChart.data.labels = data.map(d => d.label)
         osChart.data.datasets[0].data = data.map(d => d.data)
         osChart.update();
@@ -149,12 +162,17 @@ async function OSChart(actionUrl, code, timeFrame){
             }
         }
     });
+
+    NoDataCanvas(data);
 }
 async function DeviceChart(actionUrl, code, timeFrame){
     const data= await GetData(actionUrl,"device", code, timeFrame);
     if(data instanceof Error) return;
 
     if(deviceChart !== undefined){
+        if(NoDataCanvas(data))
+            return;
+        
         deviceChart.data.labels = data.map(d => d.label)
         deviceChart.data.datasets[0].data = data.map(d => d.data)
         deviceChart.update();
@@ -194,6 +212,8 @@ async function DeviceChart(actionUrl, code, timeFrame){
             }
         }
     });
+
+    NoDataCanvas(data);
 }
 async function CountryChart(actionUrl, code, timeFrame){
     const data= await GetData(actionUrl,"country", code, timeFrame);
@@ -201,6 +221,9 @@ async function CountryChart(actionUrl, code, timeFrame){
 
     const tbl = document.querySelector("#CountryTable")
     if(countryChart !== undefined){
+        if(NoDataCanvas(data))
+            return;
+        
         countryChart.data.labels = data.map(d => d.label)
         countryChart.data.datasets[0].data = data.map(d => d.data)
         countryChart.update();
@@ -251,6 +274,8 @@ async function CountryChart(actionUrl, code, timeFrame){
     for(let i =0; i< data.length; i++){
         tbl.innerHTML += `<tr><th>${i+1}</th><th>${data[i].label}</th><th>${data[i].data}</th></tr>`;
     }
+
+    NoDataCanvas(data);
 }
 async function CityChart(actionUrl, code, timeFrame){
     const data= await GetData(actionUrl,"city", code, timeFrame);
@@ -258,6 +283,9 @@ async function CityChart(actionUrl, code, timeFrame){
 
     const tbl = document.querySelector("#CityTable")
     if(cityChart !== undefined){
+        if(NoDataCanvas(data))
+            return;
+            
         cityChart.data.labels = data.map(d => d.label)
         cityChart.data.datasets[0].data = data.map(d => d.data)
         cityChart.update();
@@ -311,6 +339,23 @@ async function CityChart(actionUrl, code, timeFrame){
     for(let i =0; i< data.length; i++){
         tbl.innerHTML += `<tr><th>${i+1}</th><th>${data[i].label}</th><th>${data[i].data}</th></tr>`;
     }
+
+    NoDataCanvas(data)
+}
+
+function NoDataCanvas(data){
+    if(data.length !== 0) 
+        return false;
+
+    toastAlert.className = "toast toast-center";
+    toastAlertType.className = "alert alert-warning"
+    toastAlertText.innerText = "No Data to Show";
+    setTimeout(() => {
+        toastAlert.className = "hidden"
+        toastAlertType.className = "";
+        toastAlertText.innerText = "";
+    }, 2000);
+    return true;
 }
 
 async function GetData(actionUrl, detailType, code, timeFrame) {

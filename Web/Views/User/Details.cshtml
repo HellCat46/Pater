@@ -51,6 +51,7 @@
     <div class="bg-base-200 flex flex-col p-5">
         <canvas id="VisitsChart"></canvas>
         <div class="h-min flex flex-row-reverse gap-6 p-4">
+            <div class="badge badge-info" onclick="VisitsChart('@Url.Action("LinkVisitDetails")', '@Model.linkDetails.code', 'lifetime')">Lifetime</div>
             <div class="badge badge-info" onclick="VisitsChart('@Url.Action("LinkVisitDetails")', '@Model.linkDetails.code', '30d')">30d</div>
             <div class="badge badge-info" onclick="VisitsChart('@Url.Action("LinkVisitDetails")', '@Model.linkDetails.code', '7d')">7d</div>
             <div class="badge badge-info" onclick="VisitsChart('@Url.Action("LinkVisitDetails")', '@Model.linkDetails.code', '24h')">24h</div>
@@ -60,6 +61,7 @@
     <div class="bg-base-200 flex flex-col p-5">
         <canvas id="BrowserChart"></canvas>
         <div class="h-min flex flex-row-reverse gap-6 p-4">
+            <div class="badge badge-info" onclick="BrowserChart('@Url.Action("LinkOtherDetails")', '@Model.linkDetails.code', 'lifetime')">Lifetime</div>
             <div class="badge badge-info" onclick="BrowserChart('@Url.Action("LinkOtherDetails")', '@Model.linkDetails.code', '30d')">30d</div>
             <div class="badge badge-info" onclick="BrowserChart('@Url.Action("LinkOtherDetails")', '@Model.linkDetails.code', '7d')">7d</div>
             <div class="badge badge-info" onclick="BrowserChart('@Url.Action("LinkOtherDetails")', '@Model.linkDetails.code', '24h')">24h</div>
@@ -71,6 +73,7 @@
         <div class="basis-1/2">
             <canvas id="OSChart"></canvas>
             <div class="h-min flex flex-row-reverse gap-6 p-4">
+                <div class="badge badge-info" onclick="OSChart('@Url.Action("LinkOtherDetails")', '@Model.linkDetails.code', 'lifetime')">Lifetime</div>
                 <div class="badge badge-info" onclick="OSChart('@Url.Action("LinkOtherDetails")', '@Model.linkDetails.code', '30d')">30d</div>
                 <div class="badge badge-info" onclick="OSChart('@Url.Action("LinkOtherDetails")', '@Model.linkDetails.code', '7d')">7d</div>
                 <div class="badge badge-info" onclick="OSChart('@Url.Action("LinkOtherDetails")', '@Model.linkDetails.code', '24h')">24h</div>
@@ -79,6 +82,7 @@
         <div class="basis-1/2">
             <canvas id="DeviceChart"></canvas>
             <div class="h-min flex flex-row-reverse gap-6 p-4">
+                <div class="badge badge-info" onclick="DeviceChart('@Url.Action("LinkOtherDetails")', '@Model.linkDetails.code', 'lifetime')">Lifetime</div>
                 <div class="badge badge-info" onclick="DeviceChart('@Url.Action("LinkOtherDetails")', '@Model.linkDetails.code', '30d')">30d</div>
                 <div class="badge badge-info" onclick="DeviceChart('@Url.Action("LinkOtherDetails")', '@Model.linkDetails.code', '7d')">7d</div>
                 <div class="badge badge-info" onclick="DeviceChart('@Url.Action("LinkOtherDetails")', '@Model.linkDetails.code', '24h')">24h</div>
@@ -103,6 +107,7 @@
             </div>
         </div>
         <div class="h-min flex flex-row-reverse gap-6 p-4">
+            <div class="badge badge-info" onclick="CountryChart('@Url.Action("LinkOtherDetails")', '@Model.linkDetails.code', 'lifetime')">Lifetime</div>
             <div class="badge badge-info" onclick="CountryChart('@Url.Action("LinkOtherDetails")', '@Model.linkDetails.code', '30d')">30d</div>
             <div class="badge badge-info" onclick="CountryChart('@Url.Action("LinkOtherDetails")', '@Model.linkDetails.code', '7d')">7d</div>
             <div class="badge badge-info" onclick="CountryChart('@Url.Action("LinkOtherDetails")', '@Model.linkDetails.code', '24h')">24h</div>
@@ -111,9 +116,7 @@
 
     <div class="bg-base-200 flex flex-col p-5">
         <div class="flex flex-col lg:flex-row gap-4">
-            <div class="basis-1/2">
-                <canvas id="CityChart"></canvas>
-            </div>
+            <canvas class="basis-1/2" id="CityChart"></canvas>
             <div class="basis-1/2 overflow-y-auto bg-base-300">
                 <table class="table table-xs">
                     <thead>
@@ -126,6 +129,7 @@
             </div>
         </div>
         <div class="h-min flex flex-row-reverse gap-6 p-4">
+            <div class="badge badge-info" onclick="CityChart('@Url.Action("LinkOtherDetails")', '@Model.linkDetails.code', 'lifetime')">Lifetime</div>
             <div class="badge badge-info" onclick="CityChart('@Url.Action("LinkOtherDetails")', '@Model.linkDetails.code', '30d')">30d</div>
             <div class="badge badge-info" onclick="CityChart('@Url.Action("LinkOtherDetails")', '@Model.linkDetails.code', '7d')">7d</div>
             <div class="badge badge-info" onclick="CityChart('@Url.Action("LinkOtherDetails")', '@Model.linkDetails.code', '24h')">24h</div>

@@ -516,6 +516,9 @@ public class UserController(IConfiguration config, UserDbContext context) : Cont
                 case "30d":
                     dataSince = DateTime.Now.Subtract(TimeSpan.FromDays(30));
                     break;
+                case "lifetime" :
+                    dataSince = account.createdAt;
+                    break;
                 default:
                     return StatusCode(404, new
                     {
@@ -598,7 +601,6 @@ public class UserController(IConfiguration config, UserDbContext context) : Cont
                 return StatusCode(403, new { error = "Session Expired. Please Login in Again" });
             }
 
-            Console.WriteLine(AccountModel.UserAnalyticsDurations(account.plan).Any(dur => dur == timeFrame));
             if (!(AccountModel.UserAnalyticsDurations(account.plan).Any(dur => dur == timeFrame)))
             {
                 return StatusCode(403, new
@@ -630,6 +632,9 @@ public class UserController(IConfiguration config, UserDbContext context) : Cont
                 case "30d":
                     dataSince = DateTime.Now.Subtract(TimeSpan.FromDays(30));
                     break;
+                case "lifetime" :
+                    dataSince = account.createdAt;
+                    break;
                 default:
                     return StatusCode(404, new
                     {
@@ -641,13 +646,13 @@ public class UserController(IConfiguration config, UserDbContext context) : Cont
             {
                 return Ok(await context.Analytics.Where(a => a.visitedAt >= dataSince && a.LinkModelCode == code)
                     .GroupBy(a => a.visitedAt.Hour)
-                    .Select(g => new { duration = g.Key, count = g.Count() })
-                    .OrderBy(res => res.duration).ToListAsync());
+                    .Select(g => new LinkDetailsResponse() { label = g.Key.ToString(), data = g.Count() })
+                    .OrderBy(res => res.label).ToListAsync());
             }
 
             return Ok(await context.Analytics.Where(a => a.visitedAt >= dataSince && a.LinkModelCode == code)
                 .GroupBy(a => a.visitedAt.Date)
-                .Select(g => new LinkDetailsResponse() { label = g.Key.ToString(CultureInfo.InvariantCulture), data = g.Count() })
+                .Select(g => new LinkDetailsResponse() { label = g.Key.ToString(), data = g.Count() })
                 .OrderBy(res => res.label).ToListAsync());
         }
         catch (Exception ex)
