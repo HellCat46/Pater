@@ -1,4 +1,3 @@
-using System.Globalization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -14,9 +13,9 @@ public class UserController(IConfiguration config, UserDbContext context) : Cont
 {
     public async Task<IActionResult> Dashboard()
     {
-        byte[]? bytes = HttpContext.Session.Get("UserData");
+        var bytes = HttpContext.Session.Get("UserData");
         if (bytes == null) return RedirectToAction("Login", "Home");
-        AccountModel? account = AccountModel.Deserialize(bytes);
+        var account = AccountModel.Deserialize(bytes);
         if (account == null)
         {
             HttpContext.Session.Clear();
@@ -27,9 +26,9 @@ public class UserController(IConfiguration config, UserDbContext context) : Cont
             return View("UnVerified");
         if (!account.isVerified) ViewData["UnVerified"] = 1;
 
-        return View(new DashboardView()
+        return View(new DashboardView
         {
-            header = new _HeaderView()
+            header = new _HeaderView
             {
                 isAdmin = account.isAdmin,
                 name = account.name,
@@ -42,9 +41,9 @@ public class UserController(IConfiguration config, UserDbContext context) : Cont
 
     public IActionResult Profile()
     {
-        byte[]? bytes = HttpContext.Session.Get("UserData");
+        var bytes = HttpContext.Session.Get("UserData");
         if (bytes == null) return RedirectToAction("Login", "Home");
-        AccountModel? account = AccountModel.Deserialize(bytes);
+        var account = AccountModel.Deserialize(bytes);
         if (account == null)
         {
             HttpContext.Session.Clear();
@@ -55,9 +54,9 @@ public class UserController(IConfiguration config, UserDbContext context) : Cont
             return View("UnVerified");
         if (!account.isVerified) ViewData["UnVerified"] = 1;
 
-        return View(new ProfileView()
+        return View(new ProfileView
         {
-            header = new _HeaderView()
+            header = new _HeaderView
             {
                 isAdmin = account.isAdmin,
                 name = account.name,
@@ -65,7 +64,7 @@ public class UserController(IConfiguration config, UserDbContext context) : Cont
                 plan = account.plan
             },
             UserName = account.name,
-            UserEmail = account.email,
+            UserEmail = account.email
         });
     }
 
@@ -73,18 +72,18 @@ public class UserController(IConfiguration config, UserDbContext context) : Cont
     {
         try
         {
-            byte[]? bytes = HttpContext.Session.Get("UserData");
+            var bytes = HttpContext.Session.Get("UserData");
             if (bytes == null) return RedirectToAction("Login", "Home");
-            AccountModel? account = AccountModel.Deserialize(bytes);
+            var account = AccountModel.Deserialize(bytes);
             if (account == null)
             {
                 HttpContext.Session.Clear();
                 return RedirectToAction("Login", "Home");
             }
-            
-            return View(new CheckoutView()
+
+            return View(new CheckoutView
             {
-                header = new _HeaderView()
+                header = new _HeaderView
                 {
                     isAdmin = account.isAdmin,
                     name = account.name,
@@ -96,7 +95,7 @@ public class UserController(IConfiguration config, UserDbContext context) : Cont
         catch (Exception ex)
         {
             Console.WriteLine(ex);
-            return View("ErrorPage", new ErrorView()
+            return View("ErrorPage", new ErrorView
             {
                 errorCode = 500,
                 errorTitle = "Server Error",
@@ -112,9 +111,9 @@ public class UserController(IConfiguration config, UserDbContext context) : Cont
             if (code == null) RedirectToAction("Dashboard");
 
 
-            byte[]? bytes = HttpContext.Session.Get("UserData");
+            var bytes = HttpContext.Session.Get("UserData");
             if (bytes == null) return RedirectToAction("Login", "Home");
-            AccountModel? account = AccountModel.Deserialize(bytes);
+            var account = AccountModel.Deserialize(bytes);
             if (account == null)
             {
                 HttpContext.Session.Clear();
@@ -130,9 +129,9 @@ public class UserController(IConfiguration config, UserDbContext context) : Cont
 
             if (linkDetails == null) return RedirectToAction("Dashboard");
 
-            return View(new DetailsView()
+            return View(new DetailsView
             {
-                header = new _HeaderView()
+                header = new _HeaderView
                 {
                     isAdmin = account.isAdmin,
                     name = account.name,
@@ -146,7 +145,7 @@ public class UserController(IConfiguration config, UserDbContext context) : Cont
         catch (Exception ex)
         {
             Console.WriteLine(ex);
-            return View("ErrorPage", new ErrorView()
+            return View("ErrorPage", new ErrorView
             {
                 errorCode = 500,
                 errorTitle = "Server Error",
@@ -159,18 +158,18 @@ public class UserController(IConfiguration config, UserDbContext context) : Cont
     {
         try
         {
-            MailServer? mailConfig = config.GetSection("MailServer").Get<MailServer>();
+            var mailConfig = config.GetSection("MailServer").Get<MailServer>();
             if (mailConfig == null)
-                return View("ErrorPage", new ErrorView()
+                return View("ErrorPage", new ErrorView
                 {
                     errorCode = 500,
                     errorTitle = "Server Error",
                     errorMessage = "Please contact support through email."
                 });
 
-            byte[]? bytes = HttpContext.Session.Get("UserData");
+            var bytes = HttpContext.Session.Get("UserData");
             if (bytes == null) return RedirectToAction("Login", "Home");
-            AccountModel? acc = AccountModel.Deserialize(bytes);
+            var acc = AccountModel.Deserialize(bytes);
             if (acc == null)
             {
                 HttpContext.Session.Clear();
@@ -179,16 +178,14 @@ public class UserController(IConfiguration config, UserDbContext context) : Cont
 
             if (acc.isVerified) return RedirectToAction("Dashboard");
 
-            DateTime dateTime = DateTime.Now.Subtract(TimeSpan.FromHours(1));
+            var dateTime = DateTime.Now.Subtract(TimeSpan.FromHours(1));
             if (context.AuthAction.Any(au =>
                     au.Userid == acc.id && au.action == AuthActionModel.ActionType.VerifyEmail &&
                     au.createAt >= dateTime))
-            {
                 return View();
-            }
 
-            string code = GenerateRandom(50);
-            context.AuthAction.Add(new AuthActionModel()
+            var code = GenerateRandom(50);
+            context.AuthAction.Add(new AuthActionModel
             {
                 action = AuthActionModel.ActionType.VerifyEmail,
                 code = code,
@@ -196,16 +193,16 @@ public class UserController(IConfiguration config, UserDbContext context) : Cont
                 Userid = acc.id
             });
             context.SaveChanges();
-            
 
-            string link = Url.ActionLink("VerifyMail", "Home") + "?code=" + code;
+
+            var link = Url.ActionLink("VerifyMail", "Home") + "?code=" + code;
             MailingSystem.SendEmailVerification(mailConfig, acc.name, acc.email, link);
             return View();
         }
         catch (Exception ex)
         {
             Console.WriteLine(ex);
-            return View("ErrorPage", new ErrorView()
+            return View("ErrorPage", new ErrorView
             {
                 errorCode = 500,
                 errorTitle = "Server Error",
@@ -225,20 +222,17 @@ public class UserController(IConfiguration config, UserDbContext context) : Cont
                     error = "Page Number is too low."
                 });
 
-            byte[]? bytes = HttpContext.Session.Get("UserData");
-            if (bytes == null)
-            {
-                return StatusCode(403, new { error = "Session Expired. Please Login in Again" });
-            }
+            var bytes = HttpContext.Session.Get("UserData");
+            if (bytes == null) return StatusCode(403, new { error = "Session Expired. Please Login in Again" });
 
-            AccountModel? account = AccountModel.Deserialize(bytes);
+            var account = AccountModel.Deserialize(bytes);
             if (account == null)
             {
                 HttpContext.Session.Clear();
                 return StatusCode(403, new { error = "Session Expired. Please Login in Again" });
             }
 
-            return PartialView("_LinkRows",  await context.Link.Where(link => link.AccountId == account.id)
+            return PartialView("_LinkRows", await context.Link.Where(link => link.AccountId == account.id)
                 .OrderByDescending(log => log.CreatedAt)
                 .Skip((pageNo - 1) * 10).Take(10).ToListAsync()
             );
@@ -255,32 +249,28 @@ public class UserController(IConfiguration config, UserDbContext context) : Cont
     {
         try
         {
-            byte[]? bytes = HttpContext.Session.Get("UserData");
+            var bytes = HttpContext.Session.Get("UserData");
             if (bytes == null)
-            {
                 return StatusCode(403, new
                 {
                     error = "Session Expired. Please Login Again!"
                 });
-            }
 
-            AccountModel? account = AccountModel.Deserialize(bytes);
+            var account = AccountModel.Deserialize(bytes);
             if (account == null)
             {
                 HttpContext.Session.Clear();
                 return StatusCode(403, new { error = "Session Expired. Please Login in Again" });
             }
 
-            DateTime dateTime = DateTime.Now.Subtract(TimeSpan.FromDays(DateTime.Now.Day));
-            if ((!link.LinkCode.IsNullOrEmpty()) &&
-                (await context.Link.Where(l => l.isPaid == true && l.AccountId == account.id && l.CreatedAt >= dateTime)
-                    .CountAsync()) >= account.linkLimit)
-            {
+            var dateTime = DateTime.Now.Subtract(TimeSpan.FromDays(DateTime.Now.Day));
+            if (!link.LinkCode.IsNullOrEmpty() &&
+                await context.Link.Where(l => l.isPaid == true && l.AccountId == account.id && l.CreatedAt >= dateTime)
+                    .CountAsync() >= account.linkLimit)
                 return StatusCode(402, new
                 {
                     error = "You have reached the custom Code limit that your plan allows."
                 });
-            }
 
             if (await context.Link.AnyAsync(l => l.code == link.LinkCode))
                 return StatusCode(409, new
@@ -288,15 +278,15 @@ public class UserController(IConfiguration config, UserDbContext context) : Cont
                     error = "Code Already Being used. Try another code."
                 });
 
-            await context.Link.AddAsync(new LinkModel()
+            await context.Link.AddAsync(new LinkModel
             {
                 AccountId = account.id,
-                isPaid = (!link.LinkCode.IsNullOrEmpty()),
-                code = (!link.LinkCode.IsNullOrEmpty() ? link.LinkCode : GenerateRandom(8)),
+                isPaid = !link.LinkCode.IsNullOrEmpty(),
+                code = !link.LinkCode.IsNullOrEmpty() ? link.LinkCode : GenerateRandom(8),
                 CreatedAt = DateTime.Now,
-                name = (!link.LinkName.IsNullOrEmpty()
+                name = !link.LinkName.IsNullOrEmpty()
                     ? link.LinkName
-                    : DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToLongTimeString()),
+                    : DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToLongTimeString(),
                 url = link.LinkURL
             });
             await context.SaveChangesAsync();
@@ -321,37 +311,33 @@ public class UserController(IConfiguration config, UserDbContext context) : Cont
                 {
                     error = "Required at least one of the field."
                 });
-            
-            Console.WriteLine(link.LinkCode+" "+link.LinkURL+" "+link.LinkName);
-            
-            byte[]? bytes = HttpContext.Session.Get("UserData");
+
+            Console.WriteLine(link.LinkCode + " " + link.LinkURL + " " + link.LinkName);
+
+            var bytes = HttpContext.Session.Get("UserData");
             if (bytes == null)
-            {
                 return StatusCode(403, new
                 {
                     error = "Session Expired. Please Login Again!"
                 });
-            }
 
-            AccountModel? account = AccountModel.Deserialize(bytes);
+            var account = AccountModel.Deserialize(bytes);
             if (account == null)
             {
                 HttpContext.Session.Clear();
                 return StatusCode(403, new { error = "Session Expired. Please Login in Again" });
             }
 
-            LinkModel? linkRow = await context.Link.FirstOrDefaultAsync(l => l.code == link.LinkCode);
-            if (linkRow == null) return StatusCode(404, new { error = "Link Doesn't exist" });
-
-            if (linkRow.AccountId != account.id)
-                return StatusCode(403, new { error = "You don't have permission to edit this link" });
+            var linkRow = await context.Link.FirstOrDefaultAsync(l => l.code == link.LinkCode && l.AccountId == account.id);
+            if (linkRow == null) return StatusCode(400, new { error = "Link either doesn't exist or you don't have permission to edit this link" });
 
             if (!link.LinkName.IsNullOrEmpty()) linkRow.name = link.LinkName;
             if (!link.LinkURL.IsNullOrEmpty()) linkRow.url = link.LinkURL;
 
             await context.SaveChangesAsync();
-            ActivityLogModel.WriteLogs(context, ActivityLogModel.Event.EditLink, account, HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown");
-            
+            ActivityLogModel.WriteLogs(context, ActivityLogModel.Event.EditLink, account,
+                HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown");
+
             return Ok();
         }
         catch (Exception ex)
@@ -367,45 +353,37 @@ public class UserController(IConfiguration config, UserDbContext context) : Cont
     [HttpDelete]
     public async Task<IActionResult> DeleteMultipleLink(string[] codes)
     {
-        if(codes.IsNullOrEmpty()) 
+        if (codes.IsNullOrEmpty())
             return StatusCode(400, new
             {
                 error = "Required Parameters are missing."
             });
-        
-        
+
+
         try
         {
-            byte[]? bytes = HttpContext.Session.Get("UserData");
+            var bytes = HttpContext.Session.Get("UserData");
             if (bytes == null)
-            {
                 return StatusCode(403, new
                 {
                     error = "Session Expired. Please Login Again!"
                 });
-            }
 
-            AccountModel? account = AccountModel.Deserialize(bytes);
+            var account = AccountModel.Deserialize(bytes);
             if (account == null)
             {
                 HttpContext.Session.Clear();
                 return StatusCode(403, new { error = "Session Expired. Please Login in Again" });
             }
-            
-            
-            foreach (var code in codes)
-            {
-                var link = await context.Link.FirstOrDefaultAsync(link =>
-                    link.code == code && link.AccountId == account.id);
-                if (link != null) context.Link.Remove(link);
-            }
-            
+
+
+            var links = await context.Link.Where(link => codes.Contains(link.code)).ToListAsync();
+            context.Link.RemoveRange(links);
             await context.SaveChangesAsync();
             return Ok();
         }
         catch (Exception ex)
         {
-            
             Console.WriteLine(ex);
             return StatusCode(500, new
             {
@@ -419,32 +397,29 @@ public class UserController(IConfiguration config, UserDbContext context) : Cont
     {
         try
         {
-            byte[]? bytes = HttpContext.Session.Get("UserData");
+            var bytes = HttpContext.Session.Get("UserData");
             if (bytes == null)
-            {
                 return StatusCode(403, new
                 {
                     error = "Session Expired. Please Login Again!"
                 });
-            }
 
-            AccountModel? account = AccountModel.Deserialize(bytes);
+            var account = AccountModel.Deserialize(bytes);
             if (account == null)
             {
                 HttpContext.Session.Clear();
                 return StatusCode(403, new { error = "Session Expired. Please Login in Again" });
             }
 
-            LinkModel? linkRow = await context.Link.FirstOrDefaultAsync(link => link.code == code);
-            if (linkRow == null) return StatusCode(404, new { error = "Link Doesn't exist" });
+            var linkRow = await context.Link.FirstOrDefaultAsync(link => link.code == code && link.AccountId == account.id);
+            if (linkRow == null) return StatusCode(400, new { error = "Link either doesn't exist or you don't have permission to edit this link" });
 
-            if (linkRow.AccountId != account.id)
-                return StatusCode(403, new { error = "You don't have permission to edit this link" });
 
             context.Link.Remove(linkRow);
             await context.SaveChangesAsync();
-            ActivityLogModel.WriteLogs(context, ActivityLogModel.Event.DeleteLink, account, HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown");
-            
+            ActivityLogModel.WriteLogs(context, ActivityLogModel.Event.DeleteLink, account,
+                HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown");
+
             return Ok();
         }
         catch (Exception ex)
@@ -460,48 +435,42 @@ public class UserController(IConfiguration config, UserDbContext context) : Cont
     [HttpGet]
     public async Task<IActionResult> LinkOtherDetails(string? detailType, string? code, string? timeFrame)
     {
-        if (code == null || timeFrame == null || detailType == null) 
+        if (code == null || timeFrame == null || detailType == null)
             return StatusCode(400, new
             {
                 error = "Required Parameters are missing."
             });
-        
+
 
         try
         {
-            byte[]? bytes = HttpContext.Session.Get("UserData");
+            var bytes = HttpContext.Session.Get("UserData");
             if (bytes == null)
-            {
                 return StatusCode(403, new
                 {
                     error = "Session Expired. Please Login Again!"
                 });
-            }
 
-            AccountModel? account = AccountModel.Deserialize(bytes);
+            var account = AccountModel.Deserialize(bytes);
             if (account == null)
             {
                 HttpContext.Session.Clear();
                 return StatusCode(403, new { error = "Session Expired. Please Login in Again" });
             }
 
-            if (!(AccountModel.UserAnalyticsDurations(account.plan).Any(dur => dur == timeFrame)))
-            {
+            if (!AccountModel.UserAnalyticsDurations(account.plan).Contains(timeFrame))
                 return StatusCode(403, new
                 {
                     error = "Upgrade your Plan to Get this duration Information."
                 });
-            }
 
             var link = await context.Link.FirstOrDefaultAsync(link =>
                 link.AccountId == account.id && link.code == code);
             if (link == null)
-            {
                 return StatusCode(400, new
                 {
                     error = "This Link is either Invalid or You don't have access to check it's details."
                 });
-            }
 
 
             DateTime dataSince;
@@ -516,7 +485,7 @@ public class UserController(IConfiguration config, UserDbContext context) : Cont
                 case "30d":
                     dataSince = DateTime.Now.Subtract(TimeSpan.FromDays(30));
                     break;
-                case "lifetime" :
+                case "lifetime":
                     dataSince = account.createdAt;
                     break;
                 default:
@@ -527,30 +496,30 @@ public class UserController(IConfiguration config, UserDbContext context) : Cont
             }
 
 
-            IQueryable<AnalyticsModel> baseQuery =
+            var baseQuery =
                 context.Analytics.Where(a => a.visitedAt >= dataSince && a.LinkModelCode == code);
             IQueryable<LinkDetailsResponse> query;
             switch (detailType)
             {
                 case "browser":
                     query = baseQuery.GroupBy(ana => ana.browser)
-                        .Select(g => new LinkDetailsResponse() { label = g.Key.ToString(), data = g.Count() });
+                        .Select(g => new LinkDetailsResponse { label = g.Key.ToString(), data = g.Count() });
                     break;
                 case "os":
                     query = baseQuery.GroupBy(ana => ana.os)
-                        .Select(g => new LinkDetailsResponse() { label = g.Key.ToString(), data = g.Count() });
+                        .Select(g => new LinkDetailsResponse { label = g.Key.ToString(), data = g.Count() });
                     break;
                 case "country":
                     query = baseQuery.GroupBy(ana => ana.country)
-                        .Select(g => new LinkDetailsResponse() { label = g.Key.ToString(), data = g.Count() });
+                        .Select(g => new LinkDetailsResponse { label = g.Key.ToString(), data = g.Count() });
                     break;
                 case "city":
                     query = baseQuery.GroupBy(ana => ana.city)
-                        .Select(g => new LinkDetailsResponse() { label = g.Key.ToString(), data = g.Count() });
+                        .Select(g => new LinkDetailsResponse { label = g.Key.ToString(), data = g.Count() });
                     break;
                 case "device":
                     query = baseQuery.GroupBy(ana => ana.device)
-                        .Select(g => new LinkDetailsResponse() { label = g.Key.ToString(), data = g.Count() });
+                        .Select(g => new LinkDetailsResponse { label = g.Key.ToString(), data = g.Count() });
                     break;
                 default:
                     return StatusCode(404, new
@@ -576,48 +545,40 @@ public class UserController(IConfiguration config, UserDbContext context) : Cont
     public async Task<IActionResult> LinkVisitDetails(string? code, string? timeFrame)
     {
         if (code == null || timeFrame == null)
-        {
             return StatusCode(400, new
             {
                 error = "Required Parameters are missing."
             });
-        }
 
         try
         {
-            byte[]? bytes = HttpContext.Session.Get("UserData");
+            var bytes = HttpContext.Session.Get("UserData");
             if (bytes == null)
-            {
                 return StatusCode(403, new
                 {
                     error = "Session Expired. Please Login Again!"
                 });
-            }
 
-            AccountModel? account = AccountModel.Deserialize(bytes);
+            var account = AccountModel.Deserialize(bytes);
             if (account == null)
             {
                 HttpContext.Session.Clear();
                 return StatusCode(403, new { error = "Session Expired. Please Login in Again" });
             }
 
-            if (!(AccountModel.UserAnalyticsDurations(account.plan).Any(dur => dur == timeFrame)))
-            {
+            if (!AccountModel.UserAnalyticsDurations(account.plan).Contains(timeFrame))
                 return StatusCode(403, new
                 {
                     error = "Upgrade your Plan to Get this duration Information."
                 });
-            }
 
             var link = await context.Link.FirstOrDefaultAsync(link =>
                 link.AccountId == account.id && link.code == code);
             if (link == null)
-            {
                 return StatusCode(400, new
                 {
                     error = "This Link is either Invalid or You don't have access to check it's details."
                 });
-            }
 
 
             DateTime dataSince;
@@ -632,7 +593,7 @@ public class UserController(IConfiguration config, UserDbContext context) : Cont
                 case "30d":
                     dataSince = DateTime.Now.Subtract(TimeSpan.FromDays(30));
                     break;
-                case "lifetime" :
+                case "lifetime":
                     dataSince = account.createdAt;
                     break;
                 default:
@@ -643,16 +604,14 @@ public class UserController(IConfiguration config, UserDbContext context) : Cont
             }
 
             if (timeFrame == "24h")
-            {
                 return Ok(await context.Analytics.Where(a => a.visitedAt >= dataSince && a.LinkModelCode == code)
                     .GroupBy(a => a.visitedAt.Hour)
-                    .Select(g => new LinkDetailsResponse() { label = g.Key.ToString(), data = g.Count() })
+                    .Select(g => new LinkDetailsResponse { label = g.Key.ToString(), data = g.Count() })
                     .OrderBy(res => res.label).ToListAsync());
-            }
 
             return Ok(await context.Analytics.Where(a => a.visitedAt >= dataSince && a.LinkModelCode == code)
                 .GroupBy(a => a.visitedAt.Date)
-                .Select(g => new LinkDetailsResponse() { label = g.Key.ToString(), data = g.Count() })
+                .Select(g => new LinkDetailsResponse { label = g.Key.ToString(), data = g.Count() })
                 .OrderBy(res => res.label).ToListAsync());
         }
         catch (Exception ex)
@@ -668,23 +627,18 @@ public class UserController(IConfiguration config, UserDbContext context) : Cont
     [HttpPatch]
     public async Task<IActionResult> ChangeAvatar(IFormFile? newAvatar)
     {
-        if (newAvatar == null)
-        {
-            return StatusCode(400, new { error = "Unable to receive Image." });
-        }
+        if (newAvatar == null) return StatusCode(400, new { error = "Unable to receive Image." });
 
         try
         {
-            byte[]? bytes = HttpContext.Session.Get("UserData");
+            var bytes = HttpContext.Session.Get("UserData");
             if (bytes == null)
-            {
                 return StatusCode(403, new
                 {
                     error = "Session Expired. Please Login Again!"
                 });
-            }
 
-            AccountModel? account = AccountModel.Deserialize(bytes);
+            var account = AccountModel.Deserialize(bytes);
             if (account == null)
             {
                 HttpContext.Session.Clear();
@@ -692,9 +646,7 @@ public class UserController(IConfiguration config, UserDbContext context) : Cont
             }
 
             if (System.IO.File.Exists("wwwroot/UserPics/" + account.picPath))
-            {
                 System.IO.File.Delete("wwwroot/UserPics/" + account.picPath);
-            }
 
             account.picPath = account.id + "." + newAvatar.FileName.Split(".").Last();
             await using (var fileStream = System.IO.File.Create("wwwroot/UserPics/" + account.picPath))
@@ -729,31 +681,30 @@ public class UserController(IConfiguration config, UserDbContext context) : Cont
 
         try
         {
-            byte[]? bytes = HttpContext.Session.Get("UserData");
+            var bytes = HttpContext.Session.Get("UserData");
             if (bytes == null)
-            {
                 return StatusCode(403, new
                 {
                     error = "Session Expired. Please Login Again!"
                 });
-            }
 
-            AccountModel? account = AccountModel.Deserialize(bytes);
+            var account = AccountModel.Deserialize(bytes);
             if (account == null)
             {
                 HttpContext.Session.Clear();
                 return StatusCode(403, new { error = "Session Expired. Please Login in Again" });
             }
-            
+
             if (newEmail != null)
             {
                 if (context.Account.Any(acc => acc.email == newEmail))
-                    return StatusCode(403, new {error = "This email address can't be linked with your account."});
-                        
+                    return StatusCode(403, new { error = "This email address can't be linked with your account." });
+
                 account.email = newEmail;
-                if(!context.ExternalAuth.Any(ea => ea.AccountId == account.id))  // Yes, It's in the game
+                if (!context.ExternalAuth.Any(ea => ea.AccountId == account.id)) // Yes, It's in the game
                     account.isVerified = false;
             }
+
             if (newName != null) account.name = newName;
 
             context.Account.Update(account);
@@ -780,26 +731,24 @@ public class UserController(IConfiguration config, UserDbContext context) : Cont
     {
         try
         {
-            byte[]? bytes = HttpContext.Session.Get("UserData");
+            var bytes = HttpContext.Session.Get("UserData");
 
             if (bytes == null)
-            {
                 return StatusCode(403, new
                 {
                     error = "Session Expired. Please Login Again!"
                 });
-            }
 
-            AccountModel? account = AccountModel.Deserialize(bytes);
+            var account = AccountModel.Deserialize(bytes);
             if (account == null)
             {
                 HttpContext.Session.Clear();
                 return StatusCode(403, new { error = "Session Expired. Please Login in Again" });
             }
 
-            if(context.ExternalAuth.Any(ea => ea.AccountId == account.id))
-                return StatusCode(403, new {error = "Google Users aren't allowed to perform this action."});
-            
+            if (context.ExternalAuth.Any(ea => ea.AccountId == account.id))
+                return StatusCode(403, new { error = "Google Users aren't allowed to perform this action." });
+
             if (account.password != oldPassword)
                 return StatusCode(400, new
                 {
@@ -824,15 +773,12 @@ public class UserController(IConfiguration config, UserDbContext context) : Cont
 
     public IActionResult Logout()
     {
-        byte[]? bytes = HttpContext.Session.Get("UserData");
+        var bytes = HttpContext.Session.Get("UserData");
         HttpContext.Session.Clear();
 
-        if (bytes == null)
-        {
-            return RedirectToAction("Login", "Home");
-        }
+        if (bytes == null) return RedirectToAction("Login", "Home");
 
-        AccountModel? account = AccountModel.Deserialize(bytes);
+        var account = AccountModel.Deserialize(bytes);
         if (account == null)
         {
             HttpContext.Session.Clear();
@@ -847,13 +793,10 @@ public class UserController(IConfiguration config, UserDbContext context) : Cont
 
     public async Task<IActionResult> DeleteAccount()
     {
-        byte[]? bytes = HttpContext.Session.Get("UserData");
-        if (bytes == null)
-        {
-            return RedirectToAction("Login", "Home");
-        }
+        var bytes = HttpContext.Session.Get("UserData");
+        if (bytes == null) return RedirectToAction("Login", "Home");
 
-        AccountModel? account = AccountModel.Deserialize(bytes);
+        var account = AccountModel.Deserialize(bytes);
         if (account == null)
         {
             HttpContext.Session.Clear();
@@ -862,22 +805,12 @@ public class UserController(IConfiguration config, UserDbContext context) : Cont
 
         try
         {
-            AccountModel? userAcc = await context.Account.SingleOrDefaultAsync(acc => acc.id == account.id);
+            var userAcc = await context.Account.Include(acc => acc.Links)
+                .Include(acc => acc.Logs)
+                .SingleOrDefaultAsync(acc => acc.id == account.id);
             if (userAcc == null) return RedirectToAction("Index", "Home");
 
             context.Account.Remove(userAcc);
-
-            var links = context.Link.Where(link => link.AccountId == account.id);
-            foreach (LinkModel link in links)
-            {
-                context.Link.Remove(link);
-            }
-
-            var logs = context.ActivityLogs.Where(logs => logs.Userid == account.id);
-            foreach (ActivityLogModel log in logs)
-            {
-                context.ActivityLogs.Remove(log);
-            }
 
             await context.SaveChangesAsync();
             HttpContext.Session.Clear();
@@ -894,12 +827,9 @@ public class UserController(IConfiguration config, UserDbContext context) : Cont
     public static string GenerateRandom(int len)
     {
         const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-        Random random = new Random();
-        String code = "";
-        for (int i = 0; i < len; i++)
-        {
-            code += chars[random.Next(0, chars.Length)];
-        }
+        var random = new Random();
+        var code = "";
+        for (var i = 0; i < len; i++) code += chars[random.Next(0, chars.Length)];
 
         return code;
     }

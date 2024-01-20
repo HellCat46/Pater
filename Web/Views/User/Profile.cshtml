@@ -1,3 +1,4 @@
+@using Microsoft.IdentityModel.Tokens
 @model Web.Models.View.User.ProfileView
 @{
     ViewData["Title"] = "Profile | Pater";
@@ -25,7 +26,7 @@
         <div class="py-3 center mx-auto">
             <div class="bg-base-300 px-4 py-5 rounded-lg shadow-lg text-center w-48">
                 <div class="mb-4">
-                    <img class="w-auto mx-auto rounded-full object-cover object-center" id="userAvatar" src="~/UserPics/@(Model.header.picPath == null ? "default-avatar.svg" : Model.header.picPath)" alt="Avatar"/>
+                    <img class="w-auto mx-auto rounded-full object-cover object-center" id="userAvatar" src="~/UserPics/@(Model.header.picPath.IsNullOrEmpty() ? "default-avatar.svg" : Model.header.picPath)" alt="Avatar"/>
                 </div>
                 <label class="cursor-pointer mt-6">
                     <span class="mt-2 text-base leading-normal px-4 py-2 bg-blue-500 text-white text-sm rounded-full">Change Avatar</span>
