@@ -8,33 +8,105 @@
 @await Html.PartialAsync("_Header.cshtml", Model.header)
 
 <div class="my-10 flex flex-col ">
-        <div class="my-6 mx-10">
-            <div role="alert" class="alert hidden" id="errorAlert">
-                <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                <span id="alertMessage"></span>
-            </div>
+    <div class="my-6 mx-10">
+        <div role="alert" class="alert hidden" id="Alert">
+            <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            <span id="alertMessage"></span>
         </div>
+    </div>
     <div class="basis-1/6 flex justify-center items-center">
         <form class="form-control" asp-action="ManageUser">
-                    <input type="text" placeholder="Search using Email" asp-for="userEmail" class="input input-bordered input-info w-full max-w-xs" />
-                </form>
+            <input type="text" placeholder="Search using Email" asp-for="userEmail" class="input input-bordered input-info w-full max-w-xs"/>
+        </form>
     </div>
     <div class="basis-5/6 justify-center items-center m-5 lg:m-12 ">
         <div class="card bg-base-200 mx-8">
-            <div class="card-body items-center text-center">
+            <div class="card-body gap-4 items-center text-center">
                 <h2 class="card-title">User Profile</h2>
-                <div class="grid grid-cols-1 lg:grid-cols-2 my-6 w-full">
-                    <div class="lg:col-span-2"><img class="w-48 mx-auto rounded-full object-cover object-center" src="~/UserPics/@(Model.UserPicPath.IsNullOrEmpty() ? "default-avatar.svg" : Model.UserPicPath)" alt="Avatar"/></div>
-                    <div class="my-3">Name : @Model.UserName</div>
-                    <div class="my-3">Email : @Model.UserEmail</div>
-                    <div class="my-3">Account Created : @Model.UserAccountCreated</div>
-                    <div class="my-3">Plan : @Model.UserPlan</div>
+                <form class="grid grid-cols-1 lg:grid-cols-2 gap-4 my-10 w-full" id="userDataForm">
+                    <div class="lg:col-span-2">
+                        <img class="w-48 mx-auto rounded-full object-cover object-center" src="~/UserPics/@(Model.UserPicPath.IsNullOrEmpty() ? "default-avatar.svg" : Model.UserPicPath)" alt="Avatar"/>
+                    </div>
 
-                </div>
+                    <div class="mx-auto form-control w-full max-w-xs @(Model.UserOAuthId.IsNullOrEmpty() ? "lg:col-span-2" : "")">
+                        <div class="label">
+                            <span class="label-text">Account Id</span>
+                        </div>
+                        <input type="text" id="userId" class="input input-bordered w-full max-w-xs" value="@Model.UserId" disabled/>
+                    </div>
+                    @if (!Model.UserOAuthId.IsNullOrEmpty())
+                    {
+                        <div class="mx-auto form-control w-full max-w-xs">
+                            <div class="label">
+                                <span class="label-text">Google Id</span>
+                            </div>
+                            <input type="text" class="input input-bordered w-full max-w-xs" value="@Model.UserOAuthId" disabled/>
+                        </div>
+                    }
+
+                    <div class="mx-auto form-control w-full max-w-xs">
+                        <div class="label">
+                            <span class="label-text">Account Created</span>
+                        </div>
+                        <input type="datetime-local" class="input input-bordered w-full max-w-xs" value="@Model.UserAccountCreated" disabled/>
+                    </div>
+                    <div class="mx-auto form-control w-full max-w-xs">
+                        <div class="label">
+                            <span class="label-text">Account Auth Method</span>
+                        </div>
+                        <input type="text" class="input input-bordered w-full max-w-xs" value="@Model.UserAuthMethod" disabled/>
+                    </div>
+
+                    <div class="mx-auto form-control w-full max-w-xs">
+                        <div class="label">
+                            <span class="label-text">Name</span>
+                        </div>
+                        <input type="text" id="userNewName" class="input input-bordered w-full max-w-xs" placeholder="@Model.UserName"/>
+                    </div>
+                    <div class="mx-auto form-control w-full max-w-xs">
+                        <div class="label">
+                            <span class="label-text">Email</span>
+                        </div>
+                        <input type="email" id="userNewEmail" class="input input-bordered w-full max-w-xs" placeholder="@Model.UserEmail"/>
+                    </div>
+                    
+                    <div class="mx-auto form-control w-full max-w-xs">
+                        <div class="label">
+                            <span class="label-text">Plan</span>
+                        </div>
+                        <select class="select select-bordered w-full max-w-xs"  id="userNewPlan">
+                            @for (var idx = 0; idx < Model.plans.Length; idx++)
+                            {
+                                <!option value="@idx" @(Model.UserPlan.ToString() == Model.plans[idx] ? "selected" : "")>@Model.plans[idx]</!option>
+                            }
+                        </select>
+                    </div>
+                    <div class="mx-auto form-control w-full max-w-xs">
+                        <div class="label">
+                            <span class="label-text">Password</span>
+                        </div>
+                        <input type="text" id="userNewPassword" class="input input-bordered w-full max-w-xs" placeholder="Password"  @(Model.UserOAuthId.IsNullOrEmpty() ? "" : "disabled")/>
+                    </div>
+                    
+                    <div class="mx-auto form-control w-full max-w-xs">
+                        <div class="label">
+                            <span class="label-text">Custom Link Limit</span>
+                        </div>
+                        <input type="number" id="userNewLinkLimit" class="input input-bordered w-full max-w-xs" placeholder="@Model.UserLinkLimit"/>
+                    </div>
+                    <div class="mx-auto form-control items-center w-full cursor-pointer">
+                        <span class="label-text">is Verified</span>
+                        <input type="checkbox" id="userIsVerified" @(Model.UserIsVerified ? "checked" : " ") class="checkbox" />
+                    </div>
+                    
+                    <div class="lg:col-span-2 mx-auto form-control w-full max-w-xs pt-6">
+                        <button class="btn btn-success">Submit</button>
+                    </div>
+                </form>
                 <div class="flex flex-col lg:flex-row gap-4">
                     <button class="btn btn-info" onclick="OpenLogs()">Check logs</button>
-                    <button class="btn btn-info">Check Links</button>
-                    <button class="btn btn-accent">Manage User</button>
                 </div>
             </div>
         </div>
@@ -68,18 +140,23 @@
             <tbody id="logsBody">
             </tbody>
         </table>
-            <div class="modal-action">
-              <form method="dialog">
+        <div class="modal-action">
+            <form method="dialog">
                 <!-- if there is a button, it will close the modal -->
                 <button class="btn">Close</button>
-              </form>
-            </div>
+            </form>
+        </div>
     </div>
 </dialog>
-
 
 
 <script src="~/js/Admin/ManageUser.js"></script>
 <script>
     setRequiredVal(@Model.UserId, '@Url.Action("GetUserLogs")', '');
+    
+    const userDataForm = document.querySelector("#userDataForm");
+    userDataForm.addEventListener("submit", async (e) => {
+        e.preventDefault()
+        await UpdateUser('@Url.Action("UpdateUser")');
+    })
 </script>

@@ -20,7 +20,7 @@ async function nextPage() {
 }
 
 async function GetLogs() {
-    await fetch(`${logEndpointUrl}?pageno=${pageNo}`, {
+    await fetch(`${logEndpointUrl}?pageNo=${pageNo}`, {
     }).then(async (res) => {
         if (res.status === 200){
             logsBody.innerHTML = await res.text();

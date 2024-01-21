@@ -54,6 +54,12 @@ public class HomeController(IConfiguration config, UserDbContext context) : Cont
     {
         try
         {
+            if (data.password.IsNullOrEmpty())
+            {
+                ViewBag.ErrorMessage = "Password field is required.";
+                return View();
+            } 
+                
             AccountModel? account =
                 await context.Account.FirstOrDefaultAsync(acc =>
                     acc.email == data.email && acc.password == data.password);

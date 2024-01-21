@@ -12,11 +12,14 @@ public class ManageUserView
     
     // User Information
     public string? UserPicPath { get; set; }
-    
+    public string UserAccountCreated { get; set; }
+    public string UserAuthMethod { get; set; }
     public int UserId { get; set; }
+    public string? UserOAuthId { get; set; }
     public string UserName { get; set; }
     public string UserEmail { get; set; }
-    public DateTime UserAccountCreated { get; set; }
     public AccountModel.Plan UserPlan { get; set; }
-    
+    public int UserLinkLimit { get; set; }
+    public bool UserIsVerified { get; set; }
+    public string[] plans { get; set; }
 }
