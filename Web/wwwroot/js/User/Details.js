@@ -10,8 +10,14 @@ const toastAlertType= document.querySelector("#toastAlertType");
 const toastAlertText = document.querySelector("#toastAlertText");
 
 
-async function VisitsChart(actionUrl, code, timeFrame){
-    const data= await GetVisitsData(actionUrl, code,timeFrame);
+async function VisitsChart(actionUrl, code, startTimeFrame, endTimeFrame){
+    if(endTimeFrame == null) {
+        startTimeFrame = getStartTime(startTimeFrame);
+        const date = new Date();
+        endTimeFrame = date.toJSON();
+    }
+    
+    const data= await GetVisitsData(actionUrl, code,startTimeFrame, endTimeFrame );
     if(data instanceof Error) return;
         
         
@@ -25,7 +31,7 @@ async function VisitsChart(actionUrl, code, timeFrame){
 
         toastAlert.className = "toast toast-center";
         toastAlertType.className = "alert alert-success"
-        toastAlertText.innerText = "Set Time Frame for Visitor Chart to "+timeFrame;
+        toastAlertText.innerText = "Set Time Frame for Visitor Chart from "+startTimeFrame+" to "+endTimeFrame;
         setTimeout(() => {
             toastAlert.className = "hidden"
             toastAlertType.className = "";
@@ -62,8 +68,14 @@ async function VisitsChart(actionUrl, code, timeFrame){
 
     NoDataCanvas(data);
 }
-async function BrowserChart(actionUrl, code, timeFrame) {
-    const data= await GetData(actionUrl,"browser", code, timeFrame);
+async function BrowserChart(actionUrl, code, startTimeFrame, endTimeFrame) {
+    if(endTimeFrame == null) {
+        startTimeFrame = getStartTime(startTimeFrame);
+        const date = new Date();
+        endTimeFrame = date.toJSON();
+    }
+    
+    const data= await GetData(actionUrl,"browser", code, startTimeFrame, endTimeFrame);
     if(data instanceof Error) return;
 
     if(browserChart !== undefined){
@@ -76,7 +88,7 @@ async function BrowserChart(actionUrl, code, timeFrame) {
 
         toastAlert.className = "toast toast-center";
         toastAlertType.className = "alert alert-success"
-        toastAlertText.innerText = "Set Time Frame for Browser Chart to "+timeFrame;
+        toastAlertText.innerText = "Set Time Frame for Browser Chart from "+startTimeFrame+" to "+endTimeFrame;
         setTimeout(() => {
             toastAlert.className = "hidden"
             toastAlertType.className = "";
@@ -115,8 +127,14 @@ async function BrowserChart(actionUrl, code, timeFrame) {
 
     NoDataCanvas(data)
 }
-async function OSChart(actionUrl, code, timeFrame){
-    const data= await GetData(actionUrl,"os", code, timeFrame);
+async function OSChart(actionUrl, code, startTimeFrame, endTimeFrame){
+    if(endTimeFrame == null) {
+        startTimeFrame = getStartTime(startTimeFrame);
+        const date = new Date();
+        endTimeFrame = date.toJSON();
+    }
+    
+    const data= await GetData(actionUrl,"os", code, startTimeFrame, endTimeFrame);
     if(data instanceof Error) return;
 
     if(osChart !== undefined){
@@ -129,7 +147,7 @@ async function OSChart(actionUrl, code, timeFrame){
 
         toastAlert.className = "toast toast-center";
         toastAlertType.className = "alert alert-success"
-        toastAlertText.innerText = "Set Time Frame for OS Chart to "+timeFrame;
+        toastAlertText.innerText = "Set Time Frame for OS Chart from "+startTimeFrame+" to "+endTimeFrame;
         setTimeout(() => {
             toastAlert.className = "hidden"
             toastAlertType.className = "";
@@ -165,8 +183,14 @@ async function OSChart(actionUrl, code, timeFrame){
 
     NoDataCanvas(data);
 }
-async function DeviceChart(actionUrl, code, timeFrame){
-    const data= await GetData(actionUrl,"device", code, timeFrame);
+async function DeviceChart(actionUrl, code, startTimeFrame, endTimeFrame){
+    if(endTimeFrame == null) {
+        startTimeFrame = getStartTime(startTimeFrame);
+        const date = new Date();
+        endTimeFrame = date.toJSON();
+    }
+    
+    const data= await GetData(actionUrl,"device", code, startTimeFrame, endTimeFrame);
     if(data instanceof Error) return;
 
     if(deviceChart !== undefined){
@@ -179,7 +203,7 @@ async function DeviceChart(actionUrl, code, timeFrame){
 
         toastAlert.className = "toast toast-center";
         toastAlertType.className = "alert alert-success"
-        toastAlertText.innerText = "Set Time Frame for Device Chart to "+timeFrame;
+        toastAlertText.innerText = "Set Time Frame for Device Chart from "+startTimeFrame+" to "+endTimeFrame;
         setTimeout(() => {
             toastAlert.className = "hidden"
             toastAlertType.className = "";
@@ -215,8 +239,14 @@ async function DeviceChart(actionUrl, code, timeFrame){
 
     NoDataCanvas(data);
 }
-async function CountryChart(actionUrl, code, timeFrame){
-    const data= await GetData(actionUrl,"country", code, timeFrame);
+async function CountryChart(actionUrl, code, startTimeFrame, endTimeFrame){
+    if(endTimeFrame == null) {
+        startTimeFrame = getStartTime(startTimeFrame);
+        const date = new Date();
+        endTimeFrame = date.toJSON();
+    }
+    
+    const data= await GetData(actionUrl,"country", code, startTimeFrame, endTimeFrame);
     if(data instanceof Error) return;
 
     const tbl = document.querySelector("#CountryTable")
@@ -235,7 +265,7 @@ async function CountryChart(actionUrl, code, timeFrame){
         
         toastAlert.className = "toast toast-center";
         toastAlertType.className = "alert alert-success"
-        toastAlertText.innerText = "Set Time Frame for Country Chart to "+timeFrame;
+        toastAlertText.innerText = "Set Time Frame for Country Chart from "+startTimeFrame+" to "+endTimeFrame;
         setTimeout(() => {
             toastAlert.className = "hidden"
             toastAlertType.className = "";
@@ -277,8 +307,14 @@ async function CountryChart(actionUrl, code, timeFrame){
 
     NoDataCanvas(data);
 }
-async function CityChart(actionUrl, code, timeFrame){
-    const data= await GetData(actionUrl,"city", code, timeFrame);
+async function CityChart(actionUrl, code, startTimeFrame, endTimeFrame){
+    if(endTimeFrame == null) {
+        startTimeFrame = getStartTime(startTimeFrame);
+        const date = new Date();
+        endTimeFrame = date.toJSON();
+    }
+    
+    const data= await GetData(actionUrl,"city", code, startTimeFrame, endTimeFrame);
     if(data instanceof Error) return;
 
     const tbl = document.querySelector("#CityTable")
@@ -294,11 +330,10 @@ async function CityChart(actionUrl, code, timeFrame){
         for(let i =0; i< data.length; i++){
             tbl.innerHTML += `<tr><th>${i+1}</th><th>${data[i].label}</th><th>${data[i].data}</th></tr>`;
         }
-
-
         toastAlert.className = "toast toast-center";
         toastAlertType.className = "alert alert-success"
-        toastAlertText.innerText = "Set Time Frame for City Chart to "+timeFrame;
+        toastAlertText.innerText = "Set Time Frame for City Chart from "+startTimeFrame+" to "+endTimeFrame;
+        
         setTimeout(() => {
             toastAlert.className = "hidden"
             toastAlertType.className = "";
@@ -343,6 +378,19 @@ async function CityChart(actionUrl, code, timeFrame){
     NoDataCanvas(data)
 }
 
+function getStartTime(duration){
+    const date = new Date();
+    switch (duration){
+        case "24h" : date.setHours(date.getHours()-24);
+            break;
+        case "7d" : date.setDate(date.getDay()-7);
+            break;
+        case "30d": date.setDate(date.getDay()-30);
+            break;
+        case "lifetime" : return  document.querySelector("#createdAt").value; 
+    }
+    return date.toJSON();
+}
 function NoDataCanvas(data){
     if(data.length !== 0) 
         return false;
@@ -358,9 +406,9 @@ function NoDataCanvas(data){
     return true;
 }
 
-async function GetData(actionUrl, detailType, code, timeFrame) {
+async function GetData(actionUrl, detailType, code, startTimeFrame, endTimeFrame) {
     try {
-        const res = await fetch(`${actionUrl}?detailType=${detailType}&code=${code}&timeFrame=${timeFrame}`, {
+        const res = await fetch(`${actionUrl}?detailType=${detailType}&code=${code}&startTimeFrame=${startTimeFrame}&endTimeFrame=${endTimeFrame}`, {
             credentials: "include"
         })
         if(res.status === 200) return (await res.json());         
@@ -372,7 +420,7 @@ async function GetData(actionUrl, detailType, code, timeFrame) {
     }catch (e){
         toastAlert.className = "toast toast-center";
         toastAlertType.className = "alert alert-error"
-        toastAlertText.innerText = "Failed to Fetch Chart for "+timeFrame;
+        toastAlertText.innerText = "Failed to Fetch Chart for Duration "+startTimeFrame+" to "+endTimeFrame;
     }
     setTimeout(() => {
         toastAlert.className = "hidden"
@@ -381,9 +429,9 @@ async function GetData(actionUrl, detailType, code, timeFrame) {
     }, 2000);
     return new Error();
 }
-async function GetVisitsData(actionUrl, code, timeFrame) {
+async function GetVisitsData(actionUrl, code, startTimeFrame, endTimeFrame) {
     try {
-        const res = await fetch(`${actionUrl}?code=${code}&timeFrame=${timeFrame}`, {
+        const res = await fetch(`${actionUrl}?code=${code}&startTimeFrame=${startTimeFrame}&endTimeFrame=${endTimeFrame}`, {
             credentials: "include"
         })
         if(res.status === 200) return (await res.json());
@@ -395,7 +443,7 @@ async function GetVisitsData(actionUrl, code, timeFrame) {
     }catch (e) {
         toastAlert.className = "toast toast-center";
         toastAlertType.className = "alert alert-error"
-        toastAlertText.innerText = "Failed to Fetch Chart for "+timeFrame;
+        toastAlertText.innerText = "Failed to Fetch Chart for Duration "+startTimeFrame+" to "+endTimeFrame;
     }
     setTimeout(() => {
         toastAlert.className = "hidden"
@@ -417,7 +465,7 @@ function copyCode(code){
         toastAlert.className = "toast toast-center";
         toastAlertType.className = "alert alert-error"
         toastAlertType.innerText = "Failed to Copy Code to Clipboard";
-        console.log(err);
+        console.error(err);
     })
 
     setTimeout(() => {
@@ -456,7 +504,7 @@ async function editLinkSubmit(endpointUrl) {
                 document.querySelector("#LinkName").innerText = editLinkName.value;
             if(editLinkURL.value !== ""){
                 document.querySelector("#LinkFavicon").src = `https://t2.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=${editLinkURL.value}&size=48`;
-                document.querySelector("#LinkURL").href = editLinkURL.value;
+                document.querySelector("#LinkName").href = editLinkURL.value;
             }
             toastAlert.className = "toast toast-center";
             toastAlertType.className = "alert alert-success"
@@ -470,8 +518,8 @@ async function editLinkSubmit(endpointUrl) {
     }).catch(err => {
         toastAlert.className = "toast toast-center";
         toastAlertType.className = "alert alert-error";
-        toastAlertText.innerText = "Unable to Create Link. Please try again later";
-        console.log(err);
+        toastAlertText.innerText = "Unable to Edit Link. Please try again later";
+        console.error(err);
     });
     setTimeout(()=> {
         toastAlert.className = "hidden";

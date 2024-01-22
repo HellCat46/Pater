@@ -22,7 +22,7 @@
     <div class="flex flex-col bg-base-300 px-5 rounded-lg">
         <div class="flex flex-col lg:flex-row gap-4 py-5 items-center">
             <img src="https://t2.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=@Model.linkDetails.url&size=48" alt="favicon" id="LinkFavicon"/>
-            <span class="text-4xl font-bold grow text-center lg:text-left" id="LinkName">@Model.linkDetails.name</span>
+            <a class="text-4xl font-bold grow text-center lg:text-left" id="LinkName" href="@Model.linkDetails.url">@Model.linkDetails.name</a>
             <div class="btn" onclick="copyCode('@Model.linkDetails.code')">@Url.ActionContext.HttpContext.Request.Headers.Host/@Model.linkDetails.code</div>
             <div>
                 <div class="btn btn-info" onclick="editLink('@Model.linkDetails.code')">Edit</div>
@@ -31,22 +31,45 @@
         </div>
         <div class="divider divider-info"></div>
         <div class="flex flex-col items-center md:flex-row lg:flex-row pb-5 gap-4">
-            <a class="grow link link-info text-2xl flex justify-center items-center" href="@Model.linkDetails.url" id="LinkURL">Original Link</a>
-            <label class="form-control w-full max-w-xs">
+            <div class="form-control items-center w-full">
                 <div class="label">
-                    <span class="label-text">Last Updated</span>
+                    <span class="label-text">Last Updated:</span>
                 </div>
-                <input type="date" class="input input-bordered w-full max-w-xs" disabled/>
-            </label>
-            <label class="form-control w-full max-w-xs">
+                <input type="datetime-local" class="input input-bordered w-full max-w-xs" value="@Model.linkDetails.LastModified.ToString("yyyy'-'MM'-'dd'T'HH':'mm")" disabled/>
+            </div>
+            <div class="form-control items-center w-full">
                 <div class="label">
-                    <span class="label-text">Created At</span>
+                    <span class="label-text">Created At:</span>
                 </div>
-                <input type="date" class="input input-bordered w-full max-w-xs" value="@Model.linkDetails.CreatedAt.ToString("yyyy-MM-dd")" disabled/>
-            </label>
+                <input type="datetime-local" class="input input-bordered w-full max-w-xs" id="createdAt" value="@Model.linkDetails.CreatedAt.ToString("yyyy'-'MM'-'dd'T'HH':'mm")" disabled/>
+            </div>
         </div>
     </div>
 
+    <div class="card w-auto bg-base-300">
+        <div class="card-body">
+            <h2 class="card-title">Duration For All Graphs</h2>
+
+            <div class="flex flex-col items-center md:flex-row lg:flex-row pb-5 gap-4">
+                <div class="form-control items-center w-full">
+                    <div class="label">
+                        <span class="label-text">From:</span>
+                    </div>
+                    <input type="date" class="input input-bordered w-full max-w-xs" id="graphDurationFrom"/>
+                </div>
+                @* Since datetime-local doesn't work on Firefox, No datetime-local at all :D *@
+                <div class="form-control items-center w-full">
+                    <div class="label">
+                        <span class="label-text">To:</span>
+                    </div>
+                    <input type="date" class="input input-bordered w-full max-w-xs" id="graphDurationTo"/>
+                </div>
+            </div>
+            <div class="card-actions justify-end">
+                <button class="btn btn-primary" onclick="setAllGraphs()">Set Duration</button>
+            </div>
+        </div>
+    </div>
 
     <div class="bg-base-200 flex flex-col p-5">
         <canvas id="VisitsChart"></canvas>
@@ -184,7 +207,8 @@
             <text>
                 duration = "24h";
             </text>
-        }else if (Model.userPlan == AccountModel.Plan.Premium)
+        }
+        else if (Model.userPlan == AccountModel.Plan.Premium)
         {
             <text>
                 duration = "7d";
@@ -204,6 +228,41 @@
         await DeviceChart('@Url.Action("LinkOtherDetails")', "@Model.linkDetails.code", duration);
     })
     
+    async function setAllGraphs(){
+        const graphDurationFrom = document.querySelector("#graphDurationFrom");
+        const graphDurationTo = document.querySelector("#graphDurationTo");
+        
+        if (graphDurationFrom.value === "" || graphDurationTo.value === ""){
+            toastAlert.className = "toast toast-center";
+            toastAlertType.className = "alert alert-error";
+            toastAlertText.innerText = "Both Duration Input Needs to be filled";
+                    
+            setTimeout(() => {
+                toastAlert.className = "hidden"
+                toastAlertType.className = "";
+                toastAlertText.innerText = "";
+            }, 2000);  
+                    
+            return;
+        }
+        
+        await VisitsChart('@Url.Action("LinkVisitDetails")', "@Model.linkDetails.code", graphDurationFrom.value, graphDurationTo.value);
+        await BrowserChart('@Url.Action("LinkOtherDetails")', "@Model.linkDetails.code", graphDurationFrom.value, graphDurationTo.value);
+        await OSChart('@Url.Action("LinkOtherDetails")', "@Model.linkDetails.code", graphDurationFrom.value, graphDurationTo.value);
+        await CountryChart('@Url.Action("LinkOtherDetails")', "@Model.linkDetails.code", graphDurationFrom.value, graphDurationTo.value);
+        await CityChart('@Url.Action("LinkOtherDetails")', "@Model.linkDetails.code", graphDurationFrom.value, graphDurationTo.value);
+        await DeviceChart('@Url.Action("LinkOtherDetails")', "@Model.linkDetails.code", graphDurationFrom.value, graphDurationTo.value);
+        
+        toastAlert.className = "toast toast-center";
+        toastAlertType.className = "alert alert-success"
+        toastAlertText.innerText = "Updated Duration of All the Graphs";
+        
+        setTimeout(() => {
+            toastAlert.className = "hidden"
+            toastAlertType.className = "";
+            toastAlertText.innerText = "";
+        }, 2000);        
+    }
     
     const editLinkForm = document.querySelector("#editLinkForm");
     editLinkForm.addEventListener("submit", async (e) => {

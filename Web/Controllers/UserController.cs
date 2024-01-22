@@ -284,6 +284,7 @@ public class UserController(IConfiguration config, UserDbContext context) : Cont
                 isPaid = !link.LinkCode.IsNullOrEmpty(),
                 code = !link.LinkCode.IsNullOrEmpty() ? link.LinkCode : GenerateRandom(8),
                 CreatedAt = DateTime.Now,
+                LastModified = DateTime.Now,
                 name = !link.LinkName.IsNullOrEmpty()
                     ? link.LinkName
                     : DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToLongTimeString(),
@@ -328,12 +329,16 @@ public class UserController(IConfiguration config, UserDbContext context) : Cont
                 return StatusCode(403, new { error = "Session Expired. Please Login in Again" });
             }
 
-            var linkRow = await context.Link.FirstOrDefaultAsync(l => l.code == link.LinkCode && l.AccountId == account.id);
-            if (linkRow == null) return StatusCode(400, new { error = "Link either doesn't exist or you don't have permission to edit this link" });
+            var linkRow =
+                await context.Link.FirstOrDefaultAsync(l => l.code == link.LinkCode && l.AccountId == account.id);
+            if (linkRow == null)
+                return StatusCode(400,
+                    new { error = "Link either doesn't exist or you don't have permission to edit this link" });
 
             if (!link.LinkName.IsNullOrEmpty()) linkRow.name = link.LinkName;
             if (!link.LinkURL.IsNullOrEmpty()) linkRow.url = link.LinkURL;
-
+            
+            linkRow.LastModified = DateTime.Now;
             await context.SaveChangesAsync();
             ActivityLogModel.WriteLogs(context, ActivityLogModel.Event.EditLink, account,
                 HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown");
@@ -411,8 +416,11 @@ public class UserController(IConfiguration config, UserDbContext context) : Cont
                 return StatusCode(403, new { error = "Session Expired. Please Login in Again" });
             }
 
-            var linkRow = await context.Link.FirstOrDefaultAsync(link => link.code == code && link.AccountId == account.id);
-            if (linkRow == null) return StatusCode(400, new { error = "Link either doesn't exist or you don't have permission to edit this link" });
+            var linkRow =
+                await context.Link.FirstOrDefaultAsync(link => link.code == code && link.AccountId == account.id);
+            if (linkRow == null)
+                return StatusCode(400,
+                    new { error = "Link either doesn't exist or you don't have permission to edit this link" });
 
 
             context.Link.Remove(linkRow);
@@ -433,15 +441,14 @@ public class UserController(IConfiguration config, UserDbContext context) : Cont
     }
 
     [HttpGet]
-    public async Task<IActionResult> LinkOtherDetails(string? detailType, string? code, string? timeFrame)
+    public async Task<IActionResult> LinkOtherDetails(string? detailType, string? code, DateTime? startTimeFrame,
+        DateTime? endTimeFrame)
     {
-        if (code == null || timeFrame == null || detailType == null)
+        if (code == null || startTimeFrame == null || endTimeFrame == null || detailType == null)
             return StatusCode(400, new
             {
                 error = "Required Parameters are missing."
             });
-
-
         try
         {
             var bytes = HttpContext.Session.Get("UserData");
@@ -458,7 +465,7 @@ public class UserController(IConfiguration config, UserDbContext context) : Cont
                 return StatusCode(403, new { error = "Session Expired. Please Login in Again" });
             }
 
-            if (!AccountModel.UserAnalyticsDurations(account.plan).Contains(timeFrame))
+            if (AccountModel.UserAnalyticsDurations(account.plan) > startTimeFrame)
                 return StatusCode(403, new
                 {
                     error = "Upgrade your Plan to Get this duration Information."
@@ -473,31 +480,9 @@ public class UserController(IConfiguration config, UserDbContext context) : Cont
                 });
 
 
-            DateTime dataSince;
-            switch (timeFrame)
-            {
-                case "24h":
-                    dataSince = DateTime.Now.Subtract(TimeSpan.FromHours(24));
-                    break;
-                case "7d":
-                    dataSince = DateTime.Now.Subtract(TimeSpan.FromDays(7));
-                    break;
-                case "30d":
-                    dataSince = DateTime.Now.Subtract(TimeSpan.FromDays(30));
-                    break;
-                case "lifetime":
-                    dataSince = account.createdAt;
-                    break;
-                default:
-                    return StatusCode(404, new
-                    {
-                        error = "Unknown Time Frame. Allowed Time Frames are 24h, 7d and 30d."
-                    });
-            }
-
-
             var baseQuery =
-                context.Analytics.Where(a => a.visitedAt >= dataSince && a.LinkModelCode == code);
+                context.Analytics.Where(a =>
+                    a.visitedAt >= startTimeFrame && a.visitedAt <= endTimeFrame && a.LinkModelCode == code);
             IQueryable<LinkDetailsResponse> query;
             switch (detailType)
             {
@@ -542,14 +527,16 @@ public class UserController(IConfiguration config, UserDbContext context) : Cont
     }
 
     [HttpGet]
-    public async Task<IActionResult> LinkVisitDetails(string? code, string? timeFrame)
+    public async Task<IActionResult> LinkVisitDetails(string? code, DateTime? startTimeFrame, DateTime? endTimeFrame)
     {
-        if (code == null || timeFrame == null)
+        if (code == null || startTimeFrame == null || endTimeFrame == null)
             return StatusCode(400, new
             {
                 error = "Required Parameters are missing."
             });
-
+        
+        Console.Write(startTimeFrame+" "+endTimeFrame);
+        
         try
         {
             var bytes = HttpContext.Session.Get("UserData");
@@ -566,7 +553,7 @@ public class UserController(IConfiguration config, UserDbContext context) : Cont
                 return StatusCode(403, new { error = "Session Expired. Please Login in Again" });
             }
 
-            if (!AccountModel.UserAnalyticsDurations(account.plan).Contains(timeFrame))
+            if (AccountModel.UserAnalyticsDurations(account.plan) > startTimeFrame)
                 return StatusCode(403, new
                 {
                     error = "Upgrade your Plan to Get this duration Information."
@@ -580,36 +567,16 @@ public class UserController(IConfiguration config, UserDbContext context) : Cont
                     error = "This Link is either Invalid or You don't have access to check it's details."
                 });
 
-
-            DateTime dataSince;
-            switch (timeFrame)
-            {
-                case "24h":
-                    dataSince = DateTime.Now.Subtract(TimeSpan.FromHours(24));
-                    break;
-                case "7d":
-                    dataSince = DateTime.Now.Subtract(TimeSpan.FromDays(7));
-                    break;
-                case "30d":
-                    dataSince = DateTime.Now.Subtract(TimeSpan.FromDays(30));
-                    break;
-                case "lifetime":
-                    dataSince = account.createdAt;
-                    break;
-                default:
-                    return StatusCode(404, new
-                    {
-                        error = "Unknown Time Frame. Allowed Time Frames are 24h, 7d and 30d."
-                    });
-            }
-
-            if (timeFrame == "24h")
-                return Ok(await context.Analytics.Where(a => a.visitedAt >= dataSince && a.LinkModelCode == code)
-                    .GroupBy(a => a.visitedAt.Hour)
-                    .Select(g => new LinkDetailsResponse { label = g.Key.ToString(), data = g.Count() })
+            if (startTimeFrame <= DateTime.Now.Subtract(TimeSpan.FromHours(24)))
+                return Ok(await context.Analytics.Where(a =>
+                        a.visitedAt >= startTimeFrame && a.visitedAt <= endTimeFrame && a.LinkModelCode == code)
+                    .GroupBy(a => a.visitedAt.TimeOfDay).Select(g => new LinkDetailsResponse
+                        { label = g.Key.ToString(), data = g.Count() })
                     .OrderBy(res => res.label).ToListAsync());
 
-            return Ok(await context.Analytics.Where(a => a.visitedAt >= dataSince && a.LinkModelCode == code)
+
+            return Ok(await context.Analytics.Where(a =>
+                    a.visitedAt >= startTimeFrame && a.visitedAt <= endTimeFrame && a.LinkModelCode == code)
                 .GroupBy(a => a.visitedAt.Date)
                 .Select(g => new LinkDetailsResponse { label = g.Key.ToString(), data = g.Count() })
                 .OrderBy(res => res.label).ToListAsync());

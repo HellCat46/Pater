@@ -15,6 +15,9 @@ public class LinkModel
     public string name { get; set; }
     
     [Required]
+    public DateTime LastModified { get; set; }
+    
+    [Required]
     public DateTime CreatedAt { get; set; }
     
     [Required]

@@ -76,14 +76,14 @@ public class AccountModel
         return JsonSerializer.Deserialize<AccountModel>(bytes);
     }
 
-    public static IEnumerable<string> UserAnalyticsDurations(Plan plan)
+    public static DateTime UserAnalyticsDurations(Plan plan)
     {
         return plan switch
         {
-            Plan.Custom => ["24h", "7d", "30d", "lifetime"],
-            Plan.Business => ["24h", "7d", "30d"],
-            Plan.Premium => ["24h", "7d"],
-            _ => ["24h"]
+            Plan.Custom => DateTime.MinValue,
+            Plan.Business => DateTime.Now.Subtract(TimeSpan.FromDays(30)),
+            Plan.Premium => DateTime.Now.Subtract(TimeSpan.FromDays(7)),
+            _ => DateTime.Now.Subtract(TimeSpan.FromHours(24))
         };
     }
 }
