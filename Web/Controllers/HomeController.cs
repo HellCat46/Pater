@@ -104,8 +104,45 @@ public class HomeController(IConfiguration config, UserDbContext context) : Cont
     }
 
     [Route("/GoogleAuth")]
-    public IActionResult GoogleAuth(string state, string code)
+    public IActionResult GoogleAuth(string? error, string state, string code)
     {
+        if (!error.IsNullOrEmpty())
+        {
+            var errorView = new ErrorView() {errorCode = 400};
+            switch (error)
+            {
+                case "admin_policy_enforced" :
+                    errorView.errorTitle = "Not Enough Scopes";
+                    errorView.errorMessage = "Unable to get required user information. Please contact your Google Workspace Admin";
+                    break;
+                case "disallowed_useragent" :
+                    errorView.errorTitle = "DisAllowed";
+                    errorView.errorMessage = "Google doesn't allow authorization with this source. Try with some other browser or device";
+                    break;
+                case "org_internal" :
+                    errorView.errorTitle = "Development Mode";
+                    errorView.errorMessage = "Please contact support team to inform them about this issue.";
+                    break;
+                case "invalid_client" :
+                    errorView.errorTitle = "MisConfigured Client";
+                    errorView.errorMessage = "Please contact support team to inform them about this issue";
+                    break;
+                case "invalid_grant" :
+                    errorView.errorTitle = "Token expired";
+                    errorView.errorMessage = "Please Try again";
+                    break;
+                case "redirect_uri_mismatch" :
+                    errorView.errorTitle = "MisConfigured Redirect Url";
+                    errorView.errorMessage = "Please contact support team to inform them about this issue";
+                    break;
+                case "invalid_request" :
+                    errorView.errorTitle = "Invalid Request";
+                    errorView.errorMessage = "Please try again and if you are facing same issue then contact support.";
+                    break;
+            }
+
+            return View("ErrorPage", errorView);
+        }
         if (code.IsNullOrEmpty() || state.IsNullOrEmpty())
             return View("ErrorPage", new ErrorView()
             {
@@ -198,6 +235,14 @@ public class HomeController(IConfiguration config, UserDbContext context) : Cont
                 
                 return RedirectToAction("Dashboard", "User");
             }
+
+            if (context.Account.Any(acc => acc.email == payload.Email))
+                return View("ErrorPage", new ErrorView()
+                {
+                    errorCode = 409,
+                    errorTitle = "Email Conflict",
+                    errorMessage = "Account Already Exists with your account email. Either Use that account or Try with different Google Account."
+                });
 
             var exAuthEntityEntry = context.ExternalAuth.Add(new ExternalAuthModel()
             {
