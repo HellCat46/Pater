@@ -1,6 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.Net.Http.Headers;
+using ServiceStack;
+using ServiceStack.Text;
 using Web.ApplicationDbContext;
 using Web.Models;
 using Web.Models.Account;
@@ -105,7 +108,7 @@ public class AdminController(UserDbContext context) : Controller
             });
         }
     }
-
+    
     // Non-Action Endpoints
     public async Task<IActionResult> GetUserLogs(int pageNo, int userId)
     {
@@ -123,7 +126,7 @@ public class AdminController(UserDbContext context) : Controller
             if (adminAccount == null)
             {
                 HttpContext.Session.Clear();
-                return RedirectToAction("Login", "Home");
+                return StatusCode(403, new { error = "Session Expired. Please Login in Again" });
             }
             
             if (adminAccount.isAdmin != true)
@@ -146,12 +149,12 @@ public class AdminController(UserDbContext context) : Controller
         try
         {
             byte[]? bytes = HttpContext.Session.Get("UserData");
-            if (bytes == null) return RedirectToAction("Login", "Home");
+            if (bytes == null) return StatusCode(403, new { error = "Session Expired. Please Login in Again" });
             AccountModel? adminAccount = AccountModel.Deserialize(bytes);
             if (adminAccount == null)
             {
                 HttpContext.Session.Clear();
-                return RedirectToAction("Login", "Home");
+                return StatusCode(403, new { error = "Session Expired. Please Login in Again" });
             }
 
             if (!adminAccount.isAdmin) return StatusCode(403, new { error = "This action requires Admin Access." });
@@ -196,7 +199,7 @@ public class AdminController(UserDbContext context) : Controller
             if (adminAccount == null)
             {
                 HttpContext.Session.Clear();
-                return RedirectToAction("Login", "Home");
+                return StatusCode(403, new { error = "Session Expired. Please Login in Again" });
             }
             
             if (adminAccount.isAdmin != true)
@@ -211,4 +214,71 @@ public class AdminController(UserDbContext context) : Controller
         }
     }
 
+    public IActionResult GetLogsAsCsv(DateTime? startDate, DateTime? endDate)
+    {
+        if (startDate == null || endDate == null)
+            return StatusCode(400, new
+            {
+                error = "Required Parameters are missing"
+            });
+        Console.Write(startDate+" "+endDate);
+        try
+        {
+            byte[]? bytes = HttpContext.Session.Get("UserData");
+            if (bytes == null) 
+                return View("ErrorPage", new ErrorView()
+                {
+                    errorCode = 403,
+                    errorTitle = "Server Expired",
+                    errorMessage = "Session Expired. Please Login in Again."
+                });
+            
+            AccountModel? adminAccount = AccountModel.Deserialize(bytes);
+            if (adminAccount == null)
+            {
+                HttpContext.Session.Clear();
+                return View("ErrorPage", new ErrorView()
+                {
+                    errorCode = 403,
+                    errorTitle = "Server Expired",
+                    errorMessage = "Session Expired. Please Login in Again."
+                });
+            }
+            if (adminAccount.isAdmin != true) return RedirectToAction("Dashboard", "User");
+            
+            var logs = context.ActivityLogs.Where(al => al.date >= startDate && al.date <= endDate).ToList();
+            if (logs.Count == 0)
+                return View("ErrorPage", new ErrorView()
+                {
+                    errorCode = 404,
+                    errorTitle = "No Logs",
+                    errorMessage = "No logs to Download in the given Time Duration."
+                });
+
+            var csv = CsvSerializer.SerializeToCsv(logs);
+            if (csv == null)
+                return View("ErrorPage", new ErrorView()
+                {
+                    errorCode = 500,
+                    errorTitle = "Server Error",
+                    errorMessage = "Fail to Serialize Logs into csv."
+                });
+            
+            
+            return new FileContentResult(csv.ToAsciiBytes(), new MediaTypeHeaderValue("text/plain"))
+            {
+                FileDownloadName = "Logs.csv"
+            };
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex);
+            return View("ErrorPage", new ErrorView()
+            {
+                errorCode = 500,
+                errorTitle = "Server Error",
+                errorMessage = "Unexpected Error while processing the request"
+            });
+        }
+    }
 }

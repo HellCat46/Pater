@@ -7,6 +7,26 @@ let pageNo = 1;
 const pageNoBtn = document.querySelector("#pageNo");
 const logsBody = document.querySelector("#logsBody");
 
+async function DownloadCSV(endpointUrl){
+    const DownloadModal = document.querySelector("#downloadAsCSV");
+    const startDate = document.querySelector("#startDate");
+    const endDate = document.querySelector("#endDate");
+    
+    if(startDate.value === "" && endDate.value === ""){
+        alertError.className = "alert alert-error";
+        alertMessage.innerText = "You need to provide Duration to download logs.";
+        setTimeout(()=> {
+            alertError.className= "alert hidden";
+            alertMessage.innerText = "";
+        }, 5000);
+        DownloadModal.close();
+        return;
+    }
+
+    window.open(`${endpointUrl}?startDate=${startDate.value}&endDate=${endDate.value}`);
+    
+    DownloadModal.close();
+}
 
 async function prevPage() {
     if (pageNo === 1) return;

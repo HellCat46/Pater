@@ -26,6 +26,7 @@
                     <th colspan="5">
                         <div class="flex">
                             <p class="text-4xl text-base-content flex items-center">Activity Logs</p>
+                            <button class="ml-4 btn btn-accent" onclick="downloadAsCSV.showModal()">Export CSV Data</button>
                             <div class="grow"></div>
                             <div class="join">
                                 <button class="join-item btn" onclick="prevPage()">«</button>
@@ -50,8 +51,37 @@
     </div>
 </div>
 
-<script src="~/js/Admin/Dashboard.js"></script>
 
+@* Modals *@
+<dialog id="downloadAsCSV" class="modal modal-bottom sm:modal-middle">
+  <div class="modal-box">
+      <h3 class="font-bold text-2xl text-center">Download Logs As CSV</h3>
+      <div class="flex flex-col lg:flex-row gap-4 items-center p-5">
+          <div class="form-control w-full max-w-xs">
+              <div class="label">
+                  <span class="label-text">Start Date</span>
+              </div>
+              <input type="date" id="startDate" class="input input-bordered w-full max-w-xs" />
+          </div>
+          <div class="form-control w-full max-w-xs">
+              <div class="label">
+                  <span class="label-text">End Date</span>
+              </div>
+              <input type="date" id="endDate" class="input input-bordered w-full max-w-xs" />
+          </div>
+      </div>
+      <div class="flex justify-center items-center py-5">
+          <button class="btn btn-success" onclick="DownloadCSV('@Url.Action("GetLogsAsCsv")')">Download</button>
+      </div>
+    <div class="modal-action">
+      <form method="dialog">
+        <button class="btn">Close</button>
+      </form>
+    </div>
+  </div>
+</dialog>
+
+<script src="~/js/Admin/Dashboard.js"></script>
 <script>
     FetchFirstPage("@Url.Action("GetLogs")");
 </script>
