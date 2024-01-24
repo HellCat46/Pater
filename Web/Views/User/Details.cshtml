@@ -6,7 +6,7 @@
     Layout = "_UserLayout";
 }
 
-@Html.Partial("_Header", Model.header)
+@await Html.PartialAsync("_Header", Model.header)
 
 <div class="flex flex-col h-auto w-auto py-2 my-10 mx-5 gap-4 lg:mx-40">
     @if (ViewData["UnVerified"] != null)
@@ -72,6 +72,18 @@
     </div>
 
     <div class="bg-base-200 flex flex-col p-5">
+        <div class="flex">
+            <span class="text-2xl font-bold">Visits Chart</span>
+            <div class="grow"></div>
+            <div class="dropdown dropdown-end">
+                <div tabindex="0" role="button" class="btn btn-info">Export</div>
+                <ul tabindex="0" class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52">
+                    <li><a onclick="downloadGraph('VisitsChart')">As Image</a></li>
+                    <li><a>As CSV</a></li>
+                </ul>
+            </div>
+            
+        </div>
         <canvas id="VisitsChart"></canvas>
         <div class="h-min flex flex-row-reverse gap-6 p-4">
             <div class="badge badge-info" onclick="VisitsChart('@Url.Action("LinkVisitDetails")', '@Model.linkDetails.code', 'lifetime')">Lifetime</div>
@@ -82,6 +94,18 @@
     </div>
 
     <div class="bg-base-200 flex flex-col p-5">
+        <div class="flex">
+            <span class="text-2xl font-bold">Browser Chart</span>
+            <div class="grow"></div>
+            <div class="dropdown dropdown-end">
+                <div tabindex="0" role="button" class="btn btn-info">Export</div>
+                <ul tabindex="0" class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52">
+                    <li><a onclick="downloadGraph('BrowserChart')">As Image</a></li>
+                    <li><a>As CSV</a></li>
+                </ul>
+            </div>
+            
+        </div>
         <canvas id="BrowserChart"></canvas>
         <div class="h-min flex flex-row-reverse gap-6 p-4">
             <div class="badge badge-info" onclick="BrowserChart('@Url.Action("LinkOtherDetails")', '@Model.linkDetails.code', 'lifetime')">Lifetime</div>
@@ -92,8 +116,19 @@
     </div>
 
     @* Device and OS Pie Charts *@
-    <div class="bg-base-200 flex flex-col md:flex-row lg:flex-row p-5">
+    <div class="bg-base-200 flex flex-col md:flex-row lg:flex-row gap-4 p-5">
         <div class="basis-1/2">
+            <div class="flex">
+                <span class="text-2xl font-bold">OS Chart</span>
+                <div class="grow"></div>
+                <div class="dropdown dropdown-end">
+                  <div tabindex="0" role="button" class="btn btn-info">Export</div>
+                  <ul tabindex="0" class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52">
+                    <li><a onclick="downloadGraph('OSChart')">As Image</a></li>
+                    <li><a>As CSV</a></li>
+                  </ul>
+                </div>
+            </div>
             <canvas id="OSChart"></canvas>
             <div class="h-min flex flex-row-reverse gap-6 p-4">
                 <div class="badge badge-info" onclick="OSChart('@Url.Action("LinkOtherDetails")', '@Model.linkDetails.code', 'lifetime')">Lifetime</div>
@@ -103,6 +138,17 @@
             </div>
         </div>
         <div class="basis-1/2">
+            <div class="flex">
+                <span class="text-2xl font-bold">Device Chart</span>
+                <div class="grow"></div>
+                <div class="dropdown dropdown-end">
+                  <div tabindex="0" role="button" class="btn btn-info">Export</div>
+                  <ul tabindex="0" class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52">
+                    <li><a onclick="downloadGraph('DeviceChart')">As Image</a></li>
+                    <li><a>As CSV</a></li>
+                  </ul>
+                </div>
+            </div>
             <canvas id="DeviceChart"></canvas>
             <div class="h-min flex flex-row-reverse gap-6 p-4">
                 <div class="badge badge-info" onclick="DeviceChart('@Url.Action("LinkOtherDetails")', '@Model.linkDetails.code', 'lifetime')">Lifetime</div>
@@ -114,6 +160,17 @@
     </div>
 
     <div class="bg-base-200 flex flex-col p-5">
+        <div class="flex">
+            <span class="text-2xl font-bold">Country Chart</span>
+            <div class="grow"></div>
+            <div class="dropdown dropdown-end">
+                <div tabindex="0" role="button" class="btn btn-info">Export</div>
+                <ul tabindex="0" class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52">
+                    <li><a onclick="downloadGraph('CountryChart')">As Image</a></li>
+                    <li><a>As CSV</a></li>
+                </ul>
+            </div>
+        </div>
         <div class="flex flex-col lg:flex-row gap-4">
             <div class="basis-1/2">
                 <canvas id="CountryChart"></canvas>
@@ -138,6 +195,17 @@
     </div>
 
     <div class="bg-base-200 flex flex-col p-5">
+        <div class="flex">
+            <span class="text-2xl font-bold">City Chart</span>
+            <div class="grow"></div>
+            <div class="dropdown dropdown-end">
+                <div tabindex="0" role="button" class="btn btn-info">Export</div>
+                <ul tabindex="0" class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52">
+                    <li><a onclick="downloadGraph('CityChart')">As Image</a></li>
+                    <li><a>As CSV</a></li>
+                </ul>
+            </div>
+        </div>
         <div class="flex flex-col lg:flex-row gap-4">
             <canvas class="basis-1/2" id="CityChart"></canvas>
             <div class="basis-1/2 overflow-y-auto bg-base-300">
@@ -159,7 +227,10 @@
         </div>
     </div>
 </div>
+<a id="downloadAnchor"></a>
 
+
+@* Modals *@
 @* Edit Link *@
 <dialog id="editLink" class="modal modal-bottom sm:modal-middle">
     <div class="modal-box card">

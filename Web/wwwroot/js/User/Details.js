@@ -554,3 +554,15 @@ async function deleteLink(endpointUrl, code){
         toastAlertText.innerText = "";
     }, 2000);
 }
+
+function downloadGraph(canvasId){
+    const canvas = document.querySelector(`#${canvasId}`);
+    const anchor = document.querySelector("#downloadAnchor");
+    
+    anchor.setAttribute("download", `${canvasId.replace("Chart", "")}.png`)
+    anchor.setAttribute("href", canvas.toDataURL("image/png").replace("image/png", "image/octet-stream"));
+    anchor.click();
+    
+    anchor.removeAttribute("download");
+    anchor.removeAttribute("href");
+}
