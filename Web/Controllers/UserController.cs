@@ -1,6 +1,9 @@
+using Microsoft.Net.Http.Headers;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using ServiceStack;
+using ServiceStack.Text;
 using Web.ApplicationDbContext;
 using Web.Models;
 using Web.Models.Account;
@@ -337,7 +340,7 @@ public class UserController(IConfiguration config, UserDbContext context) : Cont
 
             if (!link.LinkName.IsNullOrEmpty()) linkRow.name = link.LinkName;
             if (!link.LinkURL.IsNullOrEmpty()) linkRow.url = link.LinkURL;
-            
+
             linkRow.LastModified = DateTime.Now;
             await context.SaveChangesAsync();
             ActivityLogModel.WriteLogs(context, ActivityLogModel.Event.EditLink, account,
@@ -441,14 +444,17 @@ public class UserController(IConfiguration config, UserDbContext context) : Cont
     }
 
     [HttpGet]
-    public async Task<IActionResult> LinkOtherDetails(string? detailType, string? code, DateTime? startTimeFrame,
-        DateTime? endTimeFrame)
+    public async Task<IActionResult> LinkOtherDetails(string? detailType, string? code, long? startTimeStamp,
+        long? endTimeStamp)
     {
-        if (code == null || startTimeFrame == null || endTimeFrame == null || detailType == null)
+        if (code == null || startTimeStamp == null || endTimeStamp == null || detailType == null)
             return StatusCode(400, new
             {
                 error = "Required Parameters are missing."
             });
+        
+        var startTimeFrame = DateTimeOffset.FromUnixTimeSeconds(startTimeStamp.Value).LocalDateTime;
+        var endTimeFrame = DateTimeOffset.FromUnixTimeSeconds(endTimeStamp.Value).LocalDateTime;
         try
         {
             var bytes = HttpContext.Session.Get("UserData");
@@ -527,16 +533,17 @@ public class UserController(IConfiguration config, UserDbContext context) : Cont
     }
 
     [HttpGet]
-    public async Task<IActionResult> LinkVisitDetails(string? code, DateTime? startTimeFrame, DateTime? endTimeFrame)
+    public async Task<IActionResult> LinkVisitDetails(string? code, long? startTimeStamp, long? endTimeStamp)
     {
-        if (code == null || startTimeFrame == null || endTimeFrame == null)
+        if (code == null || startTimeStamp == null || endTimeStamp == null)
             return StatusCode(400, new
             {
                 error = "Required Parameters are missing."
             });
         
-        Console.Write(startTimeFrame+" "+endTimeFrame);
-        
+        var startTimeFrame = DateTimeOffset.FromUnixTimeSeconds(startTimeStamp.Value).LocalDateTime;
+        var endTimeFrame = DateTimeOffset.FromUnixTimeSeconds(endTimeStamp.Value).LocalDateTime;
+        Console.Write(startTimeFrame + " " + endTimeFrame);
         try
         {
             var bytes = HttpContext.Session.Get("UserData");
@@ -567,7 +574,7 @@ public class UserController(IConfiguration config, UserDbContext context) : Cont
                     error = "This Link is either Invalid or You don't have access to check it's details."
                 });
 
-            if (startTimeFrame <= DateTime.Now.Subtract(TimeSpan.FromHours(24)))
+            if (startTimeFrame >= DateTime.Now.Subtract(TimeSpan.FromHours(24)))
                 return Ok(await context.Analytics.Where(a =>
                         a.visitedAt >= startTimeFrame && a.visitedAt <= endTimeFrame && a.LinkModelCode == code)
                     .GroupBy(a => a.visitedAt.TimeOfDay).Select(g => new LinkDetailsResponse
@@ -587,6 +594,85 @@ public class UserController(IConfiguration config, UserDbContext context) : Cont
             return StatusCode(500, new
             {
                 error = "Unexpected Error while trying to get Link Details"
+            });
+        }
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> DetailsToCsv(string? linkCode,long? startTimeStamp, long? endTimeStamp)
+    {
+        if (linkCode == null || startTimeStamp == null || endTimeStamp == null)
+            return View("ErrorPage", new ErrorView()
+            {
+                errorCode = 400,
+                errorTitle = "Bad Request",
+                errorMessage = "Required Parameters are missing."
+            });
+
+        var startDate = DateTimeOffset.FromUnixTimeSeconds(startTimeStamp.Value).LocalDateTime;
+        var endDate = DateTimeOffset.FromUnixTimeSeconds(endTimeStamp.Value).LocalDateTime;
+        try
+        {
+            byte[]? bytes = HttpContext.Session.Get("UserData");
+            if (bytes == null)
+                return View("ErrorPage", new ErrorView()
+                {
+                    errorCode = 403,
+                    errorTitle = "Server Expired",
+                    errorMessage = "Session Expired. Please Login in Again."
+                });
+
+            AccountModel? account = AccountModel.Deserialize(bytes);
+            if (account == null)
+            {
+                HttpContext.Session.Clear();
+                return View("ErrorPage", new ErrorView()
+                {
+                    errorCode = 403,
+                    errorTitle = "Server Expired",
+                    errorMessage = "Session Expired. Please Login in Again."
+                });
+            }
+
+            if (!context.Link.Any(li => li.AccountId == account.id && li.code == linkCode))
+                return View("ErrorPage", new ErrorView()
+                {
+                    errorCode = 404,
+                    errorTitle = "Not Found",
+                    errorMessage = "This Link either no longer exists or you don't have access to it."
+                });
+
+            var data = await context.Analytics.Where(an => an.LinkModelCode == linkCode && an.visitedAt >= startDate && endDate >= an.visitedAt).ToListAsync();
+            if (data.Count == 0)
+                return View("ErrorPage", new ErrorView()
+                {
+                    errorCode = 404,
+                    errorTitle = "No Data",
+                    errorMessage = "No Data to write in CSV"
+                });
+            
+            var csvData = CsvSerializer.SerializeToCsv(data);
+            if (csvData == null)
+                return View("ErrorPage", new ErrorView()
+                {
+                    errorCode = 500,
+                    errorTitle = "Server Error",
+                    errorMessage = "Failed to Serialize Data into csv."
+                });
+            
+            return new FileContentResult(csvData.ToAsciiBytes(), new MediaTypeHeaderValue("text/plain"))
+            {
+                FileDownloadName = "Analytics.csv"
+            };
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex);
+            return View("ErrorPage", new ErrorView()
+            {
+                errorCode = 500,
+                errorTitle = "Server Error",
+                errorMessage = "Unexpected Error while processing the request"
             });
         }
     }

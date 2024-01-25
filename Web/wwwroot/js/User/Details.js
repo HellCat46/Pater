@@ -14,7 +14,12 @@ async function VisitsChart(actionUrl, code, startTimeFrame, endTimeFrame){
     if(endTimeFrame == null) {
         startTimeFrame = getStartTime(startTimeFrame);
         const date = new Date();
-        endTimeFrame = date.toJSON();
+        endTimeFrame = Math.floor(date.getTime()/1000);
+    }else {
+        let date = new Date(startTimeFrame);
+        startTimeFrame = Math.floor(date.getTime()/1000);
+        date = new Date(endTimeFrame);
+        endTimeFrame = Math.floor(date.getTime()/1000);
     }
     
     const data= await GetVisitsData(actionUrl, code,startTimeFrame, endTimeFrame );
@@ -72,7 +77,12 @@ async function BrowserChart(actionUrl, code, startTimeFrame, endTimeFrame) {
     if(endTimeFrame == null) {
         startTimeFrame = getStartTime(startTimeFrame);
         const date = new Date();
-        endTimeFrame = date.toJSON();
+        endTimeFrame = Math.floor(date.getTime()/1000);
+    }else {
+        let date = new Date(startTimeFrame);
+        startTimeFrame = Math.floor(date.getTime()/1000);
+        date = new Date(endTimeFrame);
+        endTimeFrame = Math.floor(date.getTime()/1000);
     }
     
     const data= await GetData(actionUrl,"browser", code, startTimeFrame, endTimeFrame);
@@ -131,7 +141,12 @@ async function OSChart(actionUrl, code, startTimeFrame, endTimeFrame){
     if(endTimeFrame == null) {
         startTimeFrame = getStartTime(startTimeFrame);
         const date = new Date();
-        endTimeFrame = date.toJSON();
+        endTimeFrame = Math.floor(date.getTime()/1000);
+    }else {
+        let date = new Date(startTimeFrame);
+        startTimeFrame = Math.floor(date.getTime()/1000);
+        date = new Date(endTimeFrame);
+        endTimeFrame = Math.floor(date.getTime()/1000);
     }
     
     const data= await GetData(actionUrl,"os", code, startTimeFrame, endTimeFrame);
@@ -187,7 +202,12 @@ async function DeviceChart(actionUrl, code, startTimeFrame, endTimeFrame){
     if(endTimeFrame == null) {
         startTimeFrame = getStartTime(startTimeFrame);
         const date = new Date();
-        endTimeFrame = date.toJSON();
+        endTimeFrame = Math.floor(date.getTime()/1000);
+    }else {
+        let date = new Date(startTimeFrame);
+        startTimeFrame = Math.floor(date.getTime()/1000);
+        date = new Date(endTimeFrame);
+        endTimeFrame = Math.floor(date.getTime()/1000);
     }
     
     const data= await GetData(actionUrl,"device", code, startTimeFrame, endTimeFrame);
@@ -243,7 +263,12 @@ async function CountryChart(actionUrl, code, startTimeFrame, endTimeFrame){
     if(endTimeFrame == null) {
         startTimeFrame = getStartTime(startTimeFrame);
         const date = new Date();
-        endTimeFrame = date.toJSON();
+        endTimeFrame = Math.floor(date.getTime()/1000);
+    }else {
+        let date = new Date(startTimeFrame);
+        startTimeFrame = Math.floor(date.getTime()/1000);
+        date = new Date(endTimeFrame);
+        endTimeFrame = Math.floor(date.getTime()/1000);
     }
     
     const data= await GetData(actionUrl,"country", code, startTimeFrame, endTimeFrame);
@@ -311,7 +336,12 @@ async function CityChart(actionUrl, code, startTimeFrame, endTimeFrame){
     if(endTimeFrame == null) {
         startTimeFrame = getStartTime(startTimeFrame);
         const date = new Date();
-        endTimeFrame = date.toJSON();
+        endTimeFrame = Math.floor(date.getTime()/1000);
+    }else {
+        let date = new Date(startTimeFrame);
+        startTimeFrame = Math.floor(date.getTime()/1000);
+        date = new Date(endTimeFrame);
+        endTimeFrame = Math.floor(date.getTime()/1000);
     }
     
     const data= await GetData(actionUrl,"city", code, startTimeFrame, endTimeFrame);
@@ -379,17 +409,17 @@ async function CityChart(actionUrl, code, startTimeFrame, endTimeFrame){
 }
 
 function getStartTime(duration){
-    const date = new Date();
+    let date = new Date();
     switch (duration){
         case "24h" : date.setHours(date.getHours()-24);
             break;
-        case "7d" : date.setDate(date.getDay()-7);
+        case "7d" : date.setDate(date.getDate()-7);
             break;
-        case "30d": date.setDate(date.getDay()-30);
+        case "30d": date.setDate(date.getDate()-30);
             break;
-        case "lifetime" : return  document.querySelector("#createdAt").value; 
+        case "lifetime" : date = new Date(document.querySelector("#createdAt").value); 
     }
-    return date.toJSON();
+    return Math.floor(date.getTime()/1000);
 }
 function NoDataCanvas(data){
     if(data.length !== 0) 
@@ -408,7 +438,7 @@ function NoDataCanvas(data){
 
 async function GetData(actionUrl, detailType, code, startTimeFrame, endTimeFrame) {
     try {
-        const res = await fetch(`${actionUrl}?detailType=${detailType}&code=${code}&startTimeFrame=${startTimeFrame}&endTimeFrame=${endTimeFrame}`, {
+        const res = await fetch(`${actionUrl}?detailType=${detailType}&code=${code}&startTimeStamp=${startTimeFrame}&endTimeStamp=${endTimeFrame}`, {
             credentials: "include"
         })
         if(res.status === 200) return (await res.json());         
@@ -417,10 +447,11 @@ async function GetData(actionUrl, detailType, code, startTimeFrame, endTimeFrame
         toastAlert.className = "toast toast-center";
         toastAlertType.className = "alert alert-error"
         toastAlertText.innerText = json.error;
-    }catch (e){
+    }catch (ex){
+        console.error(ex);
         toastAlert.className = "toast toast-center";
         toastAlertType.className = "alert alert-error"
-        toastAlertText.innerText = "Failed to Fetch Chart for Duration "+startTimeFrame+" to "+endTimeFrame;
+        toastAlertText.innerText = "Failed to Fetch Chart for Selected Duration";
     }
     setTimeout(() => {
         toastAlert.className = "hidden"
@@ -431,7 +462,7 @@ async function GetData(actionUrl, detailType, code, startTimeFrame, endTimeFrame
 }
 async function GetVisitsData(actionUrl, code, startTimeFrame, endTimeFrame) {
     try {
-        const res = await fetch(`${actionUrl}?code=${code}&startTimeFrame=${startTimeFrame}&endTimeFrame=${endTimeFrame}`, {
+        const res = await fetch(`${actionUrl}?code=${code}&startTimeStamp=${startTimeFrame}&endTimeStamp=${endTimeFrame}`, {
             credentials: "include"
         })
         if(res.status === 200) return (await res.json());
@@ -440,10 +471,11 @@ async function GetVisitsData(actionUrl, code, startTimeFrame, endTimeFrame) {
         toastAlert.className = "toast toast-center";
         toastAlertType.className = "alert alert-error"
         toastAlertText.innerText = json.error;
-    }catch (e) {
+    }catch (ex) {
+        console.error(ex);
         toastAlert.className = "toast toast-center";
         toastAlertType.className = "alert alert-error"
-        toastAlertText.innerText = "Failed to Fetch Chart for Duration "+startTimeFrame+" to "+endTimeFrame;
+        toastAlertText.innerText = "Failed to Fetch Chart for Selected Duration";
     }
     setTimeout(() => {
         toastAlert.className = "hidden"
@@ -453,7 +485,15 @@ async function GetVisitsData(actionUrl, code, startTimeFrame, endTimeFrame) {
     return new Error();
 }
 
-
+async function DownloadGraphCSV(code, endpointUrl){
+    const graphStartDate = document.querySelector("#graphStartDate");
+    const graphEndDate = document.querySelector("#graphEndDate");
+    
+    const startDate = new Date(`${graphStartDate.value}T00:00:00`);
+    const endDate = new Date(`${graphEndDate.value}T23:59:59`);
+    
+    window.open(`${endpointUrl}?linkCode=${code}&startTimeStamp=${Math.floor(startDate.getTime()/1000)}&endTimeStamp=${Math.floor(endDate.getTime()/1000)}`)
+}
 
 function copyCode(code){
     // This wouldn't work on unsecure connection

@@ -261,7 +261,7 @@ public class AdminController(UserDbContext context) : Controller
                 {
                     errorCode = 500,
                     errorTitle = "Server Error",
-                    errorMessage = "Fail to Serialize Logs into csv."
+                    errorMessage = "Failed to Serialize Logs into csv."
                 });
             
             

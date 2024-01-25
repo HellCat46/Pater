@@ -25,6 +25,7 @@
             <a class="text-4xl font-bold grow text-center lg:text-left" id="LinkName" href="@Model.linkDetails.url">@Model.linkDetails.name</a>
             <div class="btn" onclick="copyCode('@Model.linkDetails.code')">@Url.ActionContext.HttpContext.Request.Headers.Host/@Model.linkDetails.code</div>
             <div>
+                <button class="btn btn-info" onclick="graphDataCSVModal.showModal()">Export</button>
                 <div class="btn btn-info" onclick="editLink('@Model.linkDetails.code')">Edit</div>
                 <div class="btn btn-error" onclick="deleteLink('@Url.Action("DeleteLink")', '@Model.linkDetails.code')">Delete</div>
             </div>
@@ -79,7 +80,6 @@
                 <div tabindex="0" role="button" class="btn btn-info">Export</div>
                 <ul tabindex="0" class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52">
                     <li><a onclick="downloadGraph('VisitsChart')">As Image</a></li>
-                    <li><a>As CSV</a></li>
                 </ul>
             </div>
             
@@ -101,7 +101,6 @@
                 <div tabindex="0" role="button" class="btn btn-info">Export</div>
                 <ul tabindex="0" class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52">
                     <li><a onclick="downloadGraph('BrowserChart')">As Image</a></li>
-                    <li><a>As CSV</a></li>
                 </ul>
             </div>
             
@@ -125,7 +124,6 @@
                   <div tabindex="0" role="button" class="btn btn-info">Export</div>
                   <ul tabindex="0" class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52">
                     <li><a onclick="downloadGraph('OSChart')">As Image</a></li>
-                    <li><a>As CSV</a></li>
                   </ul>
                 </div>
             </div>
@@ -144,8 +142,7 @@
                 <div class="dropdown dropdown-end">
                   <div tabindex="0" role="button" class="btn btn-info">Export</div>
                   <ul tabindex="0" class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52">
-                    <li><a onclick="downloadGraph('DeviceChart')">As Image</a></li>
-                    <li><a>As CSV</a></li>
+                      <li><a onclick="downloadGraph('DeviceChart')">As Image</a></li>
                   </ul>
                 </div>
             </div>
@@ -167,7 +164,6 @@
                 <div tabindex="0" role="button" class="btn btn-info">Export</div>
                 <ul tabindex="0" class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52">
                     <li><a onclick="downloadGraph('CountryChart')">As Image</a></li>
-                    <li><a>As CSV</a></li>
                 </ul>
             </div>
         </div>
@@ -202,7 +198,6 @@
                 <div tabindex="0" role="button" class="btn btn-info">Export</div>
                 <ul tabindex="0" class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52">
                     <li><a onclick="downloadGraph('CityChart')">As Image</a></li>
-                    <li><a>As CSV</a></li>
                 </ul>
             </div>
         </div>
@@ -231,6 +226,35 @@
 
 
 @* Modals *@
+@* Download Data *@
+<dialog id="graphDataCSVModal" class="modal modal-bottom sm:modal-middle">
+    <div class="modal-box">
+        <h3 class="font-bold text-2xl text-center">Graph Data As CSV</h3>
+        <div class="flex flex-col lg:flex-row gap-4 items-center p-5">
+            <div class="form-control w-full max-w-xs">
+                <div class="label">
+                    <span class="label-text">Start Date</span>
+                </div>
+                <input type="date" id="graphStartDate" class="input input-bordered w-full max-w-xs" />
+            </div>
+            <div class="form-control w-full max-w-xs">
+                <div class="label">
+                    <span class="label-text">End Date</span>
+                </div>
+                <input type="date" id="graphEndDate" class="input input-bordered w-full max-w-xs" />
+            </div>
+        </div>
+        <div class="flex justify-center items-center py-5">
+            <button class="btn btn-success" onclick="DownloadGraphCSV('@Model.linkDetails.code', '@Url.Action("DetailsToCsv")')">Download</button>
+        </div>
+        <div class="modal-action">
+            <form method="dialog">
+                <button class="btn">Close</button>
+            </form>
+        </div>
+    </div>
+</dialog>
+
 @* Edit Link *@
 <dialog id="editLink" class="modal modal-bottom sm:modal-middle">
     <div class="modal-box card">
