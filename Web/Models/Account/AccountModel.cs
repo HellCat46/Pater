@@ -67,14 +67,6 @@ public class AccountModel
         Business,
         Custom
     }
-    public static byte[] Serialize(AccountModel account)
-    {
-        return JsonSerializer.SerializeToUtf8Bytes(account);
-    }
-    public static AccountModel? Deserialize(byte[] bytes)
-    {
-        return JsonSerializer.Deserialize<AccountModel>(bytes);
-    }
 
     public static DateTime UserAnalyticsDurations(Plan plan)
     {

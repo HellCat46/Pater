@@ -21,14 +21,14 @@ public class ActivityLogModel
     public string Action { get; set; }
 
     
-    public static void WriteLogs(UserDbContext context, Event ev, AccountModel account, string ip  )
+    public static void WriteLogs(UserDbContext context, Event ev, string ip, int accId, string accName, string accEmail = "Add Email to Function Call" )
     {
         ActivityLogModel log = new ActivityLogModel()
         {
             date = DateTime.Now,
             IPAddr = ip,
-            Userid = account.id,
-            Action = account.name
+            Userid = accId,
+            Action = accName
         };
 
         switch (ev)
@@ -51,9 +51,9 @@ public class ActivityLogModel
                 break;
             case Event.ChangedPassword: log.Action +=  " Changed their Password.";
                 break;
-            case Event.ChangedEmail: log.Action +=  " Changed their Email to " + account.email + ".";
+            case Event.ChangedEmail: log.Action +=  " Changed their Email to " + accEmail + ".";
                 break;
-            case Event.ChangedName: log.Action +=  " Changed their Name to "+ account.name + ".";
+            case Event.ChangedName: log.Action +=  " Changed their Name to "+ accName + ".";
                 break;
             case Event.CreatedLink: log.Action +=  " Created a new link.";
                 break;

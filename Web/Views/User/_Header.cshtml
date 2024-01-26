@@ -29,7 +29,7 @@
                         </a>
                     </li>
 
-                    @if (Model.plan == AccountModel.Plan.Free)
+                    @if (!Model.isPaidUser)
                     {
                         <li>
                             <a asp-action="Checkout">Upgrade to Premium</a>
