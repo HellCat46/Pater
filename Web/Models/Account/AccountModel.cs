@@ -73,9 +73,9 @@ public class AccountModel
         return plan switch
         {
             Plan.Custom => DateTime.MinValue,
-            Plan.Business => DateTime.Now.Subtract(TimeSpan.FromDays(30)),
-            Plan.Premium => DateTime.Now.Subtract(TimeSpan.FromDays(7)),
-            _ => DateTime.Now.Subtract(TimeSpan.FromHours(24))
+            Plan.Business => DateTime.Now.Subtract(TimeSpan.FromDays(31)),
+            Plan.Premium => DateTime.Now.Subtract(TimeSpan.FromDays(8)),
+            _ => DateTime.Now.Subtract(TimeSpan.FromHours(25))
         };
     }
 }

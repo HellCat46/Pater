@@ -296,33 +296,34 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
     window.addEventListener("load", async () => {
-        let duration;
         @if (Model.userPlan == AccountModel.Plan.Free)
         {
             <text>
-                duration = "24h";
+                await SetDefaults("24h");
             </text>
         }
         else if (Model.userPlan == AccountModel.Plan.Premium)
         {
             <text>
-                duration = "7d";
+                await SetDefaults("7d");
             </text>
         }
         else
         {
             <text>
-                duration = "30d";
+                await SetDefaults("30d");
             </text>
         }
-        await VisitsChart('@Url.Action("LinkVisitDetails")', "@Model.linkDetails.code", duration);
-        await BrowserChart('@Url.Action("LinkOtherDetails")', "@Model.linkDetails.code", duration);
-        await OSChart('@Url.Action("LinkOtherDetails")', "@Model.linkDetails.code", duration);
-        await CountryChart('@Url.Action("LinkOtherDetails")', "@Model.linkDetails.code", duration);
-        await CityChart('@Url.Action("LinkOtherDetails")', "@Model.linkDetails.code", duration);
-        await DeviceChart('@Url.Action("LinkOtherDetails")', "@Model.linkDetails.code", duration);
+
     })
-    
+    async function SetDefaults(duration){
+                await VisitsChart('@Url.Action("LinkVisitDetails")', "@Model.linkDetails.code", duration);
+                await BrowserChart('@Url.Action("LinkOtherDetails")', "@Model.linkDetails.code", duration);
+                await OSChart('@Url.Action("LinkOtherDetails")', "@Model.linkDetails.code", duration);
+                await CountryChart('@Url.Action("LinkOtherDetails")', "@Model.linkDetails.code", duration);
+                await CityChart('@Url.Action("LinkOtherDetails")', "@Model.linkDetails.code", duration);
+                await DeviceChart('@Url.Action("LinkOtherDetails")', "@Model.linkDetails.code", duration);
+    }
     async function setAllGraphs(){
         const graphDurationFrom = document.querySelector("#graphDurationFrom");
         const graphDurationTo = document.querySelector("#graphDurationTo");
