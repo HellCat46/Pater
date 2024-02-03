@@ -45,41 +45,48 @@ app.MapControllerRoute(
     name: "web",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
-app.MapGet("/{code}", async (HttpContext context, string code, UserDbContext db) =>
+app.MapGet("/{code}",  (HttpContext context, string code, UserDbContext db) =>
 {
-    Console.Write(context.Connection.RemoteIpAddress);
-    string redirectUrl = "/";
-    try
+    return Task.Run(async () =>
     {
-        var linkObj  = db.Link.Find(code);
-        if (linkObj == null) throw new Exception();
-        redirectUrl = linkObj.url;
-
-        
-        Uri url = new Uri("http://ip-api.com/json/"+context.Connection.RemoteIpAddress+"?fields=status,country,city");
-        var info = await new HttpClient().GetFromJsonAsync<VisitorGeoLoc>(url);
-        var (browser, device, os) = AnalyticsModel.ParseUserAgent(context.Request.Headers.UserAgent);
-        
-        if (info is {status: "success"})
+        Console.Write(context.Connection.RemoteIpAddress);
+        string? redirectUrl = null;
+        try
         {
-            db.Analytics.Add(new AnalyticsModel()
+            Uri url = new Uri("http://ip-api.com/json/" + context.Connection.RemoteIpAddress +
+                              "?fields=status,country,city");
+            var geoLocTask = new HttpClient().GetFromJsonAsync<VisitorGeoLoc>(url);
+                
+                
+            redirectUrl = await db.Link.Where(link => link.code == code).Select(link => link.url).FirstAsync();
+            if (redirectUrl == null) throw new Exception("Not A Valid Link");
+            
+
+            var info = await geoLocTask;
+            var (browser, device, os) = AnalyticsModel.ParseUserAgent(context.Request.Headers.UserAgent);
+
+            if (info is { status: "success" })
             {
-                city = info.city,
-                country = info.country,
-                LinkModelCode = code,
-                browser = browser,
-                device = device,
-                os = os,
-                visitedAt = DateTime.Now,
-            });
-            db.SaveChanges();
+                db.Analytics.Add(new AnalyticsModel()
+                {
+                    city = info.city,
+                    country = info.country,
+                    LinkModelCode = code,
+                    browser = browser,
+                    device = device,
+                    os = os,
+                    visitedAt = DateTime.Now,
+                });
+                db.SaveChanges();
+            }
+
         }
-        
-    }
-    catch (Exception ex)
-    {
-        Console.Write(ex);
-    }
-    return Results.Redirect(redirectUrl);
+        catch (Exception ex)
+        {
+            Console.Write(ex);
+        }
+
+        return Results.Redirect(redirectUrl ?? "/");
+    });
 });
 app.Run();

@@ -120,8 +120,6 @@ public class UserController(IConfiguration config, UserDbContext context) : Cont
                     .FirstOrDefaultAsync(link => link.code == code && link.AccountId == sessionAcc.id);
             if (linkDetails == null) return RedirectToAction("Dashboard");
 
-            Console.Write(linkDetails.Account.plan);
-
             return View(new DetailsView
             {
                 header = new _HeaderView
