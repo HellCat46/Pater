@@ -29,7 +29,8 @@ public class ApiController(UserDbContext context) : Controller
             var sessionAcc = SessionAccountModel.GetSession(HttpContext);
             if (sessionAcc == null) return StatusCode(403, new { error = "Session Expired. Please Login in Again" });
 
-            return PartialView("~/Areas/User/Views/User/_LinkRows.cshtml", await context.Link.Where(link => link.AccountId == sessionAcc.id)
+            return PartialView("~/Areas/User/Views/User/_LinkRows.cshtml", await context.Link
+                .Where(link => link.AccountId == sessionAcc.id)
                 .OrderByDescending(log => log.CreatedAt)
                 .Skip((pageNo - 1) * 10).Take(10).ToListAsync()
             );
@@ -527,46 +528,6 @@ public class ApiController(UserDbContext context) : Controller
         {
             Console.WriteLine(ex);
             return StatusCode(500, new { error = "Unexpected Error while trying to Update Avatar!" });
-        }
-    }
-
-    public IActionResult Logout()
-    {
-        var sessionAcc = SessionAccountModel.GetSession(HttpContext);
-        if (sessionAcc == null) return StatusCode(403, new { error = "Session Expired. Please Login in Again" });
-
-
-        ActivityLogModel.WriteLogs(context, ActivityLogModel.Event.LoggedOut,
-            HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown", sessionAcc.id, sessionAcc.name);
-
-
-        HttpContext.Session.Clear();
-        return RedirectToAction("Index", "Home");
-    }
-
-    public async Task<IActionResult> DeleteAccount()
-    {
-        var sessionAcc = SessionAccountModel.GetSession(HttpContext);
-        if (sessionAcc == null) return StatusCode(403, new { error = "Session Expired. Please Login in Again" });
-
-
-        try
-        {
-            var userAcc = await context.Account.Include(acc => acc.Links)
-                .Include(acc => acc.Logs)
-                .SingleOrDefaultAsync(acc => acc.id == sessionAcc.id);
-            if (userAcc == null) return RedirectToAction("Index", "Home");
-
-            context.Account.Remove(userAcc);
-
-            await context.SaveChangesAsync();
-            HttpContext.Session.Clear();
-            return RedirectToAction("Index", "Home");
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine(ex);
-            return RedirectToAction("Profile", "User");
         }
     }
 }

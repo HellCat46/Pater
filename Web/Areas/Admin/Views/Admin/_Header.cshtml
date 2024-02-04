@@ -5,7 +5,7 @@
 <header>
     <div class="navbar bg-base-100">
         <div class="flex-1">
-            <a class="btn btn-ghost text-xl" asp-action="Dashboard">Pater</a>
+            <a class="btn btn-ghost text-xl" href="@Url.ActionLink("Dashboard", "Admin", new {area = "Admin"})">Pater</a>
         </div>
         <div class="flex-none">
             <div class="dropdown dropdown-end">
@@ -16,18 +16,12 @@
                 </div>
                 <ul tabindex="0" class="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52">
                     <li>
-                        <a asp-action="Dashboard" asp-controller="User">
+                        <a href="@Url.ActionLink("Dashboard", "User", new {area = "User"})">
                             User Dashboard
                         </a>
                     </li>
                     <li>
-                        <a>Mailing</a>
-                    </li>
-                    <li>
-                        <a>Danger Zone</a>
-                    </li>
-                    <li>
-                        <a asp-action="Logout" asp-controller="User">Logout</a>
+                        <a href="@Url.ActionLink("Logout", "User", new {area = "User"})">Logout</a>
                     </li>
                 </ul>
             </div>

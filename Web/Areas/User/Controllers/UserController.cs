@@ -14,7 +14,7 @@ public class UserController(IConfiguration config, UserDbContext context) : Cont
     public async Task<IActionResult> Dashboard()
     {
         var sessionAcc = SessionAccountModel.GetSession(HttpContext);
-        if (sessionAcc == null) return RedirectToAction("Login", "Home");
+        if (sessionAcc == null) return RedirectToAction("Login", "Home", new { area= ""});
 
 
         if (!sessionAcc.isVerified && sessionAcc.createdAt <= DateTime.Now.Subtract(TimeSpan.FromDays(7)))
@@ -37,7 +37,7 @@ public class UserController(IConfiguration config, UserDbContext context) : Cont
     public IActionResult Profile()
     {
         var sessionAcc = SessionAccountModel.GetSession(HttpContext);
-        if (sessionAcc == null) return RedirectToAction("Login", "Home");
+        if (sessionAcc == null) return RedirectToAction("Login", "Home", new { area= ""});
 
 
         if (!sessionAcc.isVerified && sessionAcc.createdAt <= DateTime.Now.Subtract(TimeSpan.FromDays(7)))
@@ -72,7 +72,7 @@ public class UserController(IConfiguration config, UserDbContext context) : Cont
         try
         {
             var sessionAcc = SessionAccountModel.GetSession(HttpContext);
-            if (sessionAcc == null) return RedirectToAction("Login", "Home");
+            if (sessionAcc == null) return RedirectToAction("Login", "Home", new { area= ""});
 
 
             return View(new CheckoutView
@@ -106,7 +106,7 @@ public class UserController(IConfiguration config, UserDbContext context) : Cont
 
 
             var sessionAcc = SessionAccountModel.GetSession(HttpContext);
-            if (sessionAcc == null) return RedirectToAction("Login", "Home");
+            if (sessionAcc == null) return RedirectToAction("Login", "Home", new { area= ""});
 
             if (!sessionAcc.isVerified && sessionAcc.createdAt <= DateTime.Now.Subtract(TimeSpan.FromDays(7)))
                 return View("UnVerified");
@@ -141,7 +141,45 @@ public class UserController(IConfiguration config, UserDbContext context) : Cont
             });
         }
     }
+    
+    public IActionResult Logout()
+    {
+        var sessionAcc = SessionAccountModel.GetSession(HttpContext);
+        if (sessionAcc != null)
+        {
+            ActivityLogModel.WriteLogs(context, ActivityLogModel.Event.LoggedOut,
+                HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown", sessionAcc.id, sessionAcc.name);
+            HttpContext.Session.Clear();   
+        }
+        return RedirectToAction("Index", "Home", new {area = ""});
+    }
 
+    public async Task<IActionResult> DeleteAccount()
+    {
+        var sessionAcc = SessionAccountModel.GetSession(HttpContext);
+        if (sessionAcc == null) return RedirectToAction("Login", "Home", new { area= ""});
+
+
+        try
+        {
+            var userAcc = await context.Account.Include(acc => acc.Links)
+                .Include(acc => acc.Logs)
+                .SingleOrDefaultAsync(acc => acc.id == sessionAcc.id);
+            if (userAcc == null) return RedirectToAction("Index", "Home", new { area= ""});
+
+            context.Account.Remove(userAcc);
+
+            await context.SaveChangesAsync();
+            HttpContext.Session.Clear();
+            return RedirectToAction("Index", "Home", new { area= ""});
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex);
+            return RedirectToAction("Profile", "User");
+        }
+    }
+    
     public IActionResult VerificationRequest()
     {
         try
@@ -156,7 +194,7 @@ public class UserController(IConfiguration config, UserDbContext context) : Cont
                 });
 
             var sessionAcc = SessionAccountModel.GetSession(HttpContext);
-            if (sessionAcc == null) return RedirectToAction("Login", "Home");
+            if (sessionAcc == null) return RedirectToAction("Login", "Home", new { area= ""});
             if (sessionAcc.isVerified) return RedirectToAction("Dashboard");
 
             var email = context.Account.Where(acc => acc.id == sessionAcc.id).Select(acc => acc.email).FirstOrDefault();

@@ -16,8 +16,8 @@ public class AdminController(UserDbContext context) : Controller
         try
         {
             var sessionAcc = SessionAccountModel.GetSession(HttpContext);
-            if (sessionAcc == null) return RedirectToAction("Login", "Home");
-            if (sessionAcc.isAdmin != true) return RedirectToAction("Dashboard", "User");
+            if (sessionAcc == null) return RedirectToAction("Login", "Home", new {area = ""});
+            if (sessionAcc.isAdmin != true) return RedirectToAction("Dashboard", "User", new {area = "User"});
 
             return View(new AdminDashboardView
             {
@@ -49,9 +49,9 @@ public class AdminController(UserDbContext context) : Controller
         try
         {
             var sessionAcc = SessionAccountModel.GetSession(HttpContext);
-            if (sessionAcc == null) return RedirectToAction("Login", "Home");
+            if (sessionAcc == null) return RedirectToAction("Login", "Home", new {area = ""});
 
-            if (sessionAcc.isAdmin != true) return RedirectToAction("Dashboard", "User");
+            if (sessionAcc.isAdmin != true) return RedirectToAction("Dashboard", "User", new {area = "User"});
 
             AccountModel? userAccount;
             if (userEmail != null)

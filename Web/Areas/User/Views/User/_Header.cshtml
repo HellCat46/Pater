@@ -4,7 +4,7 @@
 <header>
     <div class="navbar bg-base-100">
         <div class="flex-1">
-            <a class="btn btn-ghost text-xl" asp-action="Dashboard">Pater</a>
+            <a class="btn btn-ghost text-xl" href="@Url.ActionLink("Dashboard")">Pater</a>
         </div>
         <div class="flex-none">
             <div class="dropdown dropdown-end">
@@ -18,7 +18,7 @@
                     @if (Model.isAdmin)
                     {
                         <li>
-                            <a href="@Url.ActionLink("Dashboard", "Admin")">Admin</a>
+                            <a href="@Url.ActionLink("Dashboard", "Admin", new {area = "Admin"})">Admin</a>
                         </li>
                     }
 
