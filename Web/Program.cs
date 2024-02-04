@@ -1,5 +1,5 @@
-using Web;
 using Microsoft.EntityFrameworkCore;
+using Web;
 using Web.ApplicationDbContext;
 using Web.Models.Link;
 using Web.Models.View;
@@ -41,11 +41,26 @@ app.UseAuthorization();
 app.UseSession();
 app.UseMiddleware<Middleware>();
 
-app.MapControllerRoute(
-    name: "web",
-    pattern: "{controller=Home}/{action=Index}/{id?}");
 
-app.MapGet("/{code}",  (HttpContext context, string code, UserDbContext db) =>
+app.MapControllerRoute(
+    "UserPages",
+    "{area}/{action:exists}/{id?}",
+    new { area = "User", controller = "User" });
+
+app.MapControllerRoute(
+    "AdminPages",
+    "{area}/{action:exists}/{id?}",
+    new { area = "Admin", controller = "Admin"});
+
+app.MapControllerRoute(
+    "APIEndpoints",
+    "{area:exists}/{controller=Api}/{action}/{id?}");
+
+app.MapControllerRoute(
+    "web",
+    "{controller=Home}/{action=Index}/{id?}");
+
+app.MapGet("/{code}", (HttpContext context, string code, UserDbContext db) =>
 {
     return Task.Run(async () =>
     {
@@ -53,21 +68,21 @@ app.MapGet("/{code}",  (HttpContext context, string code, UserDbContext db) =>
         string? redirectUrl = null;
         try
         {
-            Uri url = new Uri("http://ip-api.com/json/" + context.Connection.RemoteIpAddress +
+            var url = new Uri("http://ip-api.com/json/" + context.Connection.RemoteIpAddress +
                               "?fields=status,country,city");
             var geoLocTask = new HttpClient().GetFromJsonAsync<VisitorGeoLoc>(url);
-                
-                
+
+
             redirectUrl = await db.Link.Where(link => link.code == code).Select(link => link.url).FirstAsync();
             if (redirectUrl == null) throw new Exception("Not A Valid Link");
-            
+
 
             var info = await geoLocTask;
             var (browser, device, os) = AnalyticsModel.ParseUserAgent(context.Request.Headers.UserAgent);
 
             if (info is { status: "success" })
             {
-                db.Analytics.Add(new AnalyticsModel()
+                db.Analytics.Add(new AnalyticsModel
                 {
                     city = info.city,
                     country = info.country,
@@ -75,11 +90,10 @@ app.MapGet("/{code}",  (HttpContext context, string code, UserDbContext db) =>
                     browser = browser,
                     device = device,
                     os = os,
-                    visitedAt = DateTime.Now,
+                    visitedAt = DateTime.Now
                 });
                 db.SaveChanges();
             }
-
         }
         catch (Exception ex)
         {

@@ -23,5 +23,20 @@
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
     </None>
   </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Areas\Admin\Views\Shared\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <_ContentIncludedByDefault Remove="Views\User\Checkout.cshtml" />
+    <_ContentIncludedByDefault Remove="Views\User\Dashboard.cshtml" />
+    <_ContentIncludedByDefault Remove="Views\User\Details.cshtml" />
+    <_ContentIncludedByDefault Remove="Views\User\Profile.cshtml" />
+    <_ContentIncludedByDefault Remove="Views\User\UnVerified.cshtml" />
+    <_ContentIncludedByDefault Remove="Views\User\VerificationRequest.cshtml" />
+    <_ContentIncludedByDefault Remove="Views\User\_Header.cshtml" />
+    <_ContentIncludedByDefault Remove="Views\User\_LinkRows.cshtml" />
+  </ItemGroup>
   
 </Project>

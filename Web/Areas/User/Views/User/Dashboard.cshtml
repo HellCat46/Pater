@@ -74,7 +74,7 @@
 <div class="hidden" id="linkSelToast">
     <div class="alert alert-info">
         <span>Do you want to delete all the selected links?</span>
-        <button class="btn btn-error" onclick="deleteSelectedLinks('@Url.Action("DeleteMultipleLink")')">Delete</button>
+        <button class="btn btn-error" onclick="deleteSelectedLinks('@Url.Action("DeleteMultipleLink", "Api")')">Delete</button>
     </div>
 </div>
 
@@ -145,20 +145,20 @@
 
 <script>
     function deleteLink(code){
-       deleteLinkRequest("@Url.Action("DeleteLink")", code)
+       deleteLinkRequest("@Url.Action("DeleteLink", "Api")", code)
     }
     
     const createLinkForm = document.querySelector("#createLinkForm");
     createLinkForm.addEventListener("submit", async (e) => {
         e.preventDefault();
-        await createLinkSubmit('@Url.Action("CreateLink")')
+        await createLinkSubmit('@Url.Action("CreateLink", "Api")')
     });
     
     const editLinkForm = document.querySelector("#editLinkForm");
     editLinkForm.addEventListener("submit", async (e) => {
         e.preventDefault();
-        await editLinkSubmit('@Url.Action("EditLink")');
+        await editLinkSubmit('@Url.Action("EditLink", "Api")');
     });
     
-    GetLinks("@Url.Action("GetLinks")");
+    GetLinks("@Url.Action("GetLinks", "Api")");
 </script>

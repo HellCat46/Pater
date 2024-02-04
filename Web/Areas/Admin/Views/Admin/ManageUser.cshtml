@@ -152,11 +152,11 @@
 
 <script src="~/js/Admin/ManageUser.js"></script>
 <script>
-    setRequiredVal(@Model.UserId, '@Url.Action("GetUserLogs")', '');
+    setRequiredVal(@Model.UserId, '@Url.Action("GetUserLogs", "API")', '');
     
     const userDataForm = document.querySelector("#userDataForm");
     userDataForm.addEventListener("submit", async (e) => {
         e.preventDefault()
-        await UpdateUser('@Url.Action("UpdateUser")');
+        await UpdateUser('@Url.Action("UpdateUser", "API")');
     })
 </script>

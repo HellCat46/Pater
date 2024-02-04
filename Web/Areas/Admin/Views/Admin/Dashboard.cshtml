@@ -71,7 +71,7 @@
           </div>
       </div>
       <div class="flex justify-center items-center py-5">
-          <button class="btn btn-success" onclick="DownloadCSV('@Url.Action("GetLogsAsCsv")')">Download</button>
+          <button class="btn btn-success" onclick="DownloadCSV('@Url.Action("GetLogsAsCsv", "API")')">Download</button>
       </div>
     <div class="modal-action">
       <form method="dialog">
@@ -83,5 +83,5 @@
 
 <script src="~/js/Admin/Dashboard.js"></script>
 <script>
-    FetchFirstPage("@Url.Action("GetLogs")");
+    FetchFirstPage("@Url.Action("GetLogs", "API")");
 </script>

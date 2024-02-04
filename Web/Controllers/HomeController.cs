@@ -85,7 +85,7 @@ public class HomeController(IConfiguration config, UserDbContext context) : Cont
     [Route("/GoogleAuthRedirect")]
     public IActionResult GoogleAuthRedirect()
     {
-        var state = UserController.GenerateRandom(10);
+        var state = GenerateRandom(10);
         HttpContext.Session.SetString("GoogleState", state);
 
         var auth = config.GetSection("GoogleOAuth").Get<GoogleOAuth>();
@@ -460,7 +460,7 @@ public class HomeController(IConfiguration config, UserDbContext context) : Cont
                     error = "Link has already been sent to your email."
                 });
 
-            var code = UserController.GenerateRandom(50);
+            var code = GenerateRandom(50);
             context.AuthAction.Add(new AuthActionModel
             {
                 action = AuthActionModel.ActionType.ResetPassword,
@@ -523,6 +523,16 @@ public class HomeController(IConfiguration config, UserDbContext context) : Cont
                 error = "Unexpected Error while processing the request"
             });
         }
+    }
+    
+    public static string GenerateRandom(int len)
+    {
+        const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+        var random = new Random();
+        var code = "";
+        for (var i = 0; i < len; i++) code += chars[random.Next(0, chars.Length)];
+
+        return code;
     }
 }
 

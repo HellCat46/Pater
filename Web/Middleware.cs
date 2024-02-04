@@ -2,15 +2,8 @@ using Microsoft.IdentityModel.Tokens;
 
 namespace Web;
 
-public class Middleware
-{
-    private readonly RequestDelegate _next;
-
-    public Middleware(RequestDelegate next)
-    {
-        _next = next;
-    }
-
+public class Middleware(RequestDelegate next)
+{ 
     public async Task InvokeAsync(HttpContext context)
     {
         String path = context.Request.Path.ToString();
@@ -23,7 +16,6 @@ public class Middleware
         else if (path == "/" && !userData)
             context.Response.Redirect("/User/Dashboard");
         
-        
-        await _next(context);
+        await next(context);
     }
 }

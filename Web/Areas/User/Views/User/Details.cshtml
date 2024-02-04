@@ -27,7 +27,7 @@
             <div>
                 <button class="btn btn-info" onclick="graphDataCSVModal.showModal()">Export</button>
                 <div class="btn btn-info" onclick="editLink('@Model.linkDetails.code')">Edit</div>
-                <div class="btn btn-error" onclick="deleteLink('@Url.Action("DeleteLink")', '@Model.linkDetails.code')">Delete</div>
+                <div class="btn btn-error" onclick="deleteLink('@Url.Action("DeleteLink", "Api")', '@Model.linkDetails.code')">Delete</div>
             </div>
         </div>
         <div class="divider divider-info"></div>
@@ -86,10 +86,10 @@
         </div>
         <canvas id="VisitsChart"></canvas>
         <div class="h-min flex flex-row-reverse gap-6 p-4">
-            <div class="badge badge-info" onclick="VisitsChart('@Url.Action("LinkVisitDetails")', '@Model.linkDetails.code', 'lifetime')">Lifetime</div>
-            <div class="badge badge-info" onclick="VisitsChart('@Url.Action("LinkVisitDetails")', '@Model.linkDetails.code', '30d')">30d</div>
-            <div class="badge badge-info" onclick="VisitsChart('@Url.Action("LinkVisitDetails")', '@Model.linkDetails.code', '7d')">7d</div>
-            <div class="badge badge-info" onclick="VisitsChart('@Url.Action("LinkVisitDetails")', '@Model.linkDetails.code', '24h')">24h</div>
+            <div class="badge badge-info" onclick="VisitsChart('@Url.Action("LinkVisitDetails", "Api")', '@Model.linkDetails.code', 'lifetime')">Lifetime</div>
+            <div class="badge badge-info" onclick="VisitsChart('@Url.Action("LinkVisitDetails", "Api")', '@Model.linkDetails.code', '30d')">30d</div>
+            <div class="badge badge-info" onclick="VisitsChart('@Url.Action("LinkVisitDetails", "Api")', '@Model.linkDetails.code', '7d')">7d</div>
+            <div class="badge badge-info" onclick="VisitsChart('@Url.Action("LinkVisitDetails", "Api")', '@Model.linkDetails.code', '24h')">24h</div>
         </div>
     </div>
 
@@ -107,10 +107,10 @@
         </div>
         <canvas id="BrowserChart"></canvas>
         <div class="h-min flex flex-row-reverse gap-6 p-4">
-            <div class="badge badge-info" onclick="BrowserChart('@Url.Action("LinkOtherDetails")', '@Model.linkDetails.code', 'lifetime')">Lifetime</div>
-            <div class="badge badge-info" onclick="BrowserChart('@Url.Action("LinkOtherDetails")', '@Model.linkDetails.code', '30d')">30d</div>
-            <div class="badge badge-info" onclick="BrowserChart('@Url.Action("LinkOtherDetails")', '@Model.linkDetails.code', '7d')">7d</div>
-            <div class="badge badge-info" onclick="BrowserChart('@Url.Action("LinkOtherDetails")', '@Model.linkDetails.code', '24h')">24h</div>
+            <div class="badge badge-info" onclick="BrowserChart('@Url.Action("LinkOtherDetails", "Api")', '@Model.linkDetails.code', 'lifetime')">Lifetime</div>
+            <div class="badge badge-info" onclick="BrowserChart('@Url.Action("LinkOtherDetails", "Api")', '@Model.linkDetails.code', '30d')">30d</div>
+            <div class="badge badge-info" onclick="BrowserChart('@Url.Action("LinkOtherDetails", "Api")', '@Model.linkDetails.code', '7d')">7d</div>
+            <div class="badge badge-info" onclick="BrowserChart('@Url.Action("LinkOtherDetails", "Api")', '@Model.linkDetails.code', '24h')">24h</div>
         </div>
     </div>
 
@@ -129,10 +129,10 @@
             </div>
             <canvas id="OSChart"></canvas>
             <div class="h-min flex flex-row-reverse gap-6 p-4">
-                <div class="badge badge-info" onclick="OSChart('@Url.Action("LinkOtherDetails")', '@Model.linkDetails.code', 'lifetime')">Lifetime</div>
-                <div class="badge badge-info" onclick="OSChart('@Url.Action("LinkOtherDetails")', '@Model.linkDetails.code', '30d')">30d</div>
-                <div class="badge badge-info" onclick="OSChart('@Url.Action("LinkOtherDetails")', '@Model.linkDetails.code', '7d')">7d</div>
-                <div class="badge badge-info" onclick="OSChart('@Url.Action("LinkOtherDetails")', '@Model.linkDetails.code', '24h')">24h</div>
+                <div class="badge badge-info" onclick="OSChart('@Url.Action("LinkOtherDetails", "Api")', '@Model.linkDetails.code', 'lifetime')">Lifetime</div>
+                <div class="badge badge-info" onclick="OSChart('@Url.Action("LinkOtherDetails", "Api")', '@Model.linkDetails.code', '30d')">30d</div>
+                <div class="badge badge-info" onclick="OSChart('@Url.Action("LinkOtherDetails", "Api")', '@Model.linkDetails.code', '7d')">7d</div>
+                <div class="badge badge-info" onclick="OSChart('@Url.Action("LinkOtherDetails", "Api")', '@Model.linkDetails.code', '24h')">24h</div>
             </div>
         </div>
         <div class="basis-1/2">
@@ -148,10 +148,10 @@
             </div>
             <canvas id="DeviceChart"></canvas>
             <div class="h-min flex flex-row-reverse gap-6 p-4">
-                <div class="badge badge-info" onclick="DeviceChart('@Url.Action("LinkOtherDetails")', '@Model.linkDetails.code', 'lifetime')">Lifetime</div>
-                <div class="badge badge-info" onclick="DeviceChart('@Url.Action("LinkOtherDetails")', '@Model.linkDetails.code', '30d')">30d</div>
-                <div class="badge badge-info" onclick="DeviceChart('@Url.Action("LinkOtherDetails")', '@Model.linkDetails.code', '7d')">7d</div>
-                <div class="badge badge-info" onclick="DeviceChart('@Url.Action("LinkOtherDetails")', '@Model.linkDetails.code', '24h')">24h</div>
+                <div class="badge badge-info" onclick="DeviceChart('@Url.Action("LinkOtherDetails", "Api")', '@Model.linkDetails.code', 'lifetime')">Lifetime</div>
+                <div class="badge badge-info" onclick="DeviceChart('@Url.Action("LinkOtherDetails", "Api")', '@Model.linkDetails.code', '30d')">30d</div>
+                <div class="badge badge-info" onclick="DeviceChart('@Url.Action("LinkOtherDetails", "Api")', '@Model.linkDetails.code', '7d')">7d</div>
+                <div class="badge badge-info" onclick="DeviceChart('@Url.Action("LinkOtherDetails", "Api")', '@Model.linkDetails.code', '24h')">24h</div>
             </div>
         </div>
     </div>
@@ -183,10 +183,10 @@
             </div>
         </div>
         <div class="h-min flex flex-row-reverse gap-6 p-4">
-            <div class="badge badge-info" onclick="CountryChart('@Url.Action("LinkOtherDetails")', '@Model.linkDetails.code', 'lifetime')">Lifetime</div>
-            <div class="badge badge-info" onclick="CountryChart('@Url.Action("LinkOtherDetails")', '@Model.linkDetails.code', '30d')">30d</div>
-            <div class="badge badge-info" onclick="CountryChart('@Url.Action("LinkOtherDetails")', '@Model.linkDetails.code', '7d')">7d</div>
-            <div class="badge badge-info" onclick="CountryChart('@Url.Action("LinkOtherDetails")', '@Model.linkDetails.code', '24h')">24h</div>
+            <div class="badge badge-info" onclick="CountryChart('@Url.Action("LinkOtherDetails", "Api")', '@Model.linkDetails.code', 'lifetime')">Lifetime</div>
+            <div class="badge badge-info" onclick="CountryChart('@Url.Action("LinkOtherDetails", "Api")', '@Model.linkDetails.code', '30d')">30d</div>
+            <div class="badge badge-info" onclick="CountryChart('@Url.Action("LinkOtherDetails", "Api")', '@Model.linkDetails.code', '7d')">7d</div>
+            <div class="badge badge-info" onclick="CountryChart('@Url.Action("LinkOtherDetails", "Api")', '@Model.linkDetails.code', '24h')">24h</div>
         </div>
     </div>
 
@@ -215,10 +215,10 @@
             </div>
         </div>
         <div class="h-min flex flex-row-reverse gap-6 p-4">
-            <div class="badge badge-info" onclick="CityChart('@Url.Action("LinkOtherDetails")', '@Model.linkDetails.code', 'lifetime')">Lifetime</div>
-            <div class="badge badge-info" onclick="CityChart('@Url.Action("LinkOtherDetails")', '@Model.linkDetails.code', '30d')">30d</div>
-            <div class="badge badge-info" onclick="CityChart('@Url.Action("LinkOtherDetails")', '@Model.linkDetails.code', '7d')">7d</div>
-            <div class="badge badge-info" onclick="CityChart('@Url.Action("LinkOtherDetails")', '@Model.linkDetails.code', '24h')">24h</div>
+            <div class="badge badge-info" onclick="CityChart('@Url.Action("LinkOtherDetails", "Api")', '@Model.linkDetails.code', 'lifetime')">Lifetime</div>
+            <div class="badge badge-info" onclick="CityChart('@Url.Action("LinkOtherDetails", "Api")', '@Model.linkDetails.code', '30d')">30d</div>
+            <div class="badge badge-info" onclick="CityChart('@Url.Action("LinkOtherDetails", "Api")', '@Model.linkDetails.code', '7d')">7d</div>
+            <div class="badge badge-info" onclick="CityChart('@Url.Action("LinkOtherDetails", "Api")', '@Model.linkDetails.code', '24h')">24h</div>
         </div>
     </div>
 </div>
@@ -245,7 +245,7 @@
             </div>
         </div>
         <div class="flex justify-center items-center py-5">
-            <button class="btn btn-success" onclick="DownloadGraphCSV('@Model.linkDetails.code', '@Url.Action("DetailsToCsv")')">Download</button>
+            <button class="btn btn-success" onclick="DownloadGraphCSV('@Model.linkDetails.code', '@Url.Action("DetailsToCsv", "Api")')">Download</button>
         </div>
         <div class="modal-action">
             <form method="dialog">
@@ -317,12 +317,12 @@
 
     })
     async function SetDefaults(duration){
-                await VisitsChart('@Url.Action("LinkVisitDetails")', "@Model.linkDetails.code", duration);
-                await BrowserChart('@Url.Action("LinkOtherDetails")', "@Model.linkDetails.code", duration);
-                await OSChart('@Url.Action("LinkOtherDetails")', "@Model.linkDetails.code", duration);
-                await CountryChart('@Url.Action("LinkOtherDetails")', "@Model.linkDetails.code", duration);
-                await CityChart('@Url.Action("LinkOtherDetails")', "@Model.linkDetails.code", duration);
-                await DeviceChart('@Url.Action("LinkOtherDetails")', "@Model.linkDetails.code", duration);
+                await VisitsChart('@Url.Action("LinkVisitDetails", "Api")', "@Model.linkDetails.code", duration);
+                await BrowserChart('@Url.Action("LinkOtherDetails", "Api")', "@Model.linkDetails.code", duration);
+                await OSChart('@Url.Action("LinkOtherDetails", "Api")', "@Model.linkDetails.code", duration);
+                await CountryChart('@Url.Action("LinkOtherDetails", "Api")', "@Model.linkDetails.code", duration);
+                await CityChart('@Url.Action("LinkOtherDetails", "Api")', "@Model.linkDetails.code", duration);
+                await DeviceChart('@Url.Action("LinkOtherDetails", "Api")', "@Model.linkDetails.code", duration);
     }
     async function setAllGraphs(){
         const graphDurationFrom = document.querySelector("#graphDurationFrom");
@@ -342,12 +342,12 @@
             return;
         }
         
-        await VisitsChart('@Url.Action("LinkVisitDetails")', "@Model.linkDetails.code", graphDurationFrom.value, graphDurationTo.value);
-        await BrowserChart('@Url.Action("LinkOtherDetails")', "@Model.linkDetails.code", graphDurationFrom.value, graphDurationTo.value);
-        await OSChart('@Url.Action("LinkOtherDetails")', "@Model.linkDetails.code", graphDurationFrom.value, graphDurationTo.value);
-        await CountryChart('@Url.Action("LinkOtherDetails")', "@Model.linkDetails.code", graphDurationFrom.value, graphDurationTo.value);
-        await CityChart('@Url.Action("LinkOtherDetails")', "@Model.linkDetails.code", graphDurationFrom.value, graphDurationTo.value);
-        await DeviceChart('@Url.Action("LinkOtherDetails")', "@Model.linkDetails.code", graphDurationFrom.value, graphDurationTo.value);
+        await VisitsChart('@Url.Action("LinkVisitDetails", "Api")', "@Model.linkDetails.code", graphDurationFrom.value, graphDurationTo.value);
+        await BrowserChart('@Url.Action("LinkOtherDetails", "Api")', "@Model.linkDetails.code", graphDurationFrom.value, graphDurationTo.value);
+        await OSChart('@Url.Action("LinkOtherDetails", "Api")', "@Model.linkDetails.code", graphDurationFrom.value, graphDurationTo.value);
+        await CountryChart('@Url.Action("LinkOtherDetails", "Api")', "@Model.linkDetails.code", graphDurationFrom.value, graphDurationTo.value);
+        await CityChart('@Url.Action("LinkOtherDetails", "Api")', "@Model.linkDetails.code", graphDurationFrom.value, graphDurationTo.value);
+        await DeviceChart('@Url.Action("LinkOtherDetails", "Api")', "@Model.linkDetails.code", graphDurationFrom.value, graphDurationTo.value);
         
         toastAlert.className = "toast toast-center";
         toastAlertType.className = "alert alert-success"
@@ -363,6 +363,6 @@
     const editLinkForm = document.querySelector("#editLinkForm");
     editLinkForm.addEventListener("submit", async (e) => {
         e.preventDefault();
-        await editLinkSubmit("@Url.Action("EditLink")")
+        await editLinkSubmit("@Url.Action("EditLink", "Api")")
     });
 </script>
