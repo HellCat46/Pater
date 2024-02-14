@@ -5,26 +5,102 @@
 }
 @await Html.PartialAsync("_Header", Model.header)
 
-<div class="w-auto h-[75vh] grid lg:grid-rows-4 lg:grid-flow-col gap-4 m-5 ">
-    <div class="lg:row-span-3 bg-base-300 rounded-lg lg:col-span-2 flex flex-col">
+<div class="w-auto grid lg:grid-rows-4 lg:grid-flow-col gap-4 m-5 ">
+    <div class="lg:row-span-3 bg-base-300 rounded-lg lg:col-span-2 flex flex-col p-5">
         <div class="basis-2/12 border-b-4 border-info flex flex-col items-center justify-center">
             <span class="text-2xl font-bold">Plan Information</span>
             <span class="flex p-5">
-                <select class="select w-full max-w-xs bg-base-200">
+                <select class="select w-full max-w-xs bg-base-200" onchange="ChangePlanDetails()" id="planSelector">
                     <option selected>Premium</option>
                     <option>Business</option>
                     <option>Custom</option>
                 </select>
             </span>
         </div>
-        <div class="basis-10/12"></div>
+        <div class="basis-10/12 flex flex-col m-8">
+            <div class="planInfo" id="premium">
+                <ul>
+                    <li class="flex flex-col">
+                        <div class="flex">
+                            <img src="~/assets/svg/check-white.svg" alt="check"/>
+                            <span class="ml-3"><span class="text-white">Unlimited</span> Links</span>
+                        </div>
+                        <span>Amount of Links you can create with Random Codes</span>
+                    </li>
+                    <li class="flex flex-col">
+                        <div class="flex">
+                            <img src="~/assets/svg/check-white.svg" alt="check"/>
+                            <span class="ml-3"><span class="text-white">50</span> Custom Links Per Month</span>
+                        </div>
+                        <span>Amount of Links you can create with custom Codes</span>
+                    </li>
+                    <li class="flex flex-col">
+                        <div class="flex">
+                            <img src="~/assets/svg/check-white.svg" alt="check"/>
+                            <span class="ml-3"><span class="text-white">Last 7 days</span> Analytics on Links</span>
+                        </div>
+                        <span>Maximum Days of Analytics Data you can check</span>
+                    </li>
+                </ul>
+            </div>
+            <div class="planInfo hidden" id="business">
+                <ul>
+                    <li class="flex flex-col">
+                        <div class="flex">
+                            <img src="~/assets/svg/check-white.svg" alt="check"/>
+                            <span class="ml-3"><span class="text-white">Unlimited</span> Links</span>
+                        </div>
+                        <span>Amount of Links you can create with Random Codes</span>
+                    </li>
+                    <li class="flex flex-col">
+                        <div class="flex">
+                            <img src="~/assets/svg/check-white.svg" alt="check"/>
+                            <span class="ml-3"><span class="text-white">350</span> Custom Links Per Month</span>
+                        </div>
+                        <span>Amount of Links you can create with custom Codes</span>
+                    </li>
+                    <li class="flex flex-col">
+                        <div class="flex">
+                            <img src="~/assets/svg/check-white.svg" alt="check"/>
+                            <span class="ml-3"><span class="text-white">Last 30 days</span> Analytics on Links</span>
+                        </div>
+                        <span>Maximum Days of Analytics Data you can check</span>
+                    </li>
+                </ul>
+            </div>
+            <div class="planInfo hidden" id="custom">
+                <ul>
+                    <li class="flex flex-col">
+                        <div class="flex">
+                            <img src="~/assets/svg/check-white.svg" alt="check"/>
+                            <span class="ml-3"><span class="text-white">Unlimited</span> Links</span>
+                        </div>
+                        <span>Amount of Links you can create with Random Codes</span>
+                    </li>
+                    <li class="flex flex-col">
+                        <div class="flex">
+                            <img src="~/assets/svg/check-white.svg" alt="check"/>
+                            <span class="ml-3"><span class="text-white">Unlimited</span> Custom Links Per Month</span>
+                        </div>
+                        <span>Amount of Links you can create with custom Codes</span>
+                    </li>
+                    <li class="flex flex-col">
+                        <div class="flex">
+                            <img src="~/assets/svg/check-white.svg" alt="check"/>
+                            <span class="ml-3"><span class="text-white">Lifetime</span> Analytics on Links</span>
+                        </div>
+                        <span>Maximum Days of Analytics Data you can check</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
     </div>
-    <div class="lg:row-span-1 bg-base-300 rounded-lg lg:col-span-2 flex flex-col">
+    <div class="lg:row-span-1 bg-base-300 rounded-lg lg:col-span-2 flex flex-col p-5">
         <div class="basis-2/6 border-b-4 border-info flex items-center justify-center">
             <span class="text-2xl font-bold">Custom Link Limit</span>
         </div>
         <div class="basis-4/6 p-5">
-            <input type="range" min="0" max="100" value="25" class="range" step="25"/>
+            <input type="range" min="400" max="800" value="400" class="range" id="customLinkLimitSelector" step="50" disabled/>
             <div class="w-full flex justify-between text-xs px-2">
                 <div class="flex flex-col items-center">
                     <span>|</span>
@@ -51,21 +127,21 @@
         </div>
     </div>
     <div class="lg:row-span-2 bg-base-300 rounded-lg flex flex-col">
-        <div class="basis-2/6 border-b-4 border-info flex items-center justify-center">
+        <div class="basis-2/6 border-b-4 border-info flex items-center justify-center ">
             <span class="text-2xl font-bold">Select Payment Option</span>
         </div>
         <div class="basis-4/6 flex flex-col  mx-5 my-10">
             <div class="basis-1/2 flex items-center">
-                <input type="radio" name="paymentMethod" value="0" class="radio radio-info"/>
+                <input type="radio" name="paymentMethod" value="0" class="radio radio-info" disabled/>
                 <div class="flex flex-col pl-2">
-                    <span class="text-2xl font-bold">Debit/Credit Card & Paypal</span>
+                    <span class="text-2xl font-bold">Debit/Credit Card & Paypal (Not Available)</span>
                     <span>Powered by Stripe</span>
                 </div>
             </div>
             <div class="basis-1/2 flex items-center">
-                <input type="radio" name="paymentMethod" value="1" class="radio radio-info"/>
+                <input type="radio" name="paymentMethod" value="1" class="radio radio-info" disabled/>
                 <div class="flex flex-col pl-2">
-                    <span class="text-2xl font-bold">Debit/Credit Card & UPI</span>
+                    <span class="text-2xl font-bold">Debit/Credit Card & UPI (Not Available)</span>
                     <span>Powered by Stripe</span>
                 </div>
             </div>
@@ -75,7 +151,33 @@
         <div class="basis-2/6 border-b-4 border-info flex items-center justify-center">
             <span class="text-2xl font-bold">Bill Summary</span>
         </div>
-        <div class="basis-4/6"></div>
-
+        <div class="basis-4/6">
+            <div class="flex flex-col m-5">
+                <table class="table">
+                    <thead>
+                    <tr>
+                        <th class="text-2xl">Item</th>
+                        <th class="text-2xl text-center" id="itemAmt">Amount (in USD)</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+                        <td>Base Plan</td>
+                        <td class="text-center">2</td>
+                    </tr>
+                    <tr>
+                        <td>Extra Link Limit</td>
+                        <td class="text-center" id="extraAmt"></td>
+                    </tr>
+                    <tr>
+                        <td class="text-2xl font-bold">Total</td>
+                        <td class="text-center" id="totalAmt">2</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
 </div>
+
+<script src="~/js/User/Checkout.js"></script>
