@@ -17,5 +17,9 @@ public class Middleware(RequestDelegate next)
             context.Response.Redirect("/User/Dashboard");
         
         await next(context);
+        if (context.Response is { StatusCode: 404, ContentLength: null })
+        {
+            context.Response.Redirect("/");
+        }
     }
 }
