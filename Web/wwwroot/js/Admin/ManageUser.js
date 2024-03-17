@@ -53,6 +53,29 @@ async function UpdateUser(endpointUrl){
         alertMessage.innerText = "";
     }, 5000);
 }
+
+async function DeleteAccount(endpointUrl, id){
+    try {
+    const res = await fetch(`${endpointUrl}?id=${id}`, {method: "DELETE", credentials: "include"});
+    if(res.status === 200){
+        Alert.className = "alert alert-success";
+        alertMessage.innerText = "The user has successfully been deleted";
+    }else {
+        Alert.className = "alert alert-error";
+        const json = await res.json();
+        alertMessage.innerText = json.error;
+    }
+    }catch (ex){
+        console.error(ex);
+        Alert.className = "alert alert-error";
+        alertMessage.innerText = "Unable to delete the account";
+    }
+    
+    setTimeout(()=> {
+        Alert.className= "alert hidden";
+        alertMessage.innerText = "";
+    }, 5000);
+} 
 async function OpenLogs(){
     const userLogs = document.querySelector("#userLogs");
     userLogs.showModal();

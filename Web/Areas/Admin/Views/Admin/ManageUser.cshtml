@@ -107,6 +107,7 @@
                 </form>
                 <div class="flex flex-col lg:flex-row gap-4">
                     <button class="btn btn-info" onclick="OpenLogs()">Check logs</button>
+                    <button class="btn btn-error" onclick="DeleteAccount('@Url.ActionLink("DeleteUser", "API")', '@Model.UserId')">Delete Account</button>
                 </div>
             </div>
         </div>

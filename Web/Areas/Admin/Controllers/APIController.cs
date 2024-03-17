@@ -101,6 +101,37 @@ public class ApiController(UserDbContext context) : Controller
         }
     }
 
+    [HttpDelete]
+    public async Task<IActionResult> DeleteUser(int? id)
+    {
+        if (id == null)
+        {
+            return StatusCode(400, new { error = "Id is required." });
+        }
+
+        try
+        {
+            var sessionAcc = SessionAccountModel.GetSession(HttpContext);
+            if (sessionAcc == null) return StatusCode(403, new { error = "Session Expired. Please Login Again" });
+            if (!sessionAcc.isAdmin) return StatusCode(403, new { error = "This action requires Admin Access" });
+
+            var account = await context.Account.FirstOrDefaultAsync(acc => acc.id == id);
+            if (account == null)
+            {
+                return StatusCode(404, new { error = "Account Doesn't Exist." });
+            }
+
+            context.Account.Remove(account);
+            await context.SaveChangesAsync();
+            return Ok();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex);
+            return StatusCode(500, new { error = "Unexpected Error while processing the request." });
+        }
+    }
+    
     public IActionResult GetLogsAsCsv(DateTime? startDate, DateTime? endDate)
     {
         if (startDate == null || endDate == null)
@@ -108,7 +139,7 @@ public class ApiController(UserDbContext context) : Controller
             {
                 error = "Required Parameters are missing"
             });
-        Console.Write(startDate + " " + endDate);
+        //Console.Write(startDate + " " + endDate);
         try
         {
             var sessionAcc = SessionAccountModel.GetSession(HttpContext);
